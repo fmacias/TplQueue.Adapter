@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<Version>1.0.0</Version>
+    <PackageId>Fmaciasruano.TplQueue</PackageId>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Cache\**" />
+    <Compile Remove="Factories\**" />
+    <Compile Remove="Observers\**" />
+    <EmbeddedResource Remove="Cache\**" />
+    <EmbeddedResource Remove="Factories\**" />
+    <EmbeddedResource Remove="Observers\**" />
+    <None Remove="Cache\**" />
+    <None Remove="Factories\**" />
+    <None Remove="Observers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Cache\CacheFactory.cs" />
+    <Compile Include="Cache\MemCache.cs" />
+    <Compile Include="Observers\DirectObserverDispatcher.cs" />
+    <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />
+    <Compile Include="Observers\ObserverFactory.cs" />
+    <Compile Include="Observers\TaskQueueLoggingObserver.cs" />
+    <Compile Include="Observers\TaskRunnerConsoleObserver.cs" />
+    <Compile Include="Observers\TaskRunnerFileLoggingObserver.cs" />
+    <Compile Include="Observers\TaskRunnerProfilingObserver.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fmaciasruano.TplQueue.Cache.Abstract" Version="1.0.0" />
+    <PackageReference Include="Fmaciasruano.TplQueue.Observers.ViewModel" Version="1.0.0" />
+    <PackageReference Include="Fmaciasruano.TplQueue.RetryPolicies" Version="1.0.0" />
+    <PackageReference Include="Fmaciasruano.TplQueue.Log" Version="1.0.0" />
+  </ItemGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Fmaciasruano.TplQueue.Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Fmaciasruano.TplQueue.Core.Integration.Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+</Project>

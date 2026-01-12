@@ -1,0 +1,7 @@
+﻿<Project>
+  <Import Project="..\\WorkspaceTplQueue\\Directory.Build.props" Condition="Exists('..\\WorkspaceTplQueue\\Directory.Build.props')" />
+  <PropertyGroup Condition="!Exists('..\\WorkspaceTplQueue\\Directory.Build.props')">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
