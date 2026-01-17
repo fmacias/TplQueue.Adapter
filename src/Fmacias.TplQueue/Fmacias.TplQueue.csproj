@@ -48,4 +48,9 @@
 			<_Parameter1>Fmaciasruano.TplQueue.Core.Integration.Test</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Documentation\" />
+	  <Folder Include="NewFolder\" />
+	</ItemGroup>
 </Project>
