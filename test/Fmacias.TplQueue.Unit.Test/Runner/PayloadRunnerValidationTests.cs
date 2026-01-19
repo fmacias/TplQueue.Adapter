@@ -1,6 +1,5 @@
 using Fmaciasruano.TplQueue.Abstractions;
 using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Core.Factories;
 using Fmaciasruano.TplQueue.Runner;
 using Moq;
 using NUnit.Framework;
@@ -66,41 +65,6 @@ namespace Fmaciasruano.TplQueue.Test.Runner
             Assert.Throws<ArgumentNullException>(() => factory.LoadRoot(Mock.Of<ICacheLeaseEntry>(), null!));
         }
 
-        [Test]
-        public void PayloadTaskRunner_CopyInfo_SerializesPayloadSnapshot()
-        {
-            var serializer = new Mock<IUniversalPayloadSerializer>();
-            serializer.Setup(s => s.Serialize(_payload)).Returns("{\"ok\":true}");
-            var taskRunnerFactory = TaskRunnerFactory.Instance();
-            var runner = PayloadTaskRunner<TestPayload>
-                .Create(_payload, serializer.Object, taskRunnerFactory);
-
-            var info = runner.CopyInfo();
-
-            Assert.That(runner.PayloadSerializedData.JsonInput, Is.EqualTo("{\"ok\":true}"));
-            Assert.That(info.PayloadSerializedData.JsonOutput, Is.EqualTo("{\"ok\":true}"));
-        }
-
-        [Test]
-        public async Task PayloadTaskRunnerRoot_UsesProvidedRetryPolicyFactory()
-        {
-            var serializer = new Mock<IUniversalPayloadSerializer>();
-            serializer.Setup(s => s.Serialize(_payload)).Returns("{}");
-            int calls = 0;
-            Func<IRetryPolicy> retryFactory = () => new CountingRetryPolicy(() => calls++);
-            var taskRunnerRootFactory = TaskRunnerRootFactory.Instance();
-            var root = PayloadTaskRunnerRoot<TestPayload>.Create(
-                _payload,
-                serializer.Object,
-                taskRunnerRootFactory,
-                retryFactory);
-
-            var policy = root.GetRetryPolicyFactory()();
-            await policy.ExecuteAsync(ct => Task.FromResult(true), CancellationToken.None);
-
-            Assert.That(policy, Is.InstanceOf<CountingRetryPolicy>());
-            Assert.That(calls, Is.EqualTo(1));
-        }
 
         private class TestPayload : IPayloadCommand
         {

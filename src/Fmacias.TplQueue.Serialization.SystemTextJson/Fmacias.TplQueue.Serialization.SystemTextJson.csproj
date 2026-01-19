@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>1.0.0</Version>
-    <PackageId>Fmaciasruano.TplQueue.Serialization.SystemTextJson</PackageId>
+    <PackageId>Fmacias.TplQueue.Serialization.SystemTextJson</PackageId>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fmaciasruano.TplQueue.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

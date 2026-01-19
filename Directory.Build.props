@@ -1,7 +1,79 @@
 ﻿<Project>
-  <Import Project="..\\WorkspaceTplQueue\\Directory.Build.props" Condition="Exists('..\\WorkspaceTplQueue\\Directory.Build.props')" />
-  <PropertyGroup Condition="!Exists('..\\WorkspaceTplQueue\\Directory.Build.props')">
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<!-- =========================
+       Global (all projects)
+       ========================= -->
+	<PropertyGroup>
+		<!-- Language & safety -->
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<Deterministic>true</Deterministic>
+
+		<!-- Roslyn analyzers -->
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
+
+		<!-- Standard package metadata (used when packing) -->
+		<Authors>Fernando Macias Ruano</Authors>
+		<Company></Company>
+		<RepositoryUrl>https://github.com/fmacias/ScalableComponents</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		
+		<!-- Generation of documentation -->
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		
+		<!-- Warning "Missing XML Comment for publicly visible type of member" disabled-->
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+		<NoWarn>$(NoWarn);CA2208</NoWarn>
+		<NoWarn>$(NoWarn);NU5124</NoWarn>
+
+	</PropertyGroup>
+
+	<!-- =========================
+       Test project auto-detection (name or path)
+       This runs BEFORE each .csproj, so we can't rely on IsTestProject being set.
+       If your project is named *.Tests or *.Test, or lives under any .../tests/... folder,
+       mark it as a test project here.
+       ========================= -->
+	<PropertyGroup Condition="
+      $([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Tests')) OR
+      $([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Test'))
+    ">
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<!-- =========================
+       Test projects overrides
+       (works whether IsTestProject came from csproj or auto-detection above)
+       ========================= -->
+	<PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+		<!-- Disable nullable in tests -->
+		<Nullable>disable</Nullable>
+
+		<!-- Donâ€™t treat warnings as errors in tests -->
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+		<!-- Tests usually don't emit XML docs -->
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		
+		<EnableNETAnalyzers>false</EnableNETAnalyzers>
+
+	</PropertyGroup>
+
+	<!-- Common test packages (restore happens during .props import, so it's safe here) -->
+	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+		<PackageReference Include="NUnit" Version="3.14.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+		<PackageReference Include="coverlet.collector" Version="6.0.0" />
+	</ItemGroup>
+	<PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+		<NoWarn>$(NoWarn);CS8632</NoWarn>
+	</PropertyGroup>
+
 </Project>

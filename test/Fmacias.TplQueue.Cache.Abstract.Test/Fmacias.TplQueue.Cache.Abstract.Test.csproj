@@ -11,10 +11,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\..\..\TplQueue.Abstractions\src\Fmaciasruano.TplQueue.Abstractions.csproj" />
-		<ProjectReference Include="..\Fmaciasruano.TplQueue.Cache.Abstract\Fmaciasruano.TplQueue.Cache.Abstract.csproj" />
+		<ProjectReference Include="..\..\src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj" />
 	</ItemGroup>
 </Project>

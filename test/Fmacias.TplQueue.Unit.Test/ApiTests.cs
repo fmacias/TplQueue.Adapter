@@ -1,6 +1,4 @@
 using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Core;
-using Fmaciasruano.TplQueue.Core.Runners.Internals;
 using Fmaciasruano.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
@@ -67,31 +65,6 @@ namespace Fmaciasruano.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Instance(null!));
         }
-
-        /// <summary>
-        /// Type <see cref="ITaskRunnerCommandAsync"/> is internal to core, to avoid
-        /// execution of runners out from TplCore.Context.
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [Test]
-        public async Task GetPayloadRunnerFactory_ProducesExecutableRunners()
-        {
-            var api = API.Instance(CoreApi.Instance());
-            var payloadFactory = api.GetPayloadRunnerFactory();
-            var serializer = SystemTextJsonUniversalSerializer.Create();
-
-            var payload = new RecordingPayload("payload-run");
-            var runner = payloadFactory.Create(payload, serializer, "payload");
-            var payloadAsAdapter = (ITaskRunnerAdapter)runner;
-            await ((ITaskRunnerCommandAsync)payloadAsAdapter.GetInnerRunner()).ExecuteAsync(CancellationToken.None);
-            var runnerSnapshot = payloadAsAdapter.CopyInfo();
-            Assert.That(payload.Executed, Is.True);
-            Assert.That(runner.PayloadSerializedData.JsonOutput, Does.Contain("payload-run"));
-            Assert.That(runnerSnapshot.PayloadSerializedData.JsonOutput, Does.Contain("payload-run"));
-
-        }
-
         public sealed class RecordingPayload : IPayloadCommand
         {
             public RecordingPayload(string name)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -14,7 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Fmaciasruano.TplQueue.RetryPolicies\Fmaciasruano.TplQueue.RetryPolicies.csproj" />
+	  <ProjectReference Include="..\..\src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj" />
 	</ItemGroup>
 	
 </Project>

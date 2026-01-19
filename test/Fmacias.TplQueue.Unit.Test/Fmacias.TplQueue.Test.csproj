@@ -14,9 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\TplQueue.Core\src\Fmaciasruano.TplQueue.Core\Fmaciasruano.TplQueue.Core.csproj" />
-    <ProjectReference Include="..\..\..\TplQueue.Serialization\src\Fmaciasruano.TplQueue.Serialization.SystemTextJson\Fmaciasruano.TplQueue.Serialization.SystemTextJson.csproj" />
-    <ProjectReference Include="..\Fmaciasruano.TplQueue\Fmaciasruano.TplQueue.csproj" />
+    <ProjectReference Include="..\..\src\Fmacias.TplQueue\Fmacias.TplQueue.csproj" />
   </ItemGroup> 
 
 </Project>
