@@ -14,6 +14,14 @@ function Invoke-Dotnet {
 # Return the folder that contains this script.
 # Example: if this script is in C:\repo\TplQueue.Adapter\pack-local.ps1, returns C:\repo\TplQueue.Adapter.
 function Get-RepoRoot {
+  if ($PSScriptRoot) {
+    return $PSScriptRoot
+  }
+
+  if ($PSCommandPath) {
+    return Split-Path -Parent $PSCommandPath
+  }
+
   return Split-Path -Parent $MyInvocation.MyCommand.Path
 }
 
@@ -81,11 +89,12 @@ function Get-LocalProjects {
   param([string]$RepoRoot)
 
   return @(
-    (Join-Path $RepoRoot 'src\TplQueue.Log\TplQueue.Log.csproj'),
-    (Join-Path $RepoRoot 'src\TplQueue.RetryPolicies\TplQueue.RetryPolicies.csproj'),
-    (Join-Path $RepoRoot 'src\TplQueue.Observers.ViewModel\TplQueue.Observers.ViewModel.csproj'),
-    (Join-Path $RepoRoot 'src\TplQueue.Serialization.SystemTextJson\TplQueue.Serialization.SystemTextJson.csproj'),
-    (Join-Path $RepoRoot 'src\TplQueue.Microsoft.DependencyInjection\TplQueue.Microsoft.DependencyInjection.csproj')
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj')
   )
 }
 

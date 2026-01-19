@@ -1,4 +1,16 @@
-# TplQueue.Adapter
+﻿# TplQueue.Adapter
+
+## Sumario
+- Operaciones: el build Release empaqueta los subcomponentes y el paquete principal en `..\TplQueue.NugetLocal`.
+- Operaciones: `pack-local.ps1` asegura el orden de empaquetado antes del pack del repo.
+
+## Empaquetado local (DevOps)
+El empaquetado local se dispara desde `Directory.Build.targets` y ejecuta `pack-local.ps1`.
+Este script empaqueta primero Log, RetryPolicies, Observers.ViewModel, Serialization, DI y Cache.Abstract, y luego el paquete `Fmacias.TplQueue`.
+Salida esperada: `.nupkg` y `.snupkg` en `..\TplQueue.NugetLocal`.
+Para ejecucion manual: `powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1`.
+Para omitir: `SkipPackLocal=true`.
+
 
 TplQueue.Adapter contains MIT-licensed adapter components and building blocks for TplQueue: abstractions, retry policies, cache contracts, serialization helpers, DI integration, and observer utilities. It is intended to be used together with TplQueue.Core (EULA) by referencing the Core binary as a NuGet package or project.
 
@@ -322,3 +334,8 @@ Implement IPayloadLeaseCache (or derive from Cache.Abstract) to persist and leas
 
 ## Further documentation
 Each submodule (Cache, RetryPolicies, Serialization, DI, Observers) will have its own documentation under its respective `docs` folders. This README is the entry point.
+
+## Visual Studio session note
+Avoid opening `WorkspaceTplQueue.sln` and any `TplQueue.*.sln` in separate VS sessions at the same time. The workspace swaps to project references, while standalone solutions stay package-based, and running both can lead to confusing dependency views or build output conflicts.
+
+
