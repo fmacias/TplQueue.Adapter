@@ -1,8 +1,8 @@
 ﻿using System;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// Helpers para suscribir observadores de logging a dispatchers.

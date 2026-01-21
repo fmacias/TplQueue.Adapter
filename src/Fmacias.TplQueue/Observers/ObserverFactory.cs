@@ -1,8 +1,8 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Observers.ViewModel;
 using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     internal sealed class ObserverFactory : IObserverFactory
     {

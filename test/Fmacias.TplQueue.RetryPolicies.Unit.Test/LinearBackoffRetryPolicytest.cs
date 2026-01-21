@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies.Test
+namespace Fmacias.TplQueue.RetryPolicies.Test
 {
     [TestFixture]
     public class LinearBackoffRetryPolicyTests

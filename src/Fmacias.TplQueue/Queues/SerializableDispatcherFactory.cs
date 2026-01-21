@@ -1,9 +1,8 @@
-﻿using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmaciasruano.TplQueue.Queues
+namespace Fmacias.TplQueue.Queues
 {
     /// <summary>
     /// Default factory that creates task dispatchers from named <see cref="DispatcherOptions"/>

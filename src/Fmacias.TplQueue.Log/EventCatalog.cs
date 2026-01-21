@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Log
+namespace Fmacias.TplQueue.Log
 {
     /// <summary>
     /// EventId catalog. Grouped by concern. Keep IDs stable once published.

@@ -1,6 +1,6 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Log;
-using Fmaciasruano.TplQueue.Queues;
+﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Log;
+using Fmacias.TplQueue.Queues;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

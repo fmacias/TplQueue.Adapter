@@ -1,8 +1,8 @@
 using System;
 using System.Text.Json;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Serialization.SystemTextJson
+namespace Fmacias.TplQueue.Serialization.SystemTextJson
 {
     /// <summary>
     /// Universal payload serializer backed by System.Text.Json.

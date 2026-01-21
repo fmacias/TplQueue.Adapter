@@ -1,8 +1,8 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.ObjectModel;
 
-namespace Fmaciasruano.TplQueue.Observers.ViewModel
+namespace Fmacias.TplQueue.Observers.ViewModel
 {
     /// <summary>
     /// UI-friendly observer for <see cref="ITaskRunnerEvent"/> streams.

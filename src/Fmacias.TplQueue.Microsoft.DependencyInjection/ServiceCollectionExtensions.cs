@@ -1,11 +1,10 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 
-namespace Fmaciasruano.TplQueue.Microsoft.DependencyInjection
+namespace Fmacias.TplQueue.Microsoft.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
@@ -63,11 +62,11 @@ namespace Fmaciasruano.TplQueue.Microsoft.DependencyInjection
             if (dispatcherOptions == null) throw new ArgumentNullException(nameof(dispatcherOptions));
 
             services
-                .AddSingleton<IReadOnlyDictionary<string, RetryPolicyOptions>>(
+                .AddSingleton(
                     retryPolicies is IReadOnlyDictionary<string, RetryPolicyOptions> rPolicies
                         ? rPolicies
                         : new Dictionary<string, RetryPolicyOptions>(retryPolicies, StringComparer.OrdinalIgnoreCase))
-                .AddSingleton<IReadOnlyDictionary<string, IDispatcherOptions>>(
+                .AddSingleton(
                     dispatcherOptions is IReadOnlyDictionary<string, IDispatcherOptions> dOptions
                         ? dOptions
                         : new Dictionary<string, IDispatcherOptions>(dispatcherOptions, StringComparer.OrdinalIgnoreCase));
@@ -77,27 +76,27 @@ namespace Fmaciasruano.TplQueue.Microsoft.DependencyInjection
         private static IServiceCollection AddApi(IServiceCollection services, IApi facade)
         {
             return services
-                .AddSingleton<IApi>(sp => facade)
-                .AddSingleton<ICoreApi>(sp =>
+                .AddSingleton(sp => facade)
+                .AddSingleton(sp =>
                     sp.GetRequiredService<IApi>().GetCoreApi())
-                .AddTransient<IObserverFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetObserverFactory())
-                .AddTransient<ICacheFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetCacheFactory())
-                .AddTransient<IRetryPolicyFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>()
                         .GetRetryPolicyFactory(
                             sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
                         ))
-                .AddTransient<ITaskRunnerFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetTaskRunnerFactory())
-                .AddTransient<ITaskRunnerRootFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetTaskRunnerRootFactory())
-                .AddTransient<IPayloadRunnerFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetPayloadRunnerFactory())
-                .AddTransient<ISerializableDispatcherFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetSerializableDispatcherFactory())
-                .AddTransient<ITaskDispatcherFactory>(sp =>
+                .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetTaskDispatcherFactory(
                         sp.GetRequiredService<IReadOnlyDictionary<string, IDispatcherOptions>>(),
                         sp.GetRequiredService<IRetryPolicyFactory>()));

@@ -1,12 +1,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Queues;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Queues;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Queues
+namespace Fmacias.TplQueue.Test.Queues
 {
     [TestFixture]
     public class TplTaskDispatcherAdapterTests

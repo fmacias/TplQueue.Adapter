@@ -1,9 +1,9 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Fmaciasruano.TplQueue.Queues
+namespace Fmacias.TplQueue.Queues
 {
     /// <summary>
     /// Thin MIT adapter that wraps a proprietary <see cref="ITaskDispatcher"/> instance.

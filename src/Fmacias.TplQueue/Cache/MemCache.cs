@@ -1,13 +1,12 @@
-﻿using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Abstractions.Exceptions;
-using Fmaciasruano.TplQueue.Cache.Abstract;
+﻿using Fmacias.TplQueue.Cache.Abstract;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Exceptions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fmaciasruano.TplQueue.Cache
+namespace Fmacias.TplQueue.Cache
 {
     internal sealed class MemCache : CacheAbstract, IMemCache
     {
@@ -174,7 +173,7 @@ namespace Fmaciasruano.TplQueue.Cache
         }
         private void SuccessedRootFinalized(Guid rootId)
         {
-            var rootEntry = this.GetByIdOrDefault(rootId);
+            var rootEntry = GetByIdOrDefault(rootId);
 
             if (rootEntry == null || !rootEntry.IsRoot)
                 return;

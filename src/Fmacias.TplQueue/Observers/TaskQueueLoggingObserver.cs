@@ -1,8 +1,8 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// Centralizes queue logging via IObserver events to keep the queue engine free of ILogger calls.

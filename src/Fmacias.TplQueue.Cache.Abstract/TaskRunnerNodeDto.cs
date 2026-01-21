@@ -1,7 +1,7 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Concrete DTO for a payload task runner node.

@@ -1,14 +1,13 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Cache;
-using Fmaciasruano.TplQueue.Observers;
-using Fmaciasruano.TplQueue.Queues;
-using Fmaciasruano.TplQueue.RetryPolicies;
-using Fmaciasruano.TplQueue.Runner;
+using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Queues;
+using Fmacias.TplQueue.RetryPolicies;
+using Fmacias.TplQueue.Runner;
 using System;
 using System.Collections.Generic;
 
-namespace Fmaciasruano.TplQueue
+namespace Fmacias.TplQueue
 {
     public class API : IApi
     {

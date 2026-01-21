@@ -1,9 +1,9 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Log;
+﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Log;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// <inheritdoc cref="IProfilingObserver"/>

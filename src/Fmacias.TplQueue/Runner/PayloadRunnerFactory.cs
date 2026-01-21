@@ -1,8 +1,8 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 using System.Reflection;
 
-namespace Fmaciasruano.TplQueue.Runner
+namespace Fmacias.TplQueue.Runner
 {
     /// <summary>
     /// <![CDATA[

@@ -52,6 +52,6 @@
 	  <PackageReference Include="Fmacias.TplQueue.Log" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
-	  <PackageReference Include="Fmaciasruano.TplQueue.Observers.ViewModel" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Observers.ViewModel" Version="1.0.0" />
 	</ItemGroup>
 </Project>

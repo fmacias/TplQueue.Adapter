@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// Observer que vuelca ITaskRunnerEvent a ILogger. Diseñado para poder

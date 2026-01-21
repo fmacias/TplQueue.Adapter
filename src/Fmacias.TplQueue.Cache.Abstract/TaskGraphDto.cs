@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Default implementation of <see cref="ITaskGraphDto"/> that transforms a payload runner graph

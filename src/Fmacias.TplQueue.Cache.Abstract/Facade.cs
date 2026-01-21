@@ -1,7 +1,7 @@
 using System;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Provides factory helpers to create cache-related DTOs and lease entries.

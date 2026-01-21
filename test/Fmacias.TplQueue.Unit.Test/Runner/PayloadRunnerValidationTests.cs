@@ -1,10 +1,9 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Runner;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Runner;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Runner
+namespace Fmacias.TplQueue.Test.Runner
 {
     [TestFixture]
     public class PayloadRunnerValidationTests

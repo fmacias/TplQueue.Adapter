@@ -1,10 +1,9 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Cache;
+using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Cache
+namespace Fmacias.TplQueue.Test.Cache
 {
     [TestFixture]
     public sealed class MemCacheTests

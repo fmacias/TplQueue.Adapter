@@ -1,6 +1,6 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache
+namespace Fmacias.TplQueue.Cache
 {
     internal sealed class CacheFactory : ICacheFactory
     {

@@ -1,8 +1,9 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Microsoft.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Fmaciasruano.TplQueue.Microsoft.DependencyInjection.Unit.Test
+namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 {
     internal sealed class FakeApi : IApi
     {

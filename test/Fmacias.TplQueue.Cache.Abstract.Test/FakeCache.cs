@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
+namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     internal sealed class FakeCache : CacheAbstract
     {

@@ -1,4 +1,4 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Fmaciasruano.TplQueue.Runner
+namespace Fmacias.TplQueue.Runner
 {
     internal class PayloadTaskRunner<TPayload> :
         ITaskRunnerAdapter,

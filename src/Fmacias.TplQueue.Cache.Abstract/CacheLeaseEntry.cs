@@ -1,8 +1,8 @@
 ﻿using System;
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Default in-memory implementation of <see cref="ICacheLeaseEntry"/>.
@@ -119,9 +119,9 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract
 
         public bool IsFinalized()
         {
-            return (Status == EntryStatus.Acknownledged ||
+            return Status == EntryStatus.Acknownledged ||
                 Status == EntryStatus.Canceled ||
-                Status == EntryStatus.Failed);
+                Status == EntryStatus.Failed;
         }
 
         public void MarkAsRootSuccessed()

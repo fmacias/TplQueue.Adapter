@@ -1,11 +1,11 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
-using Fmaciasruano.TplQueue.Observers;
-using Fmaciasruano.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Test.Observers
+namespace Fmacias.TplQueue.Test.Observers
 {
     [TestFixture()]
     public class TaskRunnerViewModelObserverTests

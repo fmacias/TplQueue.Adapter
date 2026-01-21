@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
+namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     [TestFixture]
     public sealed class CacheLeaseEntryTests

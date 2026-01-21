@@ -1,12 +1,12 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Serialization.SystemTextJson;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Fmaciasruano.TplQueue.Test.Serialization
+namespace Fmacias.TplQueue.Test.Serialization
 {
     [TestFixture]
     public class SystemTextJsonUniversalSerializerTests

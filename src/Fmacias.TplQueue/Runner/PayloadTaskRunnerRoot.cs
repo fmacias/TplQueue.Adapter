@@ -1,9 +1,8 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Threading;
 
-namespace Fmaciasruano.TplQueue.Runner
+namespace Fmacias.TplQueue.Runner
 {
     internal sealed class PayloadTaskRunnerRoot<TPayload> :
         PayloadTaskRunner<TPayload>,

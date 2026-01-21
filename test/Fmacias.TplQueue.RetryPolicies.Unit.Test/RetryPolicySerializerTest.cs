@@ -1,8 +1,9 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.RetryPolicies;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies.Test
+namespace Fmacias.TplQueue.RetryPolicies.Test
 {
     [TestFixture]
     public class RetryPolicySerializerTest

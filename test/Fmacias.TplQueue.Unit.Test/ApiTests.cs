@@ -1,9 +1,10 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Serialization.SystemTextJson;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test
+namespace Fmacias.TplQueue.Test
 {
     [TestFixture]
     public class ApiTests
