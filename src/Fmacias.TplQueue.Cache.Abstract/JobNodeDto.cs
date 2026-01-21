@@ -1,17 +1,17 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Concrete DTO for a payload task runner node.
     /// Enforces non-null <see cref="PayloadType"/> and <see cref="PayloadJson"/>.
     /// </summary>
-    internal sealed class TaskRunnerNodeDto : ITaskRunnerNodeDto
+    internal sealed class JobNodeDto : IJobNodeDto
     {
         /// <inheritdoc/>
-        public Guid TaskRunnerId { get; private set; }
-        public Guid ParentTaskRunnerId { get; private set; }
+        public Guid JobId { get; private set; }
+        public Guid ParentJobId { get; private set; }
 
         /// <inheritdoc/>
         public string? Name { get; private set; }
@@ -29,16 +29,16 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract
 
         public bool IsFifo { get; private set; }
 
-        private TaskRunnerNodeDto(Guid id, Guid parentId, string payloadType,
+        private JobNodeDto(Guid jobId, Guid parentJobId, string payloadType,
             string payloadJson, bool isRoot, bool isFifo,
             IRetryPolicyDescriptor retryPolicyDescriptor, string? name)
         {
-            if (id == Guid.Empty) throw new ArgumentException("Id cannot be empty.", nameof(id));
+            if (jobId == Guid.Empty) throw new ArgumentException("Id cannot be empty.", nameof(jobId));
             if (string.IsNullOrWhiteSpace(payloadType)) throw new ArgumentNullException(nameof(payloadType));
             if (string.IsNullOrEmpty(payloadJson)) throw new ArgumentNullException(nameof(payloadJson));
 
-            TaskRunnerId = id;
-            ParentTaskRunnerId = parentId;
+            JobId = jobId;
+            ParentJobId = parentJobId;
             Name = name;
             PayloadType = payloadType;
             PayloadJson = payloadJson;
@@ -51,8 +51,8 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract
         /// <summary>
         /// Factory enforcing required payload fields.
         /// </summary>
-        public static TaskRunnerNodeDto Create(Guid id, Guid parentId, string payloadType, string payloadJson, bool isRoot, bool isFifo, IRetryPolicyDescriptor retryPolicyDescriptor, string? name)
-            => new TaskRunnerNodeDto(id, parentId, payloadType, payloadJson, isRoot, isFifo, retryPolicyDescriptor, name);
+        public static JobNodeDto Create(Guid jobId, Guid parentJobId, string payloadType, string payloadJson, bool isRoot, bool isFifo, IRetryPolicyDescriptor retryPolicyDescriptor, string? name)
+            => new JobNodeDto(jobId, parentJobId, payloadType, payloadJson, isRoot, isFifo, retryPolicyDescriptor, name);
 
         public void UpdatePayloadJson(string payloadJson)
         {

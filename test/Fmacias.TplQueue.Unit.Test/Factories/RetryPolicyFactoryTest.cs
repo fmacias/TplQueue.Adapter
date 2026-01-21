@@ -1,9 +1,8 @@
 using NUnit.Framework;
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.RetryPolicies;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.RetryPolicies;
 
-namespace Fmaciasruano.TplQueue.Test.Factories
+namespace Fmacias.TplQueue.Test.Factories
 {
     [TestFixture]
     public class RetryPolicyFactoryTests

@@ -1,7 +1,7 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// Testing and Console specific implementation of <see cref="IObserverDispatcher"/>

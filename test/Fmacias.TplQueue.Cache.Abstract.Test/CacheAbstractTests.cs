@@ -1,9 +1,10 @@
 ﻿using System;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Cache.Abstract.Test;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
+namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     [TestFixture]
     public sealed class CacheAbstractTests
@@ -43,12 +44,12 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
                 knownRootId: Guid.NewGuid(),
                 knownEntry: null);
 
-            var root = new Mock<IPayloadTaskRunnerRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
             root.SetupGet(r => r.Name).Returns("root");
 
-            var rootAsCarrier = root.As<IPayloadCarrier>();
-            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrier>());
+            var rootAsCarrier = root.As<IPayloadCarrierJob>();
+            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
@@ -80,12 +81,12 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
                 knownRootId: Guid.NewGuid(), // different, so no entry found
                 knownEntry: null);
 
-            var root = new Mock<IPayloadTaskRunnerRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
 
-            var rootAsCarrier = root.As<IPayloadCarrier>();
-            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrier>());
+            var rootAsCarrier = root.As<IPayloadCarrierJob>();
+            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();

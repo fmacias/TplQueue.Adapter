@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
+namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     internal sealed class FakeCache : CacheAbstract
     {
-        private readonly List<(ITaskRunnerNodeDto Node, Guid RootId)> _appendedNodes = new();
+        private readonly List<(IJobNodeDto Node, Guid RootId)> _appendedNodes = new();
         private readonly Guid _knownRootId;
         private readonly ICacheLeaseEntry _knownEntry;
         private readonly List<ICacheLeaseEntry> _persistedEntries = new();
 
         public IReadOnlyList<ICacheLeaseEntry> PersistedEntries => _persistedEntries;
 
-        public IReadOnlyList<(ITaskRunnerNodeDto Node, Guid RootId)> AppendedNodes => _appendedNodes;
+        public IReadOnlyList<(IJobNodeDto Node, Guid RootId)> AppendedNodes => _appendedNodes;
 
         public FakeCache(
             IRetryPolicySerializable retryPolicySerializer,
@@ -26,7 +26,7 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             _knownEntry = knownEntry;
         }
 
-        protected override Action<ITaskRunnerNodeDto, Guid> AppendNodeCallBack =>
+        protected override Action<IJobNodeDto, Guid> AppendNodeCallBack =>
             (nodeDto, rootId) =>
             {
                 if (nodeDto is null) throw new ArgumentNullException(nameof(nodeDto));
@@ -34,7 +34,7 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             };
 
 
-        public override bool TryLeaseNextRoot(out IPayloadCarrierRoot payloadCarrierRoot, out ICacheLeaseEntry lease)
+        public override bool TryLeaseNextRoot(out IPayloadJobRoot payloadCarrierRoot, out ICacheLeaseEntry lease)
         {
             payloadCarrierRoot = null!;
             lease = null!;
@@ -66,7 +66,7 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             throw new NotImplementedException();
         }
 
-        public override ICacheLeaseEntry GetByTaskRunnerId(Guid id)
+        public override ICacheLeaseEntry GetByJobId(Guid id)
         {
             // Not needed for current tests.
             throw new NotImplementedException();
@@ -88,7 +88,7 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             throw new NotImplementedException();
         }
 
-        public override void SuccessRootNode(Guid taskRunnerRootId)
+        public override void SuccessRootNode(Guid JobRootId)
         {
             throw new NotImplementedException();
         }

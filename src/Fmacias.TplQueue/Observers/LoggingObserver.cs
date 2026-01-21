@@ -1,44 +1,43 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
     /// Centralizes queue logging via IObserver events to keep the queue engine free of ILogger calls.
     /// Uses LoggerMessage.Define to avoid CA1848 and reduce allocations on hot paths.
     /// </summary>
-    internal sealed class TaskQueueLoggingObserver : ITaskQueueLoggingObserver
+    internal sealed class LoggingObserver : ILoggingObserver
     {
-        private readonly ILogger<ITaskQueueLoggingObserver> _logger;
+        private readonly ILogger<ILoggingObserver> _logger;
 
-        private TaskQueueLoggingObserver(ILogger<ITaskQueueLoggingObserver> logger)
+        private LoggingObserver(ILogger<ILoggingObserver> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public static TaskQueueLoggingObserver Create(ILogger<ITaskQueueLoggingObserver> logger)
+        public static LoggingObserver Create(ILogger<ILoggingObserver> logger)
         {
-            return new TaskQueueLoggingObserver(logger);
+            return new LoggingObserver(logger);
         }
 
-        public void OnNext(ITaskRunnerEvent e)
+        public void OnNext(IJobEvent e)
         {
-            // Null checks are defensive; DTO snapshots should be fully populated.
-            var name = e?.RunnerDTO?.Name ?? "<unknown>";
+            var name = e?.JobDTO?.Name ?? "<unknown>";
             switch (e?.Status)
             {
-                case TaskRunnerEventStatus.Cache: _logEnqueueing(_logger, name, null); break;
-                case TaskRunnerEventStatus.Enqueueing: _logEnqueueing(_logger, name, null); break;
-                case TaskRunnerEventStatus.Enqueued: _logEnqueued(_logger, name, null); break;
-                case TaskRunnerEventStatus.Dequeued: _logDequeued(_logger, name, null); break;
-                case TaskRunnerEventStatus.Started: _logStarted(_logger, name, null); break;
-                case TaskRunnerEventStatus.Running: _logRunning(_logger, name, e.RetryCount, null); break;
-                case TaskRunnerEventStatus.Successed: _logFinalized(_logger, name, null); break;
-                case TaskRunnerEventStatus.RootSuccessed: _logRootFinalized(_logger, name, null); break;
-                case TaskRunnerEventStatus.Canceled: _logCanceled(_logger, name, e.Exception); break;
-                case TaskRunnerEventStatus.Failed: _logFailed(_logger, name, e.Exception); break;
-                case TaskRunnerEventStatus.Requeuing: _logReenqueue(_logger, name, e.RetryCount, null); break;
+                case JobEventStatus.Cache: _logEnqueueing(_logger, name, null); break;
+                case JobEventStatus.Enqueueing: _logEnqueueing(_logger, name, null); break;
+                case JobEventStatus.Enqueued: _logEnqueued(_logger, name, null); break;
+                case JobEventStatus.Dequeued: _logDequeued(_logger, name, null); break;
+                case JobEventStatus.Started: _logStarted(_logger, name, null); break;
+                case JobEventStatus.Running: _logRunning(_logger, name, e.RetryCount, null); break;
+                case JobEventStatus.Successed: _logFinalized(_logger, name, null); break;
+                case JobEventStatus.RootSuccessed: _logRootFinalized(_logger, name, null); break;
+                case JobEventStatus.Canceled: _logCanceled(_logger, name, e.Exception); break;
+                case JobEventStatus.Failed: _logFailed(_logger, name, e.Exception); break;
+                case JobEventStatus.Requeuing: _logReenqueue(_logger, name, e.RetryCount, null); break;
                 default: _logUnknown(_logger, name, null); break;
             }
         }

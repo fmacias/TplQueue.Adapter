@@ -1,14 +1,13 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Cache;
-using Fmaciasruano.TplQueue.Observers;
-using Fmaciasruano.TplQueue.Queues;
-using Fmaciasruano.TplQueue.RetryPolicies;
-using Fmaciasruano.TplQueue.Runner;
+using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Jobs;
+using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Queues;
+using Fmacias.TplQueue.RetryPolicies;
 using System;
 using System.Collections.Generic;
 
-namespace Fmaciasruano.TplQueue
+namespace Fmacias.TplQueue
 {
     public class API : IApi
     {
@@ -35,14 +34,14 @@ namespace Fmaciasruano.TplQueue
         {
             return ObserverFactory.Instance();
         }
-        public IPayloadRunnerFactory GetPayloadRunnerFactory()
+        public IPayloadJobFactory GetPayloadJobFactory()
         {
             var retryFactory = RetryPolicyFactory.Instance(
                 new Dictionary<string, RetryPolicyOptions>());
 
             return PayloadRunnerFactory.Instance(
-                _coreApi.GetTaskRunnerFactory(),
-                _coreApi.GetTaskRunnerRootFactory(),
+                _coreApi.GetJobFactory(),
+                _coreApi.GetJobRootFactory(),
                 retryFactory);
         }
 
@@ -53,22 +52,22 @@ namespace Fmaciasruano.TplQueue
             return RetryPolicyFactory.Instance(options);
         }
 
-        public ISerializableDispatcherFactory GetSerializableDispatcherFactory()
+        public ICacheableChainFactory GetSerializableDispatcherFactory()
         {
-            return SerializableDispatcherFactory.Instance();
+            return CacheableChainFactory.Instance();
         }
 
-        public ITaskDispatcherFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IDispatcherOptions> options, IRetryPolicyFactory retries)
+        public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
         {
             return _coreApi.GetTaskDispatcherFactory(options, retries);
         }
-        public ITaskRunnerFactory GetTaskRunnerFactory()
+        public IJobFactory GetJobFactory()
         {
-            return _coreApi.GetTaskRunnerFactory();
+            return _coreApi.GetJobFactory();
         }
-        public ITaskRunnerRootFactory GetTaskRunnerRootFactory()
+        public IJobRootFactory GetJobRootFactory()
         {
-            return _coreApi.GetTaskRunnerRootFactory();
+            return _coreApi.GetJobRootFactory();
         }
     }
 }

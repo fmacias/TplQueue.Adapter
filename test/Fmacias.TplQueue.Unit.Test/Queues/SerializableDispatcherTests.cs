@@ -1,14 +1,9 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Queues;
+using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Queues
+namespace Fmacias.TplQueue.Test.Queues
 {
     [TestFixture]
     public class SerializableDispatcherTests
@@ -18,12 +13,12 @@ namespace Fmaciasruano.TplQueue.Test.Queues
         {
             var leaseCache = new Mock<IPayloadLeaseCache>(MockBehavior.Strict);
             var dispatcherMock = CreateDispatcherMock(slots: 0);
-            var dispatcher = SerializableDispatcher.Create(Mock.Of<ILogger<ISerializablePayloadDispatcher>>(), leaseCache.Object, dispatcherMock.Object);
+            var dispatcher = CacheableChain.Create(Mock.Of<ILogger<ICacheablePayloadChain>>(), leaseCache.Object, dispatcherMock.Object);
 
-            var leased = ((SerializableDispatcher)dispatcher).TryLeaseWorkOnce();
+            var leased = ((CacheableChain)dispatcher).TryLeaseWorkOnce();
 
             Assert.That(leased, Is.False);
-            leaseCache.Verify(c => c.TryLeaseNextRoot(out It.Ref<IPayloadCarrierRoot>.IsAny!, out It.Ref<ICacheLeaseEntry>.IsAny!), Times.Never);
+            leaseCache.Verify(c => c.TryLeaseNextRoot(out It.Ref<IPayloadJobRoot>.IsAny!, out It.Ref<ICacheLeaseEntry>.IsAny!), Times.Never);
             dispatcher.Dispose();
         }
 
@@ -37,22 +32,22 @@ namespace Fmaciasruano.TplQueue.Test.Queues
             var runnerRoot = new TestPayloadCarrierRoot();
 
             // IMPORTANT: provide actual out vars
-            IPayloadCarrierRoot outRoot = runnerRoot;
+            IPayloadJobRoot outRoot = runnerRoot;
             ICacheLeaseEntry outLease = lease;
 
             leaseCache
                 .Setup(x => x.TryLeaseNextRoot(out outRoot, out outLease))
                 .Returns(true);
 
-            ITaskRunnerRoot? addedRoot = null;
+            IJobRoot? addedRoot = null;
             bool? addedFifo = null;
             CancellationToken? addedToken = null;
 
             var dispatcherMock = CreateDispatcherMock(slots: 1);
 
             dispatcherMock
-                .Setup(d => d.AddToQueue(It.IsAny<ITaskRunnerRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-                .Callback<ITaskRunnerRoot, bool, CancellationToken>((r, f, t) =>
+                .Setup(d => d.AddToQueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                .Callback<IJobRoot, bool, CancellationToken>((r, f, t) =>
                 {
                     addedRoot = r;
                     addedFifo = f;
@@ -60,13 +55,13 @@ namespace Fmaciasruano.TplQueue.Test.Queues
                 })
                 .Returns(dispatcherMock.Object);
 
-            var dispatcher = SerializableDispatcher.Create(
-                Mock.Of<ILogger<ISerializablePayloadDispatcher>>(),
+            var dispatcher = CacheableChain.Create(
+                Mock.Of<ILogger<ICacheablePayloadChain>>(),
                 leaseCache.Object,
                 dispatcherMock.Object);
 
             // Act
-            var leased = ((SerializableDispatcher)dispatcher).TryLeaseWorkOnce();
+            var leased = ((CacheableChain)dispatcher).TryLeaseWorkOnce();
 
             // Assert
             Assert.That(leased, Is.True);
@@ -77,24 +72,24 @@ namespace Fmaciasruano.TplQueue.Test.Queues
         }
 
         [Test]
-        public async Task TaskRunnerEventCallback_AcknowledgesLifecycle()
+        public async Task JobEventCallback_AcknowledgesLifecycle()
         {
             var leaseCache = new Mock<IPayloadLeaseCache>();
             var dispatcherMock = CreateDispatcherMock(slots: 1);
             var payloadData = Mock.Of<ISerializedPayload>();
-            var runnerInfo = new Mock<ITaskRunnerInfo>();
+            var runnerInfo = new Mock<IJobInfo>();
             var runnerId = Guid.NewGuid();
 
             runnerInfo.SetupGet(r => r.Id).Returns(runnerId);
             runnerInfo.SetupGet(r => r.PayloadSerializedData).Returns(payloadData);
 
-            var dispatcher = SerializableDispatcher.Create(Mock.Of<ILogger<ISerializablePayloadDispatcher>>(), leaseCache.Object, dispatcherMock.Object);
+            var dispatcher = CacheableChain.Create(Mock.Of<ILogger<ICacheablePayloadChain>>(), leaseCache.Object, dispatcherMock.Object);
             var callback = dispatcher.InternalEventDelegator;
 
-            await callback(CreateEvent(TaskRunnerEventStatus.Successed, runnerInfo.Object));
-            await callback(CreateEvent(TaskRunnerEventStatus.Failed, runnerInfo.Object));
-            await callback(CreateEvent(TaskRunnerEventStatus.Canceled, runnerInfo.Object));
-            await callback(CreateEvent(TaskRunnerEventStatus.RootSuccessed, runnerInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Successed, runnerInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Failed, runnerInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Canceled, runnerInfo.Object));
+            await callback(CreateEvent(JobEventStatus.RootSuccessed, runnerInfo.Object));
             
             leaseCache.Verify(c => c.AckNode(runnerId, payloadData), Times.Once);
             leaseCache.Verify(c => c.FailNode(runnerId, It.IsAny<string?>()), Times.Once);
@@ -108,11 +103,11 @@ namespace Fmaciasruano.TplQueue.Test.Queues
         public void LeasingPulseMs_NonPositiveValue_ResetsToDefault()
         {
             // Arrange
-            var logger = Mock.Of<ILogger<ISerializablePayloadDispatcher>>();
+            var logger = Mock.Of<ILogger<ICacheablePayloadChain>>();
             var cache = Mock.Of<IPayloadLeaseCache>();
-            var innerDispatcher = Mock.Of<ITaskDispatcher>();
+            var innerDispatcher = Mock.Of<IJobsChain>();
 
-            var dispatcher = SerializableDispatcher.Create(
+            var dispatcher = CacheableChain.Create(
                 logger,
                 cache,
                 innerDispatcher);
@@ -131,36 +126,36 @@ namespace Fmaciasruano.TplQueue.Test.Queues
             Assert.That(afterNegative, Is.EqualTo(defaultValue));
         }
 
-        private static ITaskRunnerEvent CreateEvent(TaskRunnerEventStatus status, ITaskRunnerInfo info)
+        private static IJobEvent CreateEvent(JobEventStatus status, IJobInfo info)
         {
-            var evt = new Mock<ITaskRunnerEvent>();
+            var evt = new Mock<IJobEvent>();
             evt.SetupGet(e => e.Status).Returns(status);
-            evt.SetupGet(e => e.RunnerDTO).Returns(info);
+            evt.SetupGet(e => e.JobDTO).Returns(info);
             evt.SetupGet(e => e.Timestamp).Returns(DateTime.UtcNow);
             return evt.Object;
         }
 
-        private static Mock<ITaskDispatcher> CreateDispatcherMock(int slots)
+        private static Mock<IJobsChain> CreateDispatcherMock(int slots)
         {
-            var dispatcherMock = new Mock<ITaskDispatcher>();
+            var dispatcherMock = new Mock<IJobsChain>();
             dispatcherMock.SetupProperty(d => d.InternalEventDelegator);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             dispatcherMock.SetupGet(d => d.PulseMs).Returns(10_000);
             dispatcherMock.Setup(d => d.Dispose());
-            dispatcherMock.Setup(d => d.Subscribe(It.IsAny<IObserver<ITaskRunnerEvent>>())).Returns(Mock.Of<IDisposable>());
+            dispatcherMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());
             dispatcherMock.SetupGet(d => d.Name).Returns("dispatcher");
             dispatcherMock.SetupGet(d => d.MaxParallelism).Returns(1);
             dispatcherMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());
             dispatcherMock.SetupGet(d => d.IsDisposed).Returns(false);
-            dispatcherMock.Setup(d => d.StartPolling());
-            dispatcherMock.Setup(d => d.StopPolling());
-            dispatcherMock.Setup(d => d.Enqueue(It.IsAny<ITaskRunnerRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
-            dispatcherMock.Setup(d => d.EnqueueFifo(It.IsAny<ITaskRunnerRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
+            dispatcherMock.Setup(d => d.Start());
+            dispatcherMock.Setup(d => d.Pause());
+            dispatcherMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
+            dispatcherMock.Setup(d => d.EnqueueFifo(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
 
             return dispatcherMock;
         }
 
-        private class TestPayloadCarrierRoot : IPayloadCarrierRoot
+        private class TestPayloadCarrierRoot : IPayloadJobRoot
         {
             public Guid Id { get; } = Guid.NewGuid();
             public string Name { get; } = "payload-root";
@@ -169,28 +164,28 @@ namespace Fmaciasruano.TplQueue.Test.Queues
             public TimeSpan ExecutionTime => TimeSpan.Zero;
             public DateTime ExecutionEnd => DateTime.UtcNow;
             public TaskStatus Status => TaskStatus.Created;
-            public IReadOnlyCollection<ITaskRunnerInfo> Dependencies { get; } = Array.Empty<ITaskRunnerInfo>();
+            public IReadOnlyCollection<IJobInfo> Dependencies { get; } = Array.Empty<IJobInfo>();
             public ISerializedPayload PayloadSerializedData { get; } = Mock.Of<ISerializedPayload>();
             public object GetPayload() => new object();
             public Type PayloadType => typeof(object);
-            public IReadOnlyList<IPayloadCarrier> GetPayloadDependencies() => Array.Empty<IPayloadCarrier>();
-            public ITaskRunner After(params ITaskRunner[] previousTasks) => this;
-            public ITaskRunner[] GetBatch() => Array.Empty<ITaskRunner>();
-            public ITaskRunnerInfo[] GetInfoDependencies() => Array.Empty<ITaskRunnerInfo>();
-            public void SetRoot(ITaskRunnerRoot taskRunnerRoot) { }
-            public ITaskRunnerInfo CopyInfo() => this;
+            public IReadOnlyList<IPayloadCarrierJob> GetPayloadDependencies() => Array.Empty<IPayloadCarrierJob>();
+            public IJob After(params IJob[] previousTasks) => this;
+            public IJob[] GetJobsBatch() => Array.Empty<IJob>();
+            public IJobInfo[] GetJobInfoDependencies() => Array.Empty<IJobInfo>();
+            public void SetRoot(IJobRoot jobRootId) { }
+            public IJobInfo CopyInfo() => this;
             public Func<IRetryPolicy> GetRetryPolicyFactory() => () => Mock.Of<IRetryPolicy>();
             public Task WaitUntilFinishedAsync() => Task.CompletedTask;
-            public ITaskDispatcher Enqueue(ITaskDispatcher queue, CancellationToken ct) => queue;
+            public IJobsChain Enqueue(IJobsChain queue, CancellationToken ct) => queue;
         }
 
         private class TestLeaseEntry : ICacheLeaseEntry
         {
             public Guid LeaseId { get; } = Guid.NewGuid();
-            public Guid TaskRunnerRootId { get; } = Guid.NewGuid();
-            public Guid TaskRunnerId { get; } = Guid.NewGuid();
-            public Guid ParentTaskRunnerId { get; } = Guid.NewGuid();
-            public ITaskRunnerNodeDto TaskRunnerNodeDto => Mock.Of<ITaskRunnerNodeDto>();
+            public Guid JobRootId { get; } = Guid.NewGuid();
+            public Guid JobId { get; } = Guid.NewGuid();
+            public Guid ParentJobId { get; } = Guid.NewGuid();
+            public IJobNodeDto JobNodeDto => Mock.Of<IJobNodeDto>();
             public DateTime CacheUtc { get; } = DateTime.UtcNow;
             public bool IsFifo { get; set; }
             public CancellationToken CancellationToken { get; set; }

@@ -1,8 +1,8 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Observers.ViewModel;
 using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     internal sealed class ObserverFactory : IObserverFactory
     {
@@ -11,14 +11,14 @@ namespace Fmaciasruano.TplQueue.Observers
         {
             return new ObserverFactory();
         }
-        public ITaskRunnerConsoleObserver CreateConsoleObserver()
+        public IConsoleObserver CreateConsoleObserver()
         {
-            return TaskRunnerConsoleObserver.Create();
+            return ConsoleObserver.Create();
         }
 
-        public ITaskQueueLoggingObserver CreateLoggingObserver(ILogger<ITaskQueueLoggingObserver> logger)
+        public ILoggingObserver CreateLoggingObserver(ILogger<ILoggingObserver> logger)
         {
-            return TaskQueueLoggingObserver.Create(logger);
+            return LoggingObserver.Create(logger);
         }
 
         public IObserverDispatcher CreateObserverDispatcher()
@@ -28,11 +28,11 @@ namespace Fmaciasruano.TplQueue.Observers
 
         public IProfilingObserver CreateProfilingObserver(ILogger<IProfilingObserver> logger)
         {
-            return TaskRunnerProfilingObserver.Create(logger);
+            return ProfilingObserver.Create(logger);
         }
-        public ITaskRunnerViewModelObserver CreateViewModeObserver(IObserverDispatcher observerDispatcher)
+        public IViewModelObserver CreateViewModeObserver(IObserverDispatcher observerDispatcher)
         {
-            return TaskRunnerViewModelObserver.Create(observerDispatcher);
+            return ViewModelObserver.Create(observerDispatcher);
         }
     }
 }

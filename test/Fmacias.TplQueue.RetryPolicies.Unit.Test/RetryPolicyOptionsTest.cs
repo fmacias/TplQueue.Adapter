@@ -1,8 +1,8 @@
 using System;
-using Fmaciasruano.TplQueue.Abstractions;
+using Fmacias.TplQueue;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies.Test
+namespace Fmacias.TplQueue.RetryPolicies.Test
 {
     [TestFixture]
     public class RetryPolicyOptionsTest

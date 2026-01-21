@@ -1,6 +1,6 @@
-﻿using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Log;
-using Fmaciasruano.TplQueue.Queues;
+﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Log;
+using Fmacias.TplQueue.Queues;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// <![CDATA[
 /// Dispatcher that persists payload graphs into an IPayloadLeaseCache and
-/// rehydrates/leases them into an inner ITaskDispatcher when execution
+/// rehydrates/leases them into an inner IJobsChain when execution
 /// capacity is available.
 ///
 /// The execution semantics are:
@@ -21,14 +21,14 @@ using System.Threading.Tasks;
 /// - Leasing loop: while leasing is enabled and the inner dispatcher has free
 ///   semaphore slots, TryLeaseWorkOnce() is invoked to lease a single root
 ///   and enqueue it into the inner dispatcher;
-/// - TaskRunner events (Completed/Failed/Canceled) update the lease cache
+/// - Job events (Completed/Failed/Canceled) update the lease cache
 ///   via the InternalEventDelegator callback.
 ///
 /// This dispatcher does not execute work directly. It only bridges between
 /// the durable lease cache and the in-memory task dispatcher.
 /// ]]>
 ///</summary>
-internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerializablePayloadDispatcher
+internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
 {
     /// <summary>
     /// <![CDATA[
@@ -39,7 +39,7 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// </summary>
     private const int LEASING_PULSE_MS = 100;
 
-    private readonly ILogger<ISerializablePayloadDispatcher> _logger;
+    private readonly ILogger<ICacheablePayloadChain> _logger;
     private readonly IPayloadLeaseCache _leaseCache;
     private readonly Dictionary<Guid, CancellationToken> _cancelationTokentByRootId = new();
     private readonly CancellationTokenSource _leasingCts = new();
@@ -77,7 +77,7 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// <![CDATA[
     /// Initializes a new instance of the SerializableDispatcher class.
     ///
-    /// The dispatcher wraps an inner ITaskDispatcher implementation and uses an
+    /// The dispatcher wraps an inner IJobsChain implementation and uses an
     /// IPayloadLeaseCache to persist and later rehydrate payload graphs.
     ///
     /// InternalEventDelegator is wired to a local callback that keeps the lease
@@ -86,39 +86,39 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// </summary>
     /// <param name="logger">Logger instance for diagnostic messages.</param>
     /// <param name="leaseCache">Lease cache that stores payload graphs and their leasing state.</param>
-    /// <param name="dispatcher">Inner task dispatcher that executes the rehydrated runners.</param>
+    /// <param name="chain">Inner task dispatcher that executes the rehydrated runners.</param>
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="logger"/> or <paramref name="leaseCache"/> is <c>null</c>.
     /// </exception>
-    private SerializableDispatcher(
-        ILogger<ISerializablePayloadDispatcher> logger,
+    private CacheableChain(
+        ILogger<ICacheablePayloadChain> logger,
         IPayloadLeaseCache leaseCache,
-        ITaskDispatcher dispatcher)
-        : base(dispatcher)
+        IJobsChain chain)
+        : base(chain)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _leaseCache = leaseCache ?? throw new ArgumentNullException(nameof(leaseCache));
 
-        InternalEventDelegator = TaskRunnerEventCallback;
+        InternalEventDelegator = JobEventCallback;
         _isLeasingEnabled = false;
     }
 
     /// <summary>
     /// <![CDATA[
-    /// Creates a new SerializableDispatcher instance for the given logger,
-    /// lease cache and inner dispatcher.
+    /// Creates a new CacheableChain instance for the given logger,
+    /// lease cache and inner chain.
     /// ]]>
     /// </summary>
     /// <param name="logger">Logger instance for diagnostic messages.</param>
     /// <param name="cache">Lease cache used to persist and lease payload graphs.</param>
-    /// <param name="dispatcher">Inner task dispatcher that will execute leased graphs.</param>
+    /// <param name="chain">Inner task dispatcher that will execute leased graphs.</param>
     /// <returns>A configured ISerializablePayloadDispatcher instance.</returns>
-    public static ISerializablePayloadDispatcher Create(
-        ILogger<ISerializablePayloadDispatcher> logger,
+    public static ICacheablePayloadChain Create(
+        ILogger<ICacheablePayloadChain> logger,
         IPayloadLeaseCache cache,
-        ITaskDispatcher dispatcher)
+        IJobsChain chain)
     {
-        return new SerializableDispatcher(logger, cache, dispatcher);
+        return new CacheableChain(logger, cache, chain);
     }
 
     /// <summary>
@@ -131,22 +131,22 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// ]]>
     /// </summary>
     /// <typeparam name="TPayload">Type of the payload command.</typeparam>
-    /// <param name="payloadRunnerRoot">Root payload runner that represents the graph to be persisted.</param>
+    /// <param name="payloadJobRoot">Root payload runner that represents the graph to be persisted.</param>
     /// <param name="ct">
     /// Cancellation token associated with this job. If cancellation is requested
     /// before leasing/execution, the lease cache may mark the entry as canceled.
     /// </param>
     /// <returns>The current dispatcher instance, to allow fluent calls.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="payloadRunnerRoot"/> is <c>null</c>.
+    /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public ITaskDispatcher Enqueue<TPayload>(
-        IPayloadTaskRunnerRoot<TPayload> payloadRunnerRoot,
+    public IJobsChain Enqueue<TPayload>(
+        IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayloadCommand
     {
-        if (payloadRunnerRoot is null) throw new ArgumentNullException(nameof(payloadRunnerRoot));
-        CacheNode(payloadRunnerRoot, isFifo:false, ct);
+        if (payloadJobRoot is null) throw new ArgumentNullException(nameof(payloadJobRoot));
+        CacheNode(payloadJobRoot, isFifo:false, ct);
         return this;
     }
 
@@ -161,22 +161,22 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// ]]>
     /// </summary>
     /// <typeparam name="TPayload">Type of the payload command.</typeparam>
-    /// <param name="payloadRunnerRoot">Root payload runner to be persisted.</param>
+    /// <param name="payloadJobRoot">Root payload runner to be persisted.</param>
     /// <param name="ct">
     /// Cancellation token associated with this job. If cancellation is requested
     /// before leasing/execution, the lease cache may mark the entry as canceled.
     /// </param>
     /// <returns>The current dispatcher instance, to allow fluent calls.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="payloadRunnerRoot"/> is <c>null</c>.
+    /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public ITaskDispatcher EnqueueFifo<TPayload>(
-        IPayloadTaskRunnerRoot<TPayload> payloadRunnerRoot,
+    public IJobsChain EnqueueFifo<TPayload>(
+        IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayloadCommand
     {
-        if (payloadRunnerRoot is null) throw new ArgumentNullException(nameof(payloadRunnerRoot));
-        CacheNode(payloadRunnerRoot, isFifo:true, ct);
+        if (payloadJobRoot is null) throw new ArgumentNullException(nameof(payloadJobRoot));
+        CacheNode(payloadJobRoot, isFifo:true, ct);
         return this;
     }
 
@@ -188,9 +188,9 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// If a task already exists and is still running, leasing is simply re-enabled.
     /// ]]>
     /// </summary>
-    public override void StartPolling()
+    public override void Start()
     {
-        base.StartPolling();
+        base.Start();
 
         _isLeasingEnabled = true;
 
@@ -209,10 +209,10 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// as long as this dispatcher has not been disposed.
     /// ]]>
     /// </summary>
-    public override void StopPolling()
+    public override void Pause()
     {
         _isLeasingEnabled = false;
-        base.StopPolling();
+        base.Pause();
     }
 
     /// <summary>
@@ -243,7 +243,7 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
                 {
                     try
                     {
-                        var inner = GetInnerQueue();
+                        var inner = GetInnerChain();
 
                         if (inner.Semaphore.CurrentCount > 0)
                         {
@@ -283,7 +283,7 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// </returns>
     internal bool TryLeaseWorkOnce()
     {
-        var semaphore = GetInnerQueue().Semaphore;
+        var semaphore = GetInnerChain().Semaphore;
 
         if (semaphore.CurrentCount <= 0)
         {
@@ -334,41 +334,41 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
     /// <param name="e">Task runner event produced by the inner dispatcher.</param>
     /// <returns>A completed task; no asynchronous work is performed.</returns>
     [SuppressMessage("Design", "CA1031", Justification = "Observers must not break the dispatcher.")]
-    private Task TaskRunnerEventCallback(ITaskRunnerEvent e)
+    private Task JobEventCallback(IJobEvent e)
     {
-        if (e is null || e.RunnerDTO is null)
+        if (e is null || e.JobDTO is null)
         {
             return Task.CompletedTask;
         }
 
-        var dto = e.RunnerDTO;
-        var taskRunnerId = dto.Id;
+        var dto = e.JobDTO;
+        var jobId = dto.Id;
 
         try
         {
             switch (e.Status)
             {
-                case TaskRunnerEventStatus.Successed:
-                    _leaseCache.AckNode(taskRunnerId, dto.PayloadSerializedData);
+                case JobEventStatus.Successed:
+                    _leaseCache.AckNode(jobId, dto.PayloadSerializedData);
                     break;
 
-                case TaskRunnerEventStatus.Failed:
-                    _leaseCache.FailNode(taskRunnerId, e.Exception?.Message);
+                case JobEventStatus.Failed:
+                    _leaseCache.FailNode(jobId, e.Exception?.Message);
                     break;
 
-                case TaskRunnerEventStatus.Canceled:
-                    _leaseCache.CancelNode(taskRunnerId);
+                case JobEventStatus.Canceled:
+                    _leaseCache.CancelNode(jobId);
                     break;
-                case TaskRunnerEventStatus.RootSuccessed:
-                    _leaseCache.SuccessRootNode(taskRunnerId);
+                case JobEventStatus.RootSuccessed:
+                    _leaseCache.SuccessRootNode(jobId);
                     break;
             }
 
-            if (_leaseCache.DeleteRootNode(taskRunnerId))
+            if (_leaseCache.DeleteRootNode(jobId))
             {
                 LogMessages.CacheRootTerminalAck(
                     _logger,
-                    taskRunnerId,
+                    jobId,
                     null);
             }
         }
@@ -413,7 +413,7 @@ internal sealed class SerializableDispatcher : TplTaskDispatcherAdapter, ISerial
         _leasingCts.Dispose();
         base.Dispose();
     }
-    private void CacheNode<TPayload>(IPayloadTaskRunnerRoot<TPayload> payloadRunnerRoot, bool isFifo, CancellationToken ct) where TPayload : IPayloadCommand
+    private void CacheNode<TPayload>(IPayloadJobRoot<TPayload> payloadRunnerRoot, bool isFifo, CancellationToken ct) where TPayload : IPayloadCommand
     {
         _ = _leaseCache.Append(payloadRunnerRoot, isFifo);
         _cancelationTokentByRootId.Add(payloadRunnerRoot.Id, ct);

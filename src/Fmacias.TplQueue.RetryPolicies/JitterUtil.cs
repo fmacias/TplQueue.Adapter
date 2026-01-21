@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies
+namespace Fmacias.TplQueue.RetryPolicies
 {
     /// <summary>
     /// Crypto-based jitter helpers for delay randomization.

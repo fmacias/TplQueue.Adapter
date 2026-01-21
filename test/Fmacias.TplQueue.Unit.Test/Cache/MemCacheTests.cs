@@ -1,10 +1,9 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Cache;
+using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Cache
+namespace Fmacias.TplQueue.Test.Cache
 {
     [TestFixture]
     public sealed class MemCacheTests
@@ -14,7 +13,7 @@ namespace Fmaciasruano.TplQueue.Test.Cache
         {
             var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Strict);
             var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
-            var runnerFactory = new Mock<IPayloadRunnerFactory>(MockBehavior.Strict);
+            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
 
             var cache = MemCache.Create(runnerFactory.Object, payloadSerializer.Object);
 
@@ -39,31 +38,31 @@ namespace Fmaciasruano.TplQueue.Test.Cache
                 .Setup(s => s.ToDescriptor())
                 .Returns(retryDescriptor);
 
-            var runnerFactory = new Mock<IPayloadRunnerFactory>(MockBehavior.Strict);
+            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
 
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
 
-            var rootCarrier = new Mock<IPayloadCarrierRoot>(MockBehavior.Strict);
-            var capturedDependencies = new List<ITaskRunner>();
+            var rootCarrier = new Mock<IPayloadJobRoot>(MockBehavior.Strict);
+            var capturedDependencies = new List<IJob>();
 
             rootCarrier.SetupGet(r => r.Id).Returns(rootId);
             rootCarrier
-                .Setup(r => r.After(It.IsAny<ITaskRunner[]>()))
-                .Callback<ITaskRunner[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<ITaskRunner>()))
+                .Setup(r => r.After(It.IsAny<IJob[]>()))
+                .Callback<IJob[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<IJob>()))
                 .Returns(rootCarrier.Object);
 
-            var childCarrier = new Mock<IPayloadCarrier>(MockBehavior.Strict);
+            var childCarrier = new Mock<IPayloadCarrierJob>(MockBehavior.Strict);
             childCarrier.SetupGet(c => c.Id).Returns(childId);
             childCarrier
-                .Setup(c => c.After(It.IsAny<ITaskRunner[]>()))
+                .Setup(c => c.After(It.IsAny<IJob[]>()))
                 .Returns(childCarrier.Object);
 
             runnerFactory
-                .Setup(f => f.LoadRoot(It.Is<ICacheLeaseEntry>(e => e.TaskRunnerId == rootId), payloadSerializer.Object))
+                .Setup(f => f.LoadRoot(It.Is<ICacheLeaseEntry>(e => e.JobId == rootId), payloadSerializer.Object))
                 .Returns(rootCarrier.Object);
             runnerFactory
-                .Setup(f => f.Load(It.Is<ICacheLeaseEntry>(e => e.TaskRunnerId == childId), payloadSerializer.Object))
+                .Setup(f => f.Load(It.Is<ICacheLeaseEntry>(e => e.JobId == childId), payloadSerializer.Object))
                 .Returns(childCarrier.Object);
 
             var (rootRunner, _) = CreateTaskGraph(rootId, childId);
@@ -73,8 +72,8 @@ namespace Fmaciasruano.TplQueue.Test.Cache
 
             var leased = cache.TryLeaseNextRoot(out var payloadCarrierRoot, out var lease);
 
-            var rootLease = cache.GetByTaskRunnerId(rootId);
-            var childLease = cache.GetByTaskRunnerId(childId);
+            var rootLease = cache.GetByJobId(rootId);
+            var childLease = cache.GetByJobId(childId);
 
             Assert.Multiple(() =>
             {
@@ -100,7 +99,7 @@ namespace Fmaciasruano.TplQueue.Test.Cache
                 .Setup(s => s.ToDescriptor())
                 .Returns(Mock.Of<IRetryPolicyDescriptor>());
 
-            var runnerFactory = new Mock<IPayloadRunnerFactory>(MockBehavior.Strict);
+            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
 
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
@@ -109,8 +108,8 @@ namespace Fmaciasruano.TplQueue.Test.Cache
             var cache = MemCache.Create(runnerFactory.Object, payloadSerializer.Object);
             cache.Append(rootRunner.Object, isFifo: false);
 
-            var rootLease = cache.GetByTaskRunnerId(rootId);
-            var childLease = cache.GetByTaskRunnerId(childId);
+            var rootLease = cache.GetByJobId(rootId);
+            var childLease = cache.GetByJobId(childId);
 
             rootLease.MarkAsDeleted();
             childLease.MarkFailed();
@@ -119,33 +118,33 @@ namespace Fmaciasruano.TplQueue.Test.Cache
 
             Assert.Multiple(() =>
             {
-                Assert.That(cache.GetByTaskRunnerId(rootId), Is.Null);
+                Assert.That(cache.GetByJobId(rootId), Is.Null);
                 Assert.That(childLease.Status, Is.EqualTo(EntryStatus.Failed));
             });
         }
 
-        private static (Mock<IPayloadTaskRunnerRoot<IPayloadCommand>> root, Mock<IPayloadCarrier> child) CreateTaskGraph(
+        private static (Mock<IPayloadJobRoot<IPayloadCommand>> root, Mock<IPayloadCarrierJob> child) CreateTaskGraph(
             Guid rootId,
             Guid childId)
         {
             var retryPolicy = new Func<IRetryPolicy>(() => Mock.Of<IRetryPolicy>());
             var childPayload = new DummyPayload();
-            var child = new Mock<IPayloadCarrier>(MockBehavior.Strict);
+            var child = new Mock<IPayloadCarrierJob>(MockBehavior.Strict);
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
             child.Setup(c => c.GetPayload()).Returns(childPayload);
-            child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrier>());
-            child.As<ITaskRunner>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
+            child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+            child.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
 
             var rootPayload = new DummyPayload();
-            var root = new Mock<IPayloadTaskRunnerRoot<IPayloadCommand>>(MockBehavior.Strict);
+            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Strict);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
-            root.As<IPayloadCarrier>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            root.As<IPayloadCarrier>().Setup(c => c.GetPayload()).Returns(rootPayload);
-            root.As<IPayloadCarrier>().Setup(c => c.GetPayloadDependencies()).Returns(new[] { child.Object });
-            root.As<ITaskRunner>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
+            root.As<IPayloadCarrierJob>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            root.As<IPayloadCarrierJob>().Setup(c => c.GetPayload()).Returns(rootPayload);
+            root.As<IPayloadCarrierJob>().Setup(c => c.GetPayloadDependencies()).Returns(new[] { child.Object });
+            root.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
 
             return (root, child);
         }

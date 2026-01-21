@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
+namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     [TestFixture]
     public sealed class TaskGraphDtoTests
@@ -22,10 +22,10 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             var rootId = Guid.NewGuid();
 
             // Root mock (also an IPayloadCarrier)
-            Mock<IPayloadTaskRunnerRoot<IPayloadCommand>> root = GetRootGraphMock(rootId);
+            Mock<IPayloadJobRoot<IPayloadCommand>> root = GetRootGraphMock(rootId);
 
-            var rootAsCarrier = root.As<IPayloadCarrier>();
-            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrier>());
+            var rootAsCarrier = root.As<IPayloadCarrierJob>();
+            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
@@ -37,7 +37,7 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             var dto = (TaskGraphDto)TaskGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
 
   
-            var callbackNodes = new List<(ITaskRunnerNodeDto Node, Guid RootId)>();
+            var callbackNodes = new List<(IJobNodeDto Node, Guid RootId)>();
 
             // Act
             var nodes = dto.ExtractNodes(edgedNodeCallBack: (node, rid) => callbackNodes.Add((node, rid)));
@@ -48,16 +48,16 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             Assert.That(callbackNodes, Has.Count.EqualTo(1));
 
             var single = nodes[0];
-            Assert.That(single.TaskRunnerId, Is.EqualTo(rootId));
-            Assert.That(single.ParentTaskRunnerId, Is.EqualTo(Guid.Empty));
+            Assert.That(single.JobId, Is.EqualTo(rootId));
+            Assert.That(single.ParentJobId, Is.EqualTo(Guid.Empty));
             Assert.That(single.IsRoot, Is.True);
             Assert.That(single.PayloadJson, Is.EqualTo("{}"));
             Assert.That(callbackNodes[0].RootId, Is.EqualTo(rootId));
         }
 
-        private static Mock<IPayloadTaskRunnerRoot<IPayloadCommand>> GetRootGraphMock(Guid rootId)
+        private static Mock<IPayloadJobRoot<IPayloadCommand>> GetRootGraphMock(Guid rootId)
         {
-            var root = new Mock<IPayloadTaskRunnerRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             return root;
@@ -75,11 +75,11 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
 
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
-            var root = new Mock<IPayloadTaskRunnerRoot<IPayloadCommand>>(MockBehavior.Loose);
-            var child = new Mock<IPayloadCarrier>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var child = new Mock<IPayloadCarrierJob>(MockBehavior.Loose);
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
-            child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrier>());
+            child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             child.SetupGet(c => c.PayloadType).Returns(typeof(string));
             child.Setup(c => c.GetPayload()).Returns("payload-child");
             Func<IRetryPolicy> childRetryPolicyFactory = () => Mock.Of<IRetryPolicy>();
@@ -95,20 +95,20 @@ namespace Fmaciasruano.TplQueue.Cache.Abstract.Test
             var dto = (TaskGraphDto)TaskGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
             var nodes = dto.ExtractNodes((n, rid) => { });
             Assert.That(nodes, Has.Count.EqualTo(2));
-            var rootNode = AssertSingle(nodes, n => n.TaskRunnerId == rootId);
-            var childNode = AssertSingle(nodes, n => n.TaskRunnerId == childId);
+            var rootNode = AssertSingle(nodes, n => n.JobId == rootId);
+            var childNode = AssertSingle(nodes, n => n.JobId == childId);
 
             Assert.That(rootNode.IsRoot, Is.True);
-            Assert.That(rootNode.ParentTaskRunnerId, Is.EqualTo(Guid.Empty));
+            Assert.That(rootNode.ParentJobId, Is.EqualTo(Guid.Empty));
             Assert.That(childNode.IsRoot, Is.False);
-            Assert.That(childNode.ParentTaskRunnerId, Is.EqualTo(rootId));
+            Assert.That(childNode.ParentJobId, Is.EqualTo(rootId));
         }
 
-        private static ITaskRunnerNodeDto AssertSingle(
-            IReadOnlyList<ITaskRunnerNodeDto> nodes,
-            Predicate<ITaskRunnerNodeDto> predicate)
+        private static IJobNodeDto AssertSingle(
+            IReadOnlyList<IJobNodeDto> nodes,
+            Predicate<IJobNodeDto> predicate)
         {
-            var matches = new List<ITaskRunnerNodeDto>();
+            var matches = new List<IJobNodeDto>();
             foreach (var n in nodes)
             {
                 if (predicate(n))

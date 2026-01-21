@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmaciasruano.TplQueue.Log
+namespace Fmacias.TplQueue.Log
 {
     /// <summary>
     /// Strongly-typed log message delegates.

@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Text;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 
-namespace Fmaciasruano.TplQueue.Observers
+namespace Fmacias.TplQueue.Observers
 {
     /// <summary>
-    /// Observer que vuelca ITaskRunnerEvent a ILogger. Diseñado para poder
+    /// Observer que vuelca IJobEvent a ILogger. Diseñado para poder
     /// configurar NLog/Serilog con un archivo por cola usando el nombre del logger.
     /// </summary>
-    public sealed class TaskRunnerFileLoggingObserver : IObserver<ITaskRunnerEvent>
+    public sealed class FileLoggingObserver : IObserver<IJobEvent>
     {
         private readonly ILogger _logger;
         private readonly string _queueName;
 
-        private TaskRunnerFileLoggingObserver(ILogger logger, string queueName)
+        private FileLoggingObserver(ILogger logger, string queueName)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _queueName = queueName ?? string.Empty;
         }
 
-        public static TaskRunnerFileLoggingObserver Create(ILogger logger, string queueName)
-            => new TaskRunnerFileLoggingObserver(logger, queueName);
+        public static FileLoggingObserver Create(ILogger logger, string queueName)
+            => new FileLoggingObserver(logger, queueName);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
         public void OnCompleted()
@@ -38,7 +38,7 @@ namespace Fmaciasruano.TplQueue.Observers
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
-        public void OnNext(ITaskRunnerEvent value)
+        public void OnNext(IJobEvent value)
         {
             if (value is null)
             {
@@ -48,10 +48,10 @@ namespace Fmaciasruano.TplQueue.Observers
 
             var sb = new StringBuilder();
             sb.Append("Status=").Append(value.Status)
-              .Append(" | Runner=").Append(value.RunnerDTO?.Name ?? "(null)")
-              .Append(" | Start=").Append(value.RunnerDTO?.ExecutionStart.ToString("O"))
-              .Append(" | End=").Append(value.RunnerDTO?.ExecutionEnd.ToString("O"))
-              .Append(" | Elapsed=").Append(value.RunnerDTO?.ExecutionTime)
+              .Append(" | Runner=").Append(value.JobDTO?.Name ?? "(null)")
+              .Append(" | Start=").Append(value.JobDTO?.ExecutionStart.ToString("O"))
+              .Append(" | End=").Append(value.JobDTO?.ExecutionEnd.ToString("O"))
+              .Append(" | Elapsed=").Append(value.JobDTO?.ExecutionTime)
               .Append(" | Retries=").Append(value.RetryCount);
 
             if (value.Exception != null)

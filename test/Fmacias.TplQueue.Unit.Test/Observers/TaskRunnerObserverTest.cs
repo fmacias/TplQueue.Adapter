@@ -1,50 +1,50 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Observers;
-using Fmaciasruano.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Observers.ViewModel;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
-namespace Fmaciasruano.TplQueue.Test.Observers
+namespace Fmacias.TplQueue.Test.Observers
 {
     [TestFixture()]
-    public class TaskRunnerObserverTests
+    public class JobObserverTests
     {
-        private Mock<ITaskRunnerEvent>? _eventMock;
-        private Mock<ITaskRunnerInfo>? _infoMock;
+        private Mock<IJobEvent>? _eventMock;
+        private Mock<IJobInfo>? _infoMock;
         private DateTime _now;
 
         [SetUp]
         public void SetUp()
         {
             _now = DateTime.Now;
-            _infoMock = new Mock<ITaskRunnerInfo>();
+            _infoMock = new Mock<IJobInfo>();
             _infoMock.Setup(i => i.Name).Returns("TestTask");
 
-            _eventMock = new Mock<ITaskRunnerEvent>();
-            _eventMock.Setup(e => e.Status).Returns(TaskRunnerEventStatus.Successed);
-            _eventMock.Setup(e => e.RunnerDTO).Returns(_infoMock.Object);
+            _eventMock = new Mock<IJobEvent>();
+            _eventMock.Setup(e => e.Status).Returns(JobEventStatus.Successed);
+            _eventMock.Setup(e => e.JobDTO).Returns(_infoMock.Object);
             _eventMock.Setup(e => e.Timestamp).Returns(_now);
         }
 
         [Test]
-        public void TaskRunnerConsoleObserver_ShouldWriteToConsole()
+        public void JobConsoleObserver_ShouldWriteToConsole()
         {
-            var observer = TaskRunnerConsoleObserver.Create();
+            var observer = ConsoleObserver.Create();
             Assert.DoesNotThrow(() => observer.OnNext(_eventMock!.Object));
             Assert.DoesNotThrow(() => observer.OnError(new Exception("fail")));
             Assert.DoesNotThrow(() => observer.OnCompleted());
         }
 
         [Test]
-        public void TaskRunnerProfilingObserver_ShouldLogEvents()
+        public void JobProfilingObserver_ShouldLogEvents()
         {
             // Arrange
             var loggerMock = new Mock<ILogger<IProfilingObserver>>();
 
             // Enable logging for the levels used by the observer
             loggerMock.Setup(l => l.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-            var observer = TaskRunnerProfilingObserver.Create(loggerMock.Object);
+            var observer = ProfilingObserver.Create(loggerMock.Object);
 
             observer.OnNext(_eventMock!.Object);
             observer.OnCompleted();
@@ -64,16 +64,16 @@ namespace Fmaciasruano.TplQueue.Test.Observers
                     LogLevel.Error,
                     It.Is<EventId>(e => e.Id == 3000), // OnError EventId
                     It.Is<It.IsAnyType>((v, _) =>
-                        v.ToString()!.Contains("TaskRunnerProfilingObserver", StringComparison.OrdinalIgnoreCase)), It.Is<Exception>(ex => ex.Message.Contains("boom")),
+                        v.ToString()!.Contains("JobProfilingObserver", StringComparison.OrdinalIgnoreCase)), It.Is<Exception>(ex => ex.Message.Contains("boom")),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
         }
 
         [Test]
-        public void TaskRunnerViewModelObserver_ShouldAddEventsToCollection()
+        public void JobViewModelObserver_ShouldAddEventsToCollection()
         {
             var dispatcherMock = new Mock<IObserverDispatcher>();
-            var observer = TaskRunnerViewModelObserver.Create(dispatcherMock.Object);
+            var observer = ViewModelObserver.Create(dispatcherMock.Object);
 
             dispatcherMock.Setup(d => d.Invoke(It.IsAny<Action>())).Callback<Action>(a => a());
 
@@ -87,12 +87,12 @@ namespace Fmaciasruano.TplQueue.Test.Observers
        }
 
         [Test]
-        public void TaskRunnerViewModelObserver_ShouldIgnoreEventsAfterCompletion()
+        public void JobViewModelObserver_ShouldIgnoreEventsAfterCompletion()
         {
             var dispatcherMock = new Mock<IObserverDispatcher>();
             dispatcherMock.Setup(d => d.Invoke(It.IsAny<Action>())).Callback<Action>(a => a());
 
-            var observer = TaskRunnerViewModelObserver.Create(dispatcherMock.Object);
+            var observer = ViewModelObserver.Create(dispatcherMock.Object);
 
             observer.OnCompleted();
 
@@ -106,18 +106,18 @@ namespace Fmaciasruano.TplQueue.Test.Observers
         }
 
         [Test]
-        public void TaskRunnerObserverFactory_ShouldCreateObservers()
+        public void JobObserverFactory_ShouldCreateObservers()
         {
             var loggerMock = new Mock<ILogger<IProfilingObserver>>();
             var dispatcherMock = new Mock<IObserverDispatcher>();
 
-            var consoleObs = TaskRunnerConsoleObserver.Create();
-            var profilerObs = TaskRunnerProfilingObserver.Create(loggerMock.Object);
-            var viewModelObs = TaskRunnerViewModelObserver.Create(dispatcherMock.Object);
+            var consoleObs = ConsoleObserver.Create();
+            var profilerObs = ProfilingObserver.Create(loggerMock.Object);
+            var viewModelObs = ViewModelObserver.Create(dispatcherMock.Object);
 
-            Assert.IsInstanceOf<TaskRunnerConsoleObserver>(consoleObs);
-            Assert.IsInstanceOf<TaskRunnerProfilingObserver>(profilerObs);
-            Assert.IsInstanceOf<TaskRunnerViewModelObserver>(viewModelObs);
+            Assert.IsInstanceOf<ConsoleObserver>(consoleObs);
+            Assert.IsInstanceOf<ProfilingObserver>(profilerObs);
+            Assert.IsInstanceOf<ViewModelObserver>(viewModelObs);
         }
     }
 }

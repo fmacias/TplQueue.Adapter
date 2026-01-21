@@ -1,10 +1,10 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies
+namespace Fmacias.TplQueue.RetryPolicies
 {
     /// <summary>
     /// <![CDATA[
@@ -134,7 +134,7 @@ namespace Fmaciasruano.TplQueue.RetryPolicies
         /// <inheritdoc />
         public IRetryPolicyDescriptor ToDescriptor()
         {
-            var delayMs = (int)Math.Round((Delay).TotalMilliseconds);
+            var delayMs = (int)Math.Round(Delay.TotalMilliseconds);
             return RetryPolicyDescriptor.Exponential(MaxRetries, delayMs, Factor);
         }
 

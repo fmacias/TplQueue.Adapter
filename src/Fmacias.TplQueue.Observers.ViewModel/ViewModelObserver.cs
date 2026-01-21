@@ -1,11 +1,11 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.ObjectModel;
 
-namespace Fmaciasruano.TplQueue.Observers.ViewModel
+namespace Fmacias.TplQueue.Observers.ViewModel
 {
     /// <summary>
-    /// UI-friendly observer for <see cref="ITaskRunnerEvent"/> streams.
+    /// UI-friendly observer for <see cref="IJobEvent"/> streams.
     /// <para>
     /// Collects human-readable log lines in <see cref="ProgressEvents"/> and ensures updates
     /// are marshalled onto a UI (or other synchronization) context via an
@@ -22,7 +22,7 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
     /// <para>
     /// Observer contract:
     /// <list type="bullet">
-    ///   <item><description><see cref="OnNext(ITaskRunnerEvent)"/> is called zero or more times
+    ///   <item><description><see cref="OnNext(IJobEvent)"/> is called zero or more times
     ///   as the queue emits lifecycle events (Enqueued, Running, Completed, etc.).</description></item>
     ///   <item><description><see cref="OnError(Exception)"/> is called at most once to signal
     ///   a terminal failure of the observable stream.</description></item>
@@ -36,7 +36,7 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
     /// from the appropriate context.
     /// </para>
     /// </remarks>
-    public sealed class TaskRunnerViewModelObserver : ITaskRunnerViewModelObserver
+    public sealed class ViewModelObserver : IViewModelObserver
     {
         /// <summary>
         /// Append-only log of formatted event lines, suitable for simple UI binding.
@@ -66,7 +66,7 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
         private readonly IObserverDispatcher _dispatcher;
         private bool _isCompleted;
         /// <summary>
-        /// Initializes a new instance of <see cref="TaskRunnerViewModelObserver"/>.
+        /// Initializes a new instance of <see cref="ViewModelObserver"/>.
         /// </summary>
         /// <param name="dispatcher">
         /// UI/synchronization dispatcher abstraction. This belongs to a concrete implementation
@@ -74,14 +74,14 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
         /// on the correct thread/context.
         /// </param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="dispatcher"/> is <c>null</c>.</exception>
-        private TaskRunnerViewModelObserver(IObserverDispatcher dispatcher)
+        private ViewModelObserver(IObserverDispatcher dispatcher)
         {
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
-        public static TaskRunnerViewModelObserver Create(IObserverDispatcher observerDispatcher)
+        public static ViewModelObserver Create(IObserverDispatcher observerDispatcher)
         {
-            return new TaskRunnerViewModelObserver(observerDispatcher);
+            return new ViewModelObserver(observerDispatcher);
         }
 
 
@@ -89,8 +89,8 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
         /// Receives a task-runner event and appends a formatted line to <see cref="ProgressEvents"/>
         /// on the dispatcher context.
         /// </summary>
-        /// <param name="value">The emitted <see cref="ITaskRunnerEvent"/>.</param>
-        public void OnNext(ITaskRunnerEvent value)
+        /// <param name="value">The emitted <see cref="IJobEvent"/>.</param>
+        public void OnNext(IJobEvent value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (_isCompleted) return;
@@ -135,9 +135,9 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
             _dispatcher.Invoke(action ?? throw new ArgumentNullException(nameof(action)));
         }
 
-        private static string FormatEvent(ITaskRunnerEvent value)
+        private static string FormatEvent(IJobEvent value)
         {
-            var runnerName = value.RunnerDTO?.Name ?? "<unknown>";
+            var runnerName = value.JobDTO?.Name ?? "<unknown>";
             var status = value.Status.ToString();
             var timestamp = value.Timestamp.ToString("O");
             var retries = value.RetryCount;
@@ -152,6 +152,6 @@ namespace Fmaciasruano.TplQueue.Observers.ViewModel
             => $"[ERROR] {error.GetType().Name}: {error.Message}";
 
         private static string FormatCompletion()
-            => $"Observer [{nameof(TaskRunnerViewModelObserver)}] COMPLETED";
+            => $"Observer [{nameof(ViewModelObserver)}] COMPLETED";
     }
 }

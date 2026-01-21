@@ -1,12 +1,12 @@
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
-using Fmaciasruano.TplQueue.Serialization.SystemTextJson;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Fmaciasruano.TplQueue.Test.Serialization
+namespace Fmacias.TplQueue.Test.Serialization
 {
     [TestFixture]
     public class SystemTextJsonUniversalSerializerTests
@@ -49,7 +49,7 @@ namespace Fmaciasruano.TplQueue.Test.Serialization
         public void SerializeCarrier_WhenPayloadIsNull_Throws()
         {
             var serializer = SystemTextJsonUniversalSerializer.Create();
-            var carrier = new Mock<IPayloadCarrier>();
+            var carrier = new Mock<IPayloadCarrierJob>();
             carrier.Setup(c => c.GetPayload()).Returns((object)null!);
             carrier.Setup(c => c.PayloadType).Returns(typeof(TestPayload));
 

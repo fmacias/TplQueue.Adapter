@@ -1,10 +1,10 @@
-using Fmaciasruano.TplQueue.Abstractions;
-using Fmaciasruano.TplQueue.Abstractions.Contracts;
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Fmaciasruano.TplQueue.RetryPolicies
+namespace Fmacias.TplQueue.RetryPolicies
 {
     /// <summary>
     /// <![CDATA[
