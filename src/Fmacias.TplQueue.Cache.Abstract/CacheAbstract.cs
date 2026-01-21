@@ -41,11 +41,11 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// Callback invoked for every node of the extracted task graph. Implementations use this to
         /// persist the node in their underlying storage (e.g. in-memory structures, EF, etc.).
         /// </summary>
-        protected abstract Action<ITaskRunnerNodeDto, Guid> AppendNodeCallBack { get; }
+        protected abstract Action<IJobNodeDto, Guid> AppendNodeCallBack { get; }
 
         /// <inheritdoc />
-        public IReadOnlyList<ITaskRunnerNodeDto> Append<TPayload>(
-            IPayloadTaskRunnerRoot<TPayload> root,
+        public IReadOnlyList<IJobNodeDto> Append<TPayload>(
+            IPayloadJobRoot<TPayload> root,
             bool isFifo)
             where TPayload : IPayloadCommand
         {
@@ -56,26 +56,26 @@ namespace Fmacias.TplQueue.Cache.Abstract
 
         /// <inheritdoc />
         public abstract bool TryLeaseNextRoot(
-            out IPayloadCarrierRoot payloadCarrierRoot,
+            out IPayloadJobRoot payloadCarrierRoot,
             out ICacheLeaseEntry lease);
 
         /// <inheritdoc />
-        public abstract void AckNode(Guid nodeId, ISerializedPayload payloadData);
+        public abstract void AckNode(Guid jobId, ISerializedPayload payloadData);
 
         /// <inheritdoc />
-        public abstract void FailNode(Guid nodeId, string? errorMessage);
+        public abstract void FailNode(Guid jobId, string? errorMessage);
 
         /// <inheritdoc />
-        public abstract void CancelNode(Guid nodeId);
+        public abstract void CancelNode(Guid jobId);
 
         /// <inheritdoc />
-        public abstract void SuccessRootNode(Guid taskRunnerRootId);
+        public abstract void SuccessRootNode(Guid jobRootId);
 
         /// <inheritdoc />
-        public abstract bool DeleteRootNode(Guid rootId);
+        public abstract bool DeleteRootNode(Guid jobRootId);
 
         /// <inheritdoc />
-        public abstract ICacheLeaseEntry GetByTaskRunnerId(Guid id);
+        public abstract ICacheLeaseEntry GetByJobId(Guid jobId);
 
         /// <inheritdoc />
         public abstract IPayloadLeaseCache CleanDeleted();
@@ -85,14 +85,14 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// <summary>
         /// Extracts the task runner nodes from the given root using <see cref="TaskGraphDto"/>.
         /// </summary>
-        protected IReadOnlyList<ITaskRunnerNodeDto> ExtractNodes<TPayload>(
-            IPayloadTaskRunnerRoot<TPayload> taskRunnerRoot, bool isFifo)
+        protected IReadOnlyList<IJobNodeDto> ExtractNodes<TPayload>(
+            IPayloadJobRoot<TPayload> JobRoot, bool isFifo)
             where TPayload : IPayloadCommand
         {
-            if (taskRunnerRoot is null) throw new ArgumentNullException(nameof(taskRunnerRoot));
+            if (JobRoot is null) throw new ArgumentNullException(nameof(JobRoot));
 
             return TaskGraphDto
-                .Create(_universalPayloadSerializer, taskRunnerRoot, isFifo)
+                .Create(_universalPayloadSerializer, JobRoot, isFifo)
                 .ExtractNodes(AppendNodeCallBack);
         }
 

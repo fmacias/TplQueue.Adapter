@@ -9,7 +9,7 @@ namespace Fmacias.TplQueue.Observers
     /// <inheritdoc cref="IProfilingObserver"/>
     /// Useful to log profiling information in case of memory usage problems.
     /// </summary>
-    internal sealed class TaskRunnerProfilingObserver : IProfilingObserver
+    internal sealed class ProfilingObserver : IProfilingObserver
     {
         private readonly ILogger<IProfilingObserver> _logger;
         private long _lastMemoryUsage;
@@ -18,25 +18,25 @@ namespace Fmacias.TplQueue.Observers
         /// <summary>
         /// Construct the observer with a given logger.
         /// </summary>
-        private TaskRunnerProfilingObserver(ILogger<IProfilingObserver> logger)
+        private ProfilingObserver(ILogger<IProfilingObserver> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lastMemoryUsage = GC.GetTotalMemory(forceFullCollection: false);
             _lastGcCollections = GetGcCollectionCounts();
         }
 
-        public static TaskRunnerProfilingObserver Create(ILogger<IProfilingObserver> logger)
-            => new TaskRunnerProfilingObserver(logger);
+        public static ProfilingObserver Create(ILogger<IProfilingObserver> logger)
+            => new ProfilingObserver(logger);
 
         /// <summary>
         /// <inheritdoc cref="IObserver{T}.OnNext(T)"/>
         /// Notification is logged with memory usage data at each status change.
         /// </summary>
-        public void OnNext(ITaskRunnerEvent value)
+        public void OnNext(IJobEvent value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            var runnerName = value.RunnerDTO?.Name ?? "<unknown>";
+            var jobName = value.JobDTO?.Name ?? "<unknown>";
 
             long currentMemory = GC.GetTotalMemory(forceFullCollection: false);
             int[] currentGcCollections = GetGcCollectionCounts();
@@ -56,7 +56,7 @@ namespace Fmacias.TplQueue.Observers
             _logTaskStateChanged(
                 _logger,
                 value.Timestamp,
-                runnerName,
+                jobName,
                 value.Status.ToString(),
                 currentMemory,
                 memoryDelta,
@@ -69,7 +69,7 @@ namespace Fmacias.TplQueue.Observers
             {
                 _logSignificantMemoryIncrease(
                     _logger,
-                    runnerName,
+                    jobName,
                     memoryDelta,
                     null
                 );
@@ -123,14 +123,14 @@ namespace Fmacias.TplQueue.Observers
             LoggerMessage.Define(
                 LogLevel.Error,
                 EventCatalog.ObserverError,
-                "Error occurred in TaskRunnerProfilingObserver"
+                "Error occurred in JobProfilingObserver"
             );
 
         private static readonly Action<ILogger, Exception?> _logPerfObserverCompleted =
             LoggerMessage.Define(
                 LogLevel.Information,
                 EventCatalog.ObserverCompleted, // 1099 per your constants
-                "TaskRunnerProfilingObserver completed"
+                "JobProfilingObserver completed"
             );
     }
 }

@@ -1,15 +1,41 @@
 ﻿# TplQueue.Adapter
 
 ## Sumario
-- Operaciones: el build Release empaqueta los subcomponentes y el paquete principal en `..\TplQueue.NugetLocal`.
+- Operaciones: el empaquetado local es manual via `pack-local.ps1` o `WorkspaceTplQueue\pack.ps1`.
 - Operaciones: `pack-local.ps1` asegura el orden de empaquetado antes del pack del repo.
 
 ## Empaquetado local (DevOps)
-El empaquetado local se dispara desde `Directory.Build.targets` y ejecuta `pack-local.ps1`.
+El empaquetado local es manual y ejecuta `pack-local.ps1`.
 Este script empaqueta primero Log, RetryPolicies, Observers.ViewModel, Serialization, DI y Cache.Abstract, y luego el paquete `Fmacias.TplQueue`.
 Salida esperada: `.nupkg` y `.snupkg` en `..\TplQueue.NugetLocal`.
 Para ejecucion manual: `powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1`.
-Para omitir: `SkipPackLocal=true`.
+
+## How to (step by step)
+1) Build only (fast loop) from the workspace:
+```powershell
+..\WorkspaceTplQueue\build.ps1 -Configuration Debug
+```
+
+2) Pack Adapter only:
+```powershell
+.\pack-local.ps1
+```
+
+3) Pack all repos in order (workspace):
+```powershell
+..\WorkspaceTplQueue\pack.ps1
+```
+
+## Why this design (justification)
+- Keeps Adapter independently buildable while supporting a shared workspace.
+- Avoids packing during every build; packaging is explicit and ordered.
+- Reduces restore issues by standardizing the pack sequence and cache behavior.
+
+## Local package caching policy
+- The local feed `..\TplQueue.NugetLocal` is the primary source for dev packages.
+- Pack scripts force restore to avoid stale global cache packages.
+- If you still see old types, delete the global cache folder for the package:
+  `C:\Users\<user>\.nuget\packages\fmacias.tplqueue.abstractions\1.0.0`
 
 
 TplQueue.Adapter contains MIT-licensed adapter components and building blocks for TplQueue: abstractions, retry policies, cache contracts, serialization helpers, DI integration, and observer utilities. It is intended to be used together with TplQueue.Core (EULA) by referencing the Core binary as a NuGet package or project.

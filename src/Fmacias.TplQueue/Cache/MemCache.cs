@@ -11,8 +11,8 @@ namespace Fmacias.TplQueue.Cache
     internal sealed class MemCache : CacheAbstract, IMemCache
     {
         private readonly ConcurrentDictionary<Guid, ICacheLeaseEntry> _indexedEntries = new();
-        private readonly IPayloadRunnerFactory _payloadRunnerFactory;
-        private MemCache(IPayloadRunnerFactory payloadRunnerFactory,
+        private readonly IPayloadJobFactory _payloadRunnerFactory;
+        private MemCache(IPayloadJobFactory payloadRunnerFactory,
             IUniversalPayloadSerializer serializer)
             : base(serializer)
         {
@@ -21,17 +21,17 @@ namespace Fmacias.TplQueue.Cache
             _payloadRunnerFactory = payloadRunnerFactory;
         }
 
-        public static MemCache Create(IPayloadRunnerFactory payloadRunnerFactory,
+        public static MemCache Create(IPayloadJobFactory payloadRunnerFactory,
             IUniversalPayloadSerializer serializer)
             => new MemCache(payloadRunnerFactory, serializer);
 
-        protected override Action<ITaskRunnerNodeDto, Guid> AppendNodeCallBack 
+        protected override Action<IJobNodeDto, Guid> AppendNodeCallBack 
             => (nodeDto, rootId) =>
             {
                 AddDtoNodeToCache(
                     edgedNode: nodeDto,
                     leaseId: Guid.NewGuid(),
-                    taskRunnerRootId: rootId);
+                    jobRootId: rootId);
             };
         public override void AckNode(Guid nodeId, ISerializedPayload payloadData)
         {
@@ -39,31 +39,31 @@ namespace Fmacias.TplQueue.Cache
             lease?.MarkAck(payloadData);
         }
 
-        public override void FailNode(Guid taskRunnerId, string? error)
+        public override void FailNode(Guid jobId, string? error)
         {
-            var lease = GetByIdOrDefault(taskRunnerId);
+            var lease = GetByIdOrDefault(jobId);
             lease?.MarkFailed();
         }
 
-        public override void CancelNode(Guid taskRunnerId)
+        public override void CancelNode(Guid jobId)
         {
-            var lease = GetByIdOrDefault(taskRunnerId);
+            var lease = GetByIdOrDefault(jobId);
             lease?.MarkCanceled();
         }
 
-        public override void SuccessRootNode(Guid taskRunnerRootId)
+        public override void SuccessRootNode(Guid jobRootId)
         {
-            var leaseRoot = GetByTaskRunnerId(taskRunnerRootId);
+            var leaseRoot = GetByJobId(jobRootId);
             
             if (leaseRoot == null) return;
 
             if (!leaseRoot.IsRoot) return;
-            SuccessedRootFinalized(taskRunnerRootId);
+            SuccessedRootFinalized(jobRootId);
         }
 
         public override bool DeleteRootNode(Guid rootId)
         {
-            var leaseRoot = GetByTaskRunnerId(rootId);
+            var leaseRoot = GetByJobId(rootId);
 
             if (leaseRoot == null || !leaseRoot.IsFinalized())
             {
@@ -90,14 +90,14 @@ namespace Fmacias.TplQueue.Cache
             entries
                 .Select(kv => kv.Value)
                 .Where(v => v.IsFinalized() == true &&
-                    v.TaskRunnerRootId == leaseRoot.TaskRunnerRootId &&
+                    v.JobRootId == leaseRoot.JobRootId &&
                     v.IsRoot == false).ToList().ForEach(e =>
                     {
                         e.MarkAsDeleted();
                     });
         }
 
-        public override bool TryLeaseNextRoot(out IPayloadCarrierRoot payloadCarrierRoot, out ICacheLeaseEntry lease)
+        public override bool TryLeaseNextRoot(out IPayloadJobRoot payloadCarrierRoot, out ICacheLeaseEntry lease)
         {
             payloadCarrierRoot = null!;
             lease = null!;
@@ -113,16 +113,16 @@ namespace Fmacias.TplQueue.Cache
         }
 
         private void AddDtoNodeToCache(
-            ITaskRunnerNodeDto edgedNode,
+            IJobNodeDto edgedNode,
             Guid leaseId,
-            Guid taskRunnerRootId)
+            Guid jobRootId)
         {
             var entry = Facade.CreateLeaseEntry(
                 leaseId: leaseId,
-                rootId: taskRunnerRootId,
-                taskRunnerId: edgedNode.TaskRunnerId,
-                parentTaskRunnerId: edgedNode.ParentTaskRunnerId, 
-                nodeDto: edgedNode,
+                jobRootId: jobRootId,
+                jobId: edgedNode.JobId,
+                parentJobId: edgedNode.ParentJobId, 
+                jobNodeDto: edgedNode,
                 cacheUtc: DateTime.UtcNow);
 
             PersistEntryUpdate(entry);
@@ -136,13 +136,13 @@ namespace Fmacias.TplQueue.Cache
             lock (SyncDataOperations)
             {
                 _indexedEntries.AddOrUpdate(
-                    entry.TaskRunnerId,
+                    entry.JobId,
                     (id) => entry,
                     (id, currentEntry) => entry);
             }
         }
 
-        private ICacheLeaseEntry GetByIdOrDefault(Guid taskRunnerId)
+        private ICacheLeaseEntry GetByIdOrDefault(Guid jobId)
         {
             KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
 
@@ -150,7 +150,7 @@ namespace Fmacias.TplQueue.Cache
                 entries = [.. _indexedEntries];
             }
             return entries
-                .Where(kv => kv.Key == taskRunnerId)
+                .Where(kv => kv.Key == jobId)
                 .Select(kv => kv.Value)
                 .FirstOrDefault();
         }
@@ -168,7 +168,7 @@ namespace Fmacias.TplQueue.Cache
             return entries
                     .Select(kv => kv.Value)
                     .Where(v => v.IsFinalized() == false && 
-                        v.TaskRunnerRootId == rootId && 
+                        v.JobRootId == rootId && 
                         v.IsRoot == false).Any();
         }
         private void SuccessedRootFinalized(Guid rootId)
@@ -183,7 +183,7 @@ namespace Fmacias.TplQueue.Cache
 
         private void SuccessRootChildEntries(ICacheLeaseEntry rootEntry)
         {
-            var rootId = rootEntry.TaskRunnerRootId;
+            var rootId = rootEntry.JobRootId;
 
             KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
 
@@ -194,7 +194,7 @@ namespace Fmacias.TplQueue.Cache
 
             var nonSuccessedFound = entries.Select(kv => kv.Value)
                 .Where(v => v.Status != EntryStatus.Acknownledged &&
-                v.TaskRunnerRootId == rootId).Any();
+                v.JobRootId == rootId).Any();
 
             if (nonSuccessedFound)
                 return;
@@ -202,13 +202,13 @@ namespace Fmacias.TplQueue.Cache
             entries
                 .Select(kv => kv.Value)
                 .Where(v => v.Status == EntryStatus.Acknownledged &&
-                    v.TaskRunnerRootId == rootId).ToList().ForEach((entry) => { 
+                    v.JobRootId == rootId).ToList().ForEach((entry) => { 
                         entry.MarkAsRootSuccessed(); 
                     });
         }
 
         private bool TryCreatePayloadCarrierRoot(
-            out IPayloadCarrierRoot payloadRootElement)
+            out IPayloadJobRoot payloadRootElement)
         {
             KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
 
@@ -228,9 +228,9 @@ namespace Fmacias.TplQueue.Cache
 
             if (oldestRootCachedEntry == null) return false;
             
-            var childs = RelatedChildsByParentNode(oldestRootCachedEntry.TaskRunnerId, entriesSnapshot);
+            var childs = RelatedChildsByParentNode(oldestRootCachedEntry.JobId, entriesSnapshot);
 
-            List<IPayloadCarrier> dependentElements = new();
+            List<IPayloadCarrierJob> dependentElements = new();
 
             foreach (var cacheLeaseEntry in childs)
             {
@@ -247,7 +247,7 @@ namespace Fmacias.TplQueue.Cache
         private bool TryCreatePayloadCarrier(
             ICacheLeaseEntry leaseEntry,
             ICacheLeaseEntry[] entriesSnapshot,
-            out IPayloadCarrier payloadElement,
+            out IPayloadCarrierJob payloadElement,
             HashSet<Guid>? visited = null)
         {
             payloadElement = null!;
@@ -260,9 +260,9 @@ namespace Fmacias.TplQueue.Cache
         
             if (entriesSnapshot.Length == 0) return false;
 
-            var childs = RelatedChildsByParentNode(leaseEntry.TaskRunnerId, entriesSnapshot);
+            var childs = RelatedChildsByParentNode(leaseEntry.JobId, entriesSnapshot);
 
-            List<IPayloadCarrier> dependentElements = new();
+            List<IPayloadCarrierJob> dependentElements = new();
 
             foreach (var cacheLeaseEntry in childs)
             {
@@ -273,7 +273,7 @@ namespace Fmacias.TplQueue.Cache
                     visited))
                     dependentElements.Add(currentPayloadCarrier);
                 else
-                    throw new InvalidOperationException($"Cannot create PayloadCarrier from cache [{cacheLeaseEntry.LeaseId}] of runner ({cacheLeaseEntry.TaskRunnerId}) ");
+                    throw new InvalidOperationException($"Cannot create PayloadCarrier from cache [{cacheLeaseEntry.LeaseId}] of runner ({cacheLeaseEntry.JobId}) ");
             }
 
             payloadElement  = _payloadRunnerFactory.Load(leaseEntry, Serializer);
@@ -281,24 +281,24 @@ namespace Fmacias.TplQueue.Cache
             return payloadElement != null;
         }
         private static IOrderedEnumerable<ICacheLeaseEntry> RelatedChildsByParentNode(
-            Guid parentTaskRunnerId,
+            Guid parentJobId,
             ICacheLeaseEntry[] entriesSnapshot)
         {
             return entriesSnapshot
                 .Where(l =>
-                    l.ParentTaskRunnerId == parentTaskRunnerId &&
+                    l.ParentJobId == parentJobId &&
                     l.Status == EntryStatus.Pending)
-                .OrderBy(l => l.TaskRunnerNodeDto.NodeCreationUtc);
+                .OrderBy(l => l.JobNodeDto.NodeCreationUtc);
         }
         private static ICacheLeaseEntry OldestRootCachedEntry(ICacheLeaseEntry[] entriesSnapshot)
         {
             return entriesSnapshot
                 .Where(lease => lease.IsRoot == true && lease.Status == EntryStatus.Pending)
-                .OrderBy(lease => lease.TaskRunnerNodeDto.NodeCreationUtc)
+                .OrderBy(lease => lease.JobNodeDto.NodeCreationUtc)
                 .FirstOrDefault();
         }
 
-        public override ICacheLeaseEntry GetByTaskRunnerId(Guid id)
+        public override ICacheLeaseEntry GetByJobId(Guid id)
         {
             KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
 
@@ -346,7 +346,7 @@ namespace Fmacias.TplQueue.Cache
         {
             foreach (var item in itemsToRemove)
             {
-                _indexedEntries.TryRemove(item.TaskRunnerId, out var removed);
+                _indexedEntries.TryRemove(item.JobId, out var removed);
             }
         }
 
@@ -361,7 +361,7 @@ namespace Fmacias.TplQueue.Cache
 
         private void LeaseRootGraph(ICacheLeaseEntry rootEntry)
         {
-            var rootId = rootEntry.TaskRunnerRootId;
+            var rootId = rootEntry.JobRootId;
 
             KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
 
@@ -370,7 +370,7 @@ namespace Fmacias.TplQueue.Cache
                 entries = [.. _indexedEntries];
             }
             entries.Select(kv => kv.Value)
-                .Where(entry => entry.TaskRunnerRootId == rootId)
+                .Where(entry => entry.JobRootId == rootId)
                 .ToList().ForEach((entry) => entry.MarkLeased());
         }
     }

@@ -6,18 +6,18 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Fmacias.TplQueue.Runner
+namespace Fmacias.TplQueue.Jobs
 {
-    internal class PayloadTaskRunner<TPayload> :
-        ITaskRunnerAdapter,
-        IPayloadTaskRunner<TPayload>
+    internal class PayloadJob<TPayload> :
+        IJobAdapter,
+        IPayloadJob<TPayload>
         where TPayload : IPayloadCommand
     {
-        private readonly ITaskRunner _inner;
+        private readonly IJob _inner;
         private readonly TPayload _payload;
         private readonly string _jsonSerializedInput;
         private readonly IUniversalPayloadSerializer _serializer;
-        protected PayloadTaskRunner(ITaskRunner inner, TPayload payload, string jsonSerialized,
+        protected PayloadJob(IJob inner, TPayload payload, string jsonSerialized,
             IUniversalPayloadSerializer serializer)
         {
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
@@ -38,71 +38,71 @@ namespace Fmacias.TplQueue.Runner
                 _payload.HandlerId, _jsonSerializedInput, payloadType);
         }
 
-        public static PayloadTaskRunner<TPayload> Create(
+        public static PayloadJob<TPayload> Create(
             TPayload payload,
             IUniversalPayloadSerializer serializer,
-            ITaskRunnerFactory taskRunnerFactory,
+            IJobFactory jobFactory,
             string name = "")
         {
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-            if (taskRunnerFactory is null) throw new ArgumentNullException(nameof(taskRunnerFactory));
+            if (jobFactory is null) throw new ArgumentNullException(nameof(jobFactory));
 
-            var inner = taskRunnerFactory.Create(
+            var inner = jobFactory.Create(
                 func: async (ct, pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
                 name: name);
             var json = serializer.Serialize(payload);
-            return new PayloadTaskRunner<TPayload>(inner, payload, json, serializer);
+            return new PayloadJob<TPayload>(inner, payload, json, serializer);
         }
 
-        public static PayloadTaskRunner<TPayload> Create(
-            Guid taskRunnerId,
+        public static PayloadJob<TPayload> Create(
+            Guid jobId,
             TPayload payload,
             IUniversalPayloadSerializer serializer,
-            ITaskRunnerFactory taskRunnerFactory,
+            IJobFactory jobFactory,
             string name = "")
         {
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-            if (taskRunnerFactory is null) throw new ArgumentNullException(nameof(taskRunnerFactory));
+            if (jobFactory is null) throw new ArgumentNullException(nameof(jobFactory));
 
-            var innerTaskRunner = taskRunnerFactory.Create(
-                id: taskRunnerId,
+            var innerJob = jobFactory.Create(
+                id: jobId,
                 body: async (ct, pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
                 name: name);
             var json = serializer.Serialize(payload);
-            return new PayloadTaskRunner<TPayload>(innerTaskRunner, payload, json, serializer);
+            return new PayloadJob<TPayload>(innerJob, payload, json, serializer);
         }
 
-        public static PayloadTaskRunner<TPayload> Load(ICacheLeaseEntry cacheLeaseEntry,
-            IUniversalPayloadSerializer serializer, ITaskRunnerFactory taskRunnerFactory)
+        public static PayloadJob<TPayload> Load(ICacheLeaseEntry cacheLeaseEntry,
+            IUniversalPayloadSerializer serializer, IJobFactory jobFactory)
         {
             cacheLeaseEntry = cacheLeaseEntry ?? throw new ArgumentNullException(nameof(cacheLeaseEntry));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-            if (taskRunnerFactory is null) throw new ArgumentNullException(nameof(taskRunnerFactory));
+            if (jobFactory is null) throw new ArgumentNullException(nameof(jobFactory));
 
-            var json = cacheLeaseEntry.TaskRunnerNodeDto.PayloadJson;
+            var json = cacheLeaseEntry.JobNodeDto.PayloadJson;
             var payload = serializer.Deserialize<TPayload>(json);
-            var inner = taskRunnerFactory.Create(
-                id: cacheLeaseEntry.TaskRunnerId,
+            var inner = jobFactory.Create(
+                id: cacheLeaseEntry.JobId,
                 body: async (ct, pl) =>
                 {
                     await pl.ExecuteAsync(ct).ConfigureAwait(false);
                 },
                 arg: payload,
-                name: cacheLeaseEntry.TaskRunnerNodeDto.Name ?? string.Empty);
+                name: cacheLeaseEntry.JobNodeDto.Name ?? string.Empty);
 
-            return new PayloadTaskRunner<TPayload>(inner, payload, json,
+            return new PayloadJob<TPayload>(inner, payload, json,
                 serializer);
         }
 
         public object GetPayload() => _payload;
         public Type PayloadType => typeof(TPayload);
         public TPayload Payload => _payload;
-        public IReadOnlyList<IPayloadCarrier> GetPayloadDependencies()
-            => [.. _inner.Dependencies.OfType<IPayloadCarrier>()];
+        public IReadOnlyList<IPayloadCarrierJob> GetPayloadDependencies()
+            => [.. _inner.Dependencies.OfType<IPayloadCarrierJob>()];
         public Guid Id => _inner.Id;
         public string Name => _inner.Name;
         public bool IsCompleted => _inner.IsCompleted;
@@ -110,17 +110,17 @@ namespace Fmacias.TplQueue.Runner
         public TimeSpan ExecutionTime => _inner.ExecutionTime;
         public DateTime ExecutionEnd => _inner.ExecutionEnd;
         public TaskStatus Status => _inner.Status;
-        public IReadOnlyCollection<ITaskRunnerInfo> Dependencies => _inner.Dependencies;
+        public IReadOnlyCollection<IJobInfo> Dependencies => _inner.Dependencies;
         public ISerializedPayload PayloadSerializedData => _inner.PayloadSerializedData;
-        public ITaskRunner After(params ITaskRunner[] previousTasks) => _inner.After(previousTasks);
-        public ITaskRunnerInfo[] GetInfoDependencies() => _inner.GetInfoDependencies();
-        public void SetRoot(ITaskRunnerRoot taskRunnerRoot)
+        public IJob After(params IJob[] previousTasks) => _inner.After(previousTasks);
+        public IJobInfo[] GetJobInfoDependencies() => _inner.GetJobInfoDependencies();
+        public void SetRoot(IJobRoot jobRoot)
         {
-            if (taskRunnerRoot == null) throw new ArgumentNullException(nameof(taskRunnerRoot));
-            _inner.SetRoot(taskRunnerRoot);
+            if (jobRoot == null) throw new ArgumentNullException(nameof(jobRoot));
+            _inner.SetRoot(jobRoot);
         }
-        public ITaskRunner GetInnerRunner() => _inner;
-        public ITaskRunnerInfo CopyInfo()
+        public IJob GetInnerJob() => _inner;
+        public IJobInfo CopyInfo()
         {
             PayloadSerializedData
                 .SetOutput(_serializer.Serialize(_payload));
@@ -131,9 +131,9 @@ namespace Fmacias.TplQueue.Runner
             return _inner.GetRetryPolicyFactory();
         }
 
-        public ITaskRunner[] GetBatch()
+        public IJob[] GetJobsBatch()
         {
-            return _inner.GetBatch();
+            return _inner.GetJobsBatch();
         }
 
         public async Task WaitUntilFinishedAsync()

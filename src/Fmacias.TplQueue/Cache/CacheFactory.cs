@@ -11,7 +11,7 @@ namespace Fmacias.TplQueue.Cache
             return new CacheFactory();
         }
 
-        public IMemCache CreateMemCache(IPayloadRunnerFactory payloadRunnerFactory,
+        public IMemCache CreateMemCache(IPayloadJobFactory payloadRunnerFactory,
             IUniversalPayloadSerializer serializer)
         {
             return MemCache.Create(payloadRunnerFactory, serializer);

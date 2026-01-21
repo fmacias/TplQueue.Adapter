@@ -8,17 +8,17 @@ using Fmacias.TplQueue.Contracts;
 namespace Fmacias.TplQueue.Test.Observers
 {
     [TestFixture()]
-    public class TaskRunnerViewModelObserverTests
+    public class JobViewModelObserverTests
     {
 #pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
-        private class DummyEvent : ITaskRunnerEvent
+        private class DummyEvent : IJobEvent
 #pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
         {
             public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-            public ITaskRunnerInfo RunnerDTO { get; set; }
+            public IJobInfo JobDTO { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-            public TaskRunnerEventStatus Status { get; set; } = TaskRunnerEventStatus.Successed;
+            public JobEventStatus Status { get; set; } = JobEventStatus.Successed;
 
             public Exception Exception => throw new NotImplementedException();
 
@@ -38,13 +38,13 @@ namespace Fmacias.TplQueue.Test.Observers
         {
             var logs = new List<string>();
             var logger = new MockLogger<IProfilingObserver>(logs);
-            var observer = TaskRunnerProfilingObserver.Create(logger);
+            var observer = ProfilingObserver.Create(logger);
     
-            var mockedRunnerDto = new Mock<ITaskRunnerInfo>(MockBehavior.Strict);
+            var mockedRunnerDto = new Mock<IJobInfo>(MockBehavior.Strict);
             mockedRunnerDto.Setup(o => o.Name).Returns("Dummy");
             var dummyEvent = new DummyEvent()
             {
-                RunnerDTO = mockedRunnerDto.Object
+                JobDTO = mockedRunnerDto.Object
             };
             observer.OnNext(dummyEvent);
 

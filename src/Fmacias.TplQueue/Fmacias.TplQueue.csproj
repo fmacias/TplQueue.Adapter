@@ -10,12 +10,15 @@
   <ItemGroup>
     <Compile Remove="Cache\**" />
     <Compile Remove="Factories\**" />
+    <Compile Remove="NewFolder\**" />
     <Compile Remove="Observers\**" />
     <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="Factories\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="Observers\**" />
     <None Remove="Cache\**" />
     <None Remove="Factories\**" />
+    <None Remove="NewFolder\**" />
     <None Remove="Observers\**" />
   </ItemGroup>
 
@@ -25,10 +28,10 @@
     <Compile Include="Observers\DirectObserverDispatcher.cs" />
     <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />
     <Compile Include="Observers\ObserverFactory.cs" />
-    <Compile Include="Observers\TaskQueueLoggingObserver.cs" />
-    <Compile Include="Observers\TaskRunnerConsoleObserver.cs" />
-    <Compile Include="Observers\TaskRunnerFileLoggingObserver.cs" />
-    <Compile Include="Observers\TaskRunnerProfilingObserver.cs" />
+    <Compile Include="Observers\LoggingObserver.cs" />
+    <Compile Include="Observers\ConsoleObserver.cs" />
+    <Compile Include="Observers\FileLoggingObserver.cs" />
+    <Compile Include="Observers\ProfilingObserver.cs" />
   </ItemGroup>
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -44,7 +47,6 @@
 	
 	<ItemGroup>
 	  <Folder Include="Documentation\" />
-	  <Folder Include="NewFolder\" />
 	</ItemGroup>
 	
 	<ItemGroup>

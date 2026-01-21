@@ -24,12 +24,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IPayloadRunnerFactory GetPayloadRunnerFactory()
+        public IPayloadJobFactory GetPayloadJobFactory()
         {
             throw new NotImplementedException();
         }
 
-        public ISerializableDispatcherFactory GetSerializableDispatcherFactory()
+        public ICacheableChainFactory GetSerializableDispatcherFactory()
         {
             throw new NotImplementedException();
         }
@@ -39,17 +39,17 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public ITaskDispatcherFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IDispatcherOptions> options, IRetryPolicyFactory retries)
+        public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
 
-        public ITaskRunnerFactory GetTaskRunnerFactory()
+        public IJobFactory GetJobFactory()
         {
             throw new NotImplementedException();
         }
 
-        public ITaskRunnerRootFactory GetTaskRunnerRootFactory()
+        public IJobRootFactory GetJobRootFactory()
         {
             throw new NotImplementedException();
         }
@@ -83,7 +83,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             {
                 { "default", RetryPolicyOptions.Linear(3, 100) }
             };
-            var dispatcherOptions = new Dictionary<string, IDispatcherOptions>();
+            var dispatcherOptions = new Dictionary<string, IChainOptions>();
 
             // Act
             services.AddTplQueue(
@@ -113,22 +113,22 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         private sealed class DummyCoreApi : ICoreApi
         {
-            public ITaskDispatcherFactory DispatcherFactory => throw new NotImplementedException();
-            public ITaskRunnerRootFactory RunnerRootFactory => throw new NotImplementedException();
+            public IChainFactory DispatcherFactory => throw new NotImplementedException();
+            public IJobRootFactory RunnerRootFactory => throw new NotImplementedException();
             public IReadOnlyDictionary<string, RetryPolicyOptions> RetryPolicies => new Dictionary<string, RetryPolicyOptions>();
-            public IReadOnlyDictionary<string, IDispatcherOptions> Dispatchers => new Dictionary<string, IDispatcherOptions>();
+            public IReadOnlyDictionary<string, IChainOptions> Dispatchers => new Dictionary<string, IChainOptions>();
 
-            public ITaskDispatcherFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IDispatcherOptions> options, IRetryPolicyFactory retries)
+            public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }
 
-            public ITaskRunnerFactory GetTaskRunnerFactory()
+            public IJobFactory GetJobFactory()
             {
                 throw new NotImplementedException();
             }
 
-            public ITaskRunnerRootFactory GetTaskRunnerRootFactory()
+            public IJobRootFactory GetJobRootFactory()
             {
                 throw new NotImplementedException();
             }

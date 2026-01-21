@@ -6,22 +6,22 @@ namespace Fmacias.TplQueue.Observers
     /// <summary>
     /// Observers to the console 
     /// </summary>
-    internal sealed class TaskRunnerConsoleObserver : ITaskRunnerConsoleObserver
+    internal sealed class ConsoleObserver : IConsoleObserver
     {
-        private TaskRunnerConsoleObserver() { }
+        private ConsoleObserver() { }
 
-        public static TaskRunnerConsoleObserver Create()
+        public static ConsoleObserver Create()
         {
-            return new TaskRunnerConsoleObserver();
+            return new ConsoleObserver();
         }
 
         /// <summary>
-        /// <inheritdoc cref="IObserver{TaskRunnerEvent}.OnCompleted"/>
+        /// <inheritdoc cref="IObserver{JobEvent}.OnCompleted"/>
         /// Nofication ignored
         /// </summary>
         public void OnCompleted() { }
         /// <summary>
-        /// <inheritdoc cref="IObserver{TaskRunnerEvent}.OnError(Exception)"/>
+        /// <inheritdoc cref="IObserver{JobEvent}.OnError(Exception)"/>
         /// Notfies error to the console
         /// </summary>
         /// <param name="error"></param>
@@ -32,15 +32,15 @@ namespace Fmacias.TplQueue.Observers
             Console.WriteLine($"[ERROR] {error.Message}");
         }
         /// <summary>
-        /// <inheritdoc cref="IObserver{TaskRunnerEvent}.OnNext(TaskRunnerEvent)"/>
+        /// <inheritdoc cref="IObserver{JobEvent}.OnNext(JobEvent)"/>
         /// Notfies status changes to the console
         /// </summary>
         /// <param name="value"></param>
-        public void OnNext(ITaskRunnerEvent value)
+        public void OnNext(IJobEvent value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            Console.WriteLine($"[EVENT] {value.Status} - {value.RunnerDTO.Name}");
+            Console.WriteLine($"[EVENT] {value.Status} - {value.JobDTO.Name}");
         }
     }
 }

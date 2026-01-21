@@ -11,10 +11,10 @@ namespace Fmacias.TplQueue.Cache.Abstract
     internal sealed class CacheLeaseEntry : ICacheLeaseEntry
     {
         public Guid LeaseId { get; }
-        public Guid TaskRunnerRootId { get; }
-        public Guid TaskRunnerId { get; }
-        public Guid ParentTaskRunnerId { get; }
-        public ITaskRunnerNodeDto TaskRunnerNodeDto { get; private set; }
+        public Guid JobRootId { get; }
+        public Guid JobId { get; }
+        public Guid ParentJobId { get; }
+        public IJobNodeDto JobNodeDto { get; private set; }
         public bool IsFifo { get; private set; }
         public DateTime CacheUtc { get; }
         public EntryStatus Status { get; private set; }
@@ -25,27 +25,27 @@ namespace Fmacias.TplQueue.Cache.Abstract
 
         private CacheLeaseEntry(
             Guid leaseId,
-            Guid rootId,
-            Guid taskRunnerId,
-            Guid parentTaskRunnerId,
-            ITaskRunnerNodeDto nodeDto,
+            Guid jobRootId,
+            Guid jobId,
+            Guid parentJobId,
+            IJobNodeDto jobNodeDto,
             DateTime cacheUtc)
         {
             if (leaseId == Guid.Empty) throw new ArgumentException("Lease id cannot be empty.", nameof(leaseId));
-            if (rootId == Guid.Empty) throw new ArgumentException("Root id cannot be empty.", nameof(rootId));
-            if (taskRunnerId == Guid.Empty) throw new ArgumentException("Task runner id cannot be empty.", nameof(taskRunnerId));
-            if (nodeDto is null) throw new ArgumentNullException(nameof(nodeDto));
+            if (jobRootId == Guid.Empty) throw new ArgumentException("Root id cannot be empty.", nameof(jobRootId));
+            if (jobId == Guid.Empty) throw new ArgumentException("Task runner id cannot be empty.", nameof(jobId));
+            if (jobNodeDto is null) throw new ArgumentNullException(nameof(jobNodeDto));
 
             LeaseId = leaseId;
-            TaskRunnerRootId = rootId;
-            TaskRunnerId = taskRunnerId;
-            ParentTaskRunnerId = parentTaskRunnerId;
-            TaskRunnerNodeDto = nodeDto;
+            this.JobRootId = jobRootId;
+            JobId = jobId;
+            ParentJobId = parentJobId;
+            JobNodeDto = jobNodeDto;
             CacheUtc = cacheUtc;
-            RetryDescriptor = nodeDto.RetryDescriptor;
+            RetryDescriptor = jobNodeDto.RetryDescriptor;
             Status = EntryStatus.Pending;
-            IsRoot = nodeDto.IsRoot;
-            IsFifo = nodeDto.IsFifo;
+            IsRoot = jobNodeDto.IsRoot;
+            IsFifo = jobNodeDto.IsFifo;
         }
 
         /// <summary>
@@ -53,18 +53,18 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// </summary>
         public static ICacheLeaseEntry Create(
             Guid leaseId,
-            Guid rootId,
-            Guid taskRunnerId,
-            Guid parentTaskRunnerId,
-            ITaskRunnerNodeDto nodeDto,
+            Guid jobRootId,
+            Guid jobId,
+            Guid parentJobId,
+            IJobNodeDto jobNodeDto,
             DateTime cacheUtc)
         {
             return new CacheLeaseEntry(
                 leaseId,
-                rootId,
-                taskRunnerId,
-                parentTaskRunnerId,
-                nodeDto,
+                jobRootId,
+                jobId,
+                parentJobId,
+                jobNodeDto,
                 cacheUtc);
         }
 
@@ -87,7 +87,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
 
             if (!string.IsNullOrEmpty(jsonOutput))
             {
-                TaskRunnerNodeDto.UpdatePayloadJson(jsonOutput);
+                JobNodeDto.UpdatePayloadJson(jsonOutput);
             }
 
             Status = EntryStatus.Acknownledged;

@@ -16,9 +16,9 @@ namespace Fmacias.TplQueue.Test.Cache
             var runnerId = Guid.NewGuid();
             var parentRunnerId = rootId;
             var mockRetryDescriptor = new Mock<IRetryPolicyDescriptor>();
-            var nodeDto = Mock.Of<ITaskRunnerNodeDto>(n =>
-                n.TaskRunnerId == runnerId &&
-                n.ParentTaskRunnerId == parentRunnerId &&
+            var nodeDto = Mock.Of<IJobNodeDto>(n =>
+                n.JobId == runnerId &&
+                n.ParentJobId == parentRunnerId &&
                 n.Name == "node" &&
                 n.PayloadJson == "{}" &&
                 n.PayloadType == "type" && 
@@ -36,10 +36,10 @@ namespace Fmacias.TplQueue.Test.Cache
                 nodeDto,
                 cacheUtc: DateTime.UtcNow);
             Assert.That(entry.LeaseId, Is.EqualTo(leaseId));
-            Assert.That(entry.TaskRunnerRootId, Is.EqualTo(rootId));
-            Assert.That(entry.TaskRunnerId, Is.EqualTo(runnerId));
-            Assert.That(entry.ParentTaskRunnerId, Is.EqualTo(parentRunnerId));
-            Assert.That(entry.TaskRunnerNodeDto, Is.EqualTo(nodeDto));
+            Assert.That(entry.JobRootId, Is.EqualTo(rootId));
+            Assert.That(entry.JobId, Is.EqualTo(runnerId));
+            Assert.That(entry.ParentJobId, Is.EqualTo(parentRunnerId));
+            Assert.That(entry.JobNodeDto, Is.EqualTo(nodeDto));
             Assert.That(entry.IsFifo, Is.True);
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Pending));
             Assert.That(entry.IsRoot, Is.True);
@@ -87,8 +87,8 @@ namespace Fmacias.TplQueue.Test.Cache
             var rootId = Guid.NewGuid();
             var runnerId = Guid.NewGuid();
 
-            var nodeDto = Mock.Of<ITaskRunnerNodeDto>(n =>
-                n.TaskRunnerId == runnerId &&
+            var nodeDto = Mock.Of<IJobNodeDto>(n =>
+                n.JobId == runnerId &&
                 n.Name == "node" &&
                 n.PayloadJson == "{}" &&
                 n.PayloadType == "type" &&
@@ -99,7 +99,7 @@ namespace Fmacias.TplQueue.Test.Cache
                 leaseId,
                 rootId,
                 runnerId,
-                parentTaskRunnerId: Guid.Empty,
+                parentJobId: Guid.Empty,
                 nodeDto,
                 cacheUtc: DateTime.UtcNow);
         }

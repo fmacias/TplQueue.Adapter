@@ -15,12 +15,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             // Arrange
             var leaseId = Guid.NewGuid();
-            var rootId = Guid.NewGuid();
-            var taskRunnerId = Guid.NewGuid();
-            var parentId = Guid.NewGuid();
+            var jobRootId = Guid.NewGuid();
+            var jobId = Guid.NewGuid();
+            var parentJobId = Guid.NewGuid();
             var retryDescriptor = Mock.Of<IRetryPolicyDescriptor>();
 
-            var nodeDto = new Mock<ITaskRunnerNodeDto>();
+            var nodeDto = new Mock<IJobNodeDto>();
             nodeDto.SetupGet(n => n.RetryDescriptor).Returns(retryDescriptor);
             nodeDto.SetupGet(n => n.IsRoot).Returns(true);
             var cacheUtc = DateTime.UtcNow;
@@ -28,18 +28,18 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             // Act
             var entry = CacheLeaseEntry.Create(
                 leaseId,
-                rootId,
-                taskRunnerId,
-                parentId,
+                jobRootId,
+                jobId,
+                parentJobId,
                 nodeDto.Object,
                 cacheUtc);
 
             // Assert
             Assert.That(entry.LeaseId, Is.EqualTo(leaseId));
-            Assert.That(entry.TaskRunnerRootId, Is.EqualTo(rootId));
-            Assert.That(entry.TaskRunnerId, Is.EqualTo(taskRunnerId));
-            Assert.That(entry.ParentTaskRunnerId, Is.EqualTo(parentId));
-            Assert.That(entry.TaskRunnerNodeDto, Is.SameAs(nodeDto.Object));
+            Assert.That(entry.JobRootId, Is.EqualTo(jobRootId));
+            Assert.That(entry.JobId, Is.EqualTo(jobId));
+            Assert.That(entry.ParentJobId, Is.EqualTo(parentJobId));
+            Assert.That(entry.JobNodeDto, Is.SameAs(nodeDto.Object));
             Assert.That(entry.CacheUtc, Is.EqualTo(cacheUtc).Within(TimeSpan.FromSeconds(1)));
             Assert.That(entry.RetryDescriptor, Is.SameAs(retryDescriptor));
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Pending));
@@ -49,7 +49,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         [Test]
         public void Create_EmptyIds_Throws()
         {
-            var nodeDto = Mock.Of<ITaskRunnerNodeDto>();
+            var nodeDto = Mock.Of<IJobNodeDto>();
 
             Assert.Throws<ArgumentException>(() =>
                 CacheLeaseEntry.Create(
@@ -93,7 +93,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         public void MarkAck_UpdatesPayloadJsonAndStatus()
         {
             // Arrange
-            var nodeDto = new Mock<ITaskRunnerNodeDto>();
+            var nodeDto = new Mock<IJobNodeDto>();
             nodeDto.SetupGet(n => n.RetryDescriptor).Returns(Mock.Of<IRetryPolicyDescriptor>());
 
             var entry = CacheLeaseEntry.Create(
@@ -157,7 +157,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
         private static CacheLeaseEntry CreateDefaultEntry()
         {
-            var nodeDto = new Mock<ITaskRunnerNodeDto>();
+            var nodeDto = new Mock<IJobNodeDto>();
             nodeDto.SetupGet(n => n.RetryDescriptor).Returns(Mock.Of<IRetryPolicyDescriptor>());
 
             return (CacheLeaseEntry)CacheLeaseEntry.Create(

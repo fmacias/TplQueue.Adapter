@@ -10,27 +10,27 @@ namespace Fmacias.TplQueue.Test
     public class ApiTests
     {
         private Mock<ICoreApi> _coreApi = null!;
-        private Mock<ITaskRunnerFactory> _runnerFactory = null!;
-        private Mock<ITaskRunnerRootFactory> _rootFactory = null!;
-        private Mock<ITaskDispatcherFactory> _dispatcherFactory = null!;
+        private Mock<IJobFactory> _runnerFactory = null!;
+        private Mock<IJobRootFactory> _rootFactory = null!;
+        private Mock<IChainFactory> _dispatcherFactory = null!;
         private Mock<IRetryPolicyFactory> _retryFactory = null!;
-        private Dictionary<string, IDispatcherOptions> _dispatcherOptions = null!;
+        private Dictionary<string, IChainOptions> _dispatcherOptions = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _runnerFactory = new Mock<ITaskRunnerFactory>();
-            _rootFactory = new Mock<ITaskRunnerRootFactory>();
-            _dispatcherFactory = new Mock<ITaskDispatcherFactory>();
+            _runnerFactory = new Mock<IJobFactory>();
+            _rootFactory = new Mock<IJobRootFactory>();
+            _dispatcherFactory = new Mock<IChainFactory>();
             _retryFactory = new Mock<IRetryPolicyFactory>();
 
             _coreApi = new Mock<ICoreApi>();
-            _coreApi.Setup(a => a.GetTaskRunnerFactory()).Returns(_runnerFactory.Object);
-            _coreApi.Setup(a => a.GetTaskRunnerRootFactory()).Returns(_rootFactory.Object);
+            _coreApi.Setup(a => a.GetJobFactory()).Returns(_runnerFactory.Object);
+            _coreApi.Setup(a => a.GetJobRootFactory()).Returns(_rootFactory.Object);
 
-            _dispatcherOptions = new Dictionary<string, IDispatcherOptions>
+            _dispatcherOptions = new Dictionary<string, IChainOptions>
             {
-                { "default", Mock.Of<IDispatcherOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
+                { "default", Mock.Of<IChainOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
             };
             _coreApi.Setup(a => a.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object))
                 .Returns(_dispatcherFactory.Object);
@@ -41,12 +41,12 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Instance(_coreApi.Object);
 
-            Assert.That(api.GetTaskRunnerFactory(), Is.SameAs(_runnerFactory.Object));
-            Assert.That(api.GetTaskRunnerRootFactory(), Is.SameAs(_rootFactory.Object));
+            Assert.That(api.GetJobFactory(), Is.SameAs(_runnerFactory.Object));
+            Assert.That(api.GetJobRootFactory(), Is.SameAs(_rootFactory.Object));
             Assert.That(api.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object), Is.SameAs(_dispatcherFactory.Object));
 
-            _coreApi.Verify(a => a.GetTaskRunnerFactory(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetTaskRunnerRootFactory(), Times.AtLeastOnce);
+            _coreApi.Verify(a => a.GetJobFactory(), Times.AtLeastOnce);
+            _coreApi.Verify(a => a.GetJobRootFactory(), Times.AtLeastOnce);
             _coreApi.Verify(a => a.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object), Times.Once);
         }
 

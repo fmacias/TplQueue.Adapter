@@ -49,7 +49,7 @@ namespace Fmacias.TplQueue.Test.Serialization
         public void SerializeCarrier_WhenPayloadIsNull_Throws()
         {
             var serializer = SystemTextJsonUniversalSerializer.Create();
-            var carrier = new Mock<IPayloadCarrier>();
+            var carrier = new Mock<IPayloadCarrierJob>();
             carrier.Setup(c => c.GetPayload()).Returns((object)null!);
             carrier.Setup(c => c.PayloadType).Returns(typeof(TestPayload));
 

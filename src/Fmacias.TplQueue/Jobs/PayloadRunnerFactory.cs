@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace Fmacias.TplQueue.Runner
+namespace Fmacias.TplQueue.Jobs
 {
     /// <summary>
     /// <![CDATA[
@@ -11,26 +11,26 @@ namespace Fmacias.TplQueue.Runner
     ///
     /// Normal creation paths (Create / CreateRoot) are fully generic and type-safe.
     /// Reflection is only used for Load / LoadRoot where the payload type is known
-    /// only by its CLR type name stored in the cache (TaskRunnerNodeDto.PayloadType).
+    /// only by its CLR type name stored in the cache (JobNodeDto.PayloadType).
     ///
     /// The factory also integrates with IRetryPolicyFactory so that root runners
     /// are rehydrated with the same retry policy (via IRetryPolicyDescriptor) that
     /// was used when the graph was originally created.
     /// ]]>
     /// </summary>
-    internal sealed class PayloadRunnerFactory : IPayloadRunnerFactory
+    internal sealed class PayloadRunnerFactory : IPayloadJobFactory
     {
-        private readonly ITaskRunnerRootFactory _taskRunnerRootFactory;
-        private readonly ITaskRunnerFactory _taskRunnerFactory;
+        private readonly IJobRootFactory _jobRootFactory;
+        private readonly IJobFactory _jobFactory;
         private readonly IRetryPolicyFactory _retryPolicyFactory;
 
         private PayloadRunnerFactory(
-            ITaskRunnerFactory taskRunnerFactory,
-            ITaskRunnerRootFactory taskRunnerRootFactory,
+            IJobFactory jobFactory,
+            IJobRootFactory jobRootFactory,
             IRetryPolicyFactory retryPolicyFactory)
         {
-            _taskRunnerFactory = taskRunnerFactory ?? throw new ArgumentNullException(nameof(taskRunnerFactory));
-            _taskRunnerRootFactory = taskRunnerRootFactory ?? throw new ArgumentNullException(nameof(taskRunnerRootFactory));
+            _jobFactory = jobFactory ?? throw new ArgumentNullException(nameof(jobFactory));
+            _jobRootFactory = jobRootFactory ?? throw new ArgumentNullException(nameof(jobRootFactory));
             _retryPolicyFactory = retryPolicyFactory ?? throw new ArgumentNullException(nameof(retryPolicyFactory));
         }
 
@@ -38,16 +38,16 @@ namespace Fmacias.TplQueue.Runner
         /// Factory method that hides the concrete implementation and enforces injection
         /// of all required dependencies.
         /// </summary>
-        public static IPayloadRunnerFactory Instance(
-            ITaskRunnerFactory taskRunnerFactory,
-            ITaskRunnerRootFactory taskRunnerRootFactory,
+        public static IPayloadJobFactory Instance(
+            IJobFactory jobFactory,
+            IJobRootFactory jobRootFactory,
             IRetryPolicyFactory retryPolicyFactory)
         {
-            return new PayloadRunnerFactory(taskRunnerFactory, taskRunnerRootFactory, retryPolicyFactory);
+            return new PayloadRunnerFactory(jobFactory, jobRootFactory, retryPolicyFactory);
         }
 
         /// <inheritdoc />
-        public IPayloadTaskRunner<T> Create<T>(
+        public IPayloadJob<T> Create<T>(
             T payload,
             IUniversalPayloadSerializer serializer,
             string name = "")
@@ -56,16 +56,16 @@ namespace Fmacias.TplQueue.Runner
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
 
-            return PayloadTaskRunner<T>.Create(
+            return PayloadJob<T>.Create(
                 payload,
                 serializer,
-                _taskRunnerFactory,
+                _jobFactory,
                 name);
         }
 
         /// <inheritdoc />
-        public IPayloadTaskRunner<T> Create<T>(
-            Guid taskRunnerId,
+        public IPayloadJob<T> Create<T>(
+            Guid jobId,
             T payload,
             IUniversalPayloadSerializer serializer,
             string name = "")
@@ -74,37 +74,17 @@ namespace Fmacias.TplQueue.Runner
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
 
-            return PayloadTaskRunner<T>.Create(
-                taskRunnerId,
+            return PayloadJob<T>.Create(
+                jobId,
                 payload,
                 serializer,
-                _taskRunnerFactory,
+                _jobFactory,
                 name);
         }
 
         /// <inheritdoc />
-        public IPayloadTaskRunnerRoot<T> CreateRoot<T>(
-            Guid taskRunnerId,
-            T payload,
-            IUniversalPayloadSerializer serializer,
-            Func<IRetryPolicy>? retryPolicyFactory = null,
-            string name = "")
-            where T : IPayloadCommand
-        {
-            if (payload is null) throw new ArgumentNullException(nameof(payload));
-            if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-
-            return PayloadTaskRunnerRoot<T>.Create(
-                taskRunnerId,
-                payload,
-                serializer,
-                _taskRunnerRootFactory,
-                retryPolicyFactory,
-                name);
-        }
-
-        /// <inheritdoc />
-        public IPayloadTaskRunnerRoot<T> CreateRoot<T>(
+        public IPayloadJobRoot<T> CreateRoot<T>(
+            Guid jobId,
             T payload,
             IUniversalPayloadSerializer serializer,
             Func<IRetryPolicy>? retryPolicyFactory = null,
@@ -114,29 +94,49 @@ namespace Fmacias.TplQueue.Runner
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
 
-            return PayloadTaskRunnerRoot<T>.Create(
+            return PayloadJobRoot<T>.Create(
+                jobId,
                 payload,
                 serializer,
-                _taskRunnerRootFactory,
+                _jobRootFactory,
                 retryPolicyFactory,
                 name);
         }
 
         /// <inheritdoc />
-        public IPayloadCarrier Load(
+        public IPayloadJobRoot<T> CreateRoot<T>(
+            T payload,
+            IUniversalPayloadSerializer serializer,
+            Func<IRetryPolicy>? retryPolicyFactory = null,
+            string name = "")
+            where T : IPayloadCommand
+        {
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            if (serializer is null) throw new ArgumentNullException(nameof(serializer));
+
+            return PayloadJobRoot<T>.Create(
+                payload,
+                serializer,
+                _jobRootFactory,
+                retryPolicyFactory,
+                name);
+        }
+
+        /// <inheritdoc />
+        public IPayloadCarrierJob Load(
             ICacheLeaseEntry lease,
             IUniversalPayloadSerializer serializer)
         {
             if (lease == null) throw new ArgumentNullException(nameof(lease));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            var nodeDto = lease.TaskRunnerNodeDto;
+            var nodeDto = lease.JobNodeDto;
             if (string.IsNullOrWhiteSpace(nodeDto.PayloadType))
                 throw new InvalidOperationException(
-                    "PayloadType must be provided in TaskRunnerNodeDto to rehydrate a payload runner.");
+                    "PayloadType must be provided in JobNodeDto to rehydrate a payload runner.");
 
             var payloadType = Type.GetType(nodeDto.PayloadType!, throwOnError: true)!;
-            var runnerType = typeof(PayloadTaskRunner<>).MakeGenericType(payloadType);
+            var runnerType = typeof(PayloadJob<>).MakeGenericType(payloadType);
 
             var loadMethod = runnerType.GetMethod(
                 name: "Load",
@@ -146,41 +146,41 @@ namespace Fmacias.TplQueue.Runner
                 {
                     typeof(ICacheLeaseEntry),
                     typeof(IUniversalPayloadSerializer),
-                    typeof(ITaskRunnerFactory)
+                    typeof(IJobFactory)
                 },
                 modifiers: null);
 
             if (loadMethod is null)
             {
                 throw new InvalidOperationException(
-                    "Cannot locate PayloadTaskRunner<T>.Load(ICacheLeaseEntry, IUniversalPayloadSerializer, ITaskRunnerFactory).");
+                    "Cannot locate PayloadJob<T>.Load(ICacheLeaseEntry, IUniversalPayloadSerializer, IJobFactory).");
             }
 
-            return (IPayloadCarrier)loadMethod.Invoke(
+            return (IPayloadCarrierJob)loadMethod.Invoke(
                 obj: null,
                 parameters: new object[]
                 {
                     lease,
                     serializer,
-                    _taskRunnerFactory
+                    _jobFactory
                 })!;
         }
 
         /// <inheritdoc />
-        public IPayloadCarrierRoot LoadRoot(
+        public IPayloadJobRoot LoadRoot(
             ICacheLeaseEntry lease,
             IUniversalPayloadSerializer serializer)
         {
             if (lease == null) throw new ArgumentNullException(nameof(lease));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            var nodeDto = lease.TaskRunnerNodeDto;
+            var nodeDto = lease.JobNodeDto;
             if (string.IsNullOrWhiteSpace(nodeDto.PayloadType))
                 throw new InvalidOperationException(
-                    "PayloadType must be provided in TaskRunnerNodeDto to rehydrate a root payload runner.");
+                    "PayloadType must be provided in JobNodeDto to rehydrate a root payload runner.");
 
             var payloadType = Type.GetType(nodeDto.PayloadType!, throwOnError: true)!;
-            var runnerType = typeof(PayloadTaskRunnerRoot<>).MakeGenericType(payloadType);
+            var runnerType = typeof(PayloadJobRoot<>).MakeGenericType(payloadType);
 
             var loadMethod = runnerType.GetMethod(
                 name: "Load",
@@ -190,7 +190,7 @@ namespace Fmacias.TplQueue.Runner
                 {
                     typeof(ICacheLeaseEntry),
                     typeof(IUniversalPayloadSerializer),
-                    typeof(ITaskRunnerRootFactory),
+                    typeof(IJobRootFactory),
                     typeof(IRetryPolicyFactory)
                 },
                 modifiers: null);
@@ -198,16 +198,16 @@ namespace Fmacias.TplQueue.Runner
             if (loadMethod is null)
             {
                 throw new InvalidOperationException(
-                    "Cannot locate PayloadTaskRunnerRoot<T>.Load(ICacheLeaseEntry, IUniversalPayloadSerializer, ITaskRunnerRootFactory, IRetryPolicyFactory).");
+                    "Cannot locate PayloadJobRoot<T>.Load(ICacheLeaseEntry, IUniversalPayloadSerializer, IJobRootFactory, IRetryPolicyFactory).");
             }
 
-            return (IPayloadCarrierRoot)loadMethod.Invoke(
+            return (IPayloadJobRoot)loadMethod.Invoke(
                 obj: null,
                 parameters: new object[]
                 {
                     lease,
                     serializer,
-                    _taskRunnerRootFactory,
+                    _jobRootFactory,
                     _retryPolicyFactory
                 })!;
         }

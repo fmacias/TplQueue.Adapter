@@ -1,5 +1,5 @@
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Runner;
+using Fmacias.TplQueue.Jobs;
 using Moq;
 using NUnit.Framework;
 
@@ -11,39 +11,39 @@ namespace Fmacias.TplQueue.Test.Runner
         private readonly TestPayload _payload = new();
 
         [Test]
-        public void PayloadTaskRunner_Create_ShouldValidateInputs()
+        public void PayloadJob_Create_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunner<TestPayload>.Create(null!, Mock.Of<IUniversalPayloadSerializer>(), Mock.Of<ITaskRunnerFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunner<TestPayload>.Create(_payload, null!, Mock.Of<ITaskRunnerFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunner<TestPayload>.Create(_payload, Mock.Of<IUniversalPayloadSerializer>(), null!));
+            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Create(null!, Mock.Of<IUniversalPayloadSerializer>(), Mock.Of<IJobFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Create(_payload, null!, Mock.Of<IJobFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Create(_payload, Mock.Of<IUniversalPayloadSerializer>(), null!));
         }
 
         [Test]
-        public void PayloadTaskRunner_Load_ShouldValidateInputs()
+        public void PayloadJob_Load_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunner<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), null!, Mock.Of<ITaskRunnerFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunner<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), Mock.Of<IUniversalPayloadSerializer>(), null!));
+            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), null!, Mock.Of<IJobFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), Mock.Of<IUniversalPayloadSerializer>(), null!));
         }
 
         [Test]
-        public void PayloadTaskRunnerRoot_Create_ShouldValidateInputs()
+        public void PayloadJobRoot_Create_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunnerRoot<TestPayload>.Create(Guid.NewGuid(), null!, Mock.Of<IUniversalPayloadSerializer>(), Mock.Of<ITaskRunnerRootFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunnerRoot<TestPayload>.Create(Guid.NewGuid(), _payload, null!, Mock.Of<ITaskRunnerRootFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunnerRoot<TestPayload>.Create(Guid.NewGuid(), _payload, Mock.Of<IUniversalPayloadSerializer>(), null!));
+            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.Create(Guid.NewGuid(), null!, Mock.Of<IUniversalPayloadSerializer>(), Mock.Of<IJobRootFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.Create(Guid.NewGuid(), _payload, null!, Mock.Of<IJobRootFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.Create(Guid.NewGuid(), _payload, Mock.Of<IUniversalPayloadSerializer>(), null!));
         }
 
         [Test]
-        public void PayloadTaskRunnerRoot_Load_ShouldValidateInputs()
+        public void PayloadJobRoot_Load_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunnerRoot<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), null!, Mock.Of<ITaskRunnerRootFactory>(), Mock.Of<IRetryPolicyFactory>()));
-            Assert.Throws<ArgumentNullException>(() => PayloadTaskRunnerRoot<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), Mock.Of<IUniversalPayloadSerializer>(), null!, Mock.Of<IRetryPolicyFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), null!, Mock.Of<IJobRootFactory>(), Mock.Of<IRetryPolicyFactory>()));
+            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.Load(Mock.Of<ICacheLeaseEntry>(), Mock.Of<IUniversalPayloadSerializer>(), null!, Mock.Of<IRetryPolicyFactory>()));
         }
 
         [Test]
         public void PayloadRunnerFactory_CreateRoot_ShouldValidateSerializer()
         {
-            var factory = PayloadRunnerFactory.Instance(Mock.Of<ITaskRunnerFactory>(), Mock.Of<ITaskRunnerRootFactory>(),Mock.Of<IRetryPolicyFactory>());
+            var factory = PayloadRunnerFactory.Instance(Mock.Of<IJobFactory>(), Mock.Of<IJobRootFactory>(),Mock.Of<IRetryPolicyFactory>());
             Assert.Throws<ArgumentNullException>(() => factory.CreateRoot(Guid.NewGuid(), _payload, null!));
             Assert.Throws<ArgumentNullException>(() => factory.CreateRoot(_payload, null!));
         }
@@ -51,7 +51,7 @@ namespace Fmacias.TplQueue.Test.Runner
         [Test]
         public void PayloadRunnerFactory_Create_ShouldValidateSerializer()
         {
-            var factory = PayloadRunnerFactory.Instance(Mock.Of<ITaskRunnerFactory>(), Mock.Of<ITaskRunnerRootFactory>(), Mock.Of<IRetryPolicyFactory>());
+            var factory = PayloadRunnerFactory.Instance(Mock.Of<IJobFactory>(), Mock.Of<IJobRootFactory>(), Mock.Of<IRetryPolicyFactory>());
             Assert.Throws<ArgumentNullException>(() => factory.Create(_payload, null!));
             Assert.Throws<ArgumentNullException>(() => factory.Create(Guid.NewGuid(), _payload, null!));
         }
@@ -59,7 +59,7 @@ namespace Fmacias.TplQueue.Test.Runner
         [Test]
         public void PayloadRunnerFactory_Load_ShouldValidateSerializer()
         {
-            var factory = PayloadRunnerFactory.Instance(Mock.Of<ITaskRunnerFactory>(), Mock.Of<ITaskRunnerRootFactory>(), Mock.Of<IRetryPolicyFactory>());
+            var factory = PayloadRunnerFactory.Instance(Mock.Of<IJobFactory>(), Mock.Of<IJobRootFactory>(), Mock.Of<IRetryPolicyFactory>());
             Assert.Throws<ArgumentNullException>(() => factory.Load(Mock.Of<ICacheLeaseEntry>(), null!));
             Assert.Throws<ArgumentNullException>(() => factory.LoadRoot(Mock.Of<ICacheLeaseEntry>(), null!));
         }
