@@ -93,7 +93,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     private CacheableChain(
         ILogger<ICacheablePayloadChain> logger,
         IPayloadLeaseCache leaseCache,
-        IJobsChain chain)
+        IJobQ chain)
         : base(chain)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -116,7 +116,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     public static ICacheablePayloadChain Create(
         ILogger<ICacheablePayloadChain> logger,
         IPayloadLeaseCache cache,
-        IJobsChain chain)
+        IJobQ chain)
     {
         return new CacheableChain(logger, cache, chain);
     }
@@ -140,7 +140,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public IJobsChain Enqueue<TPayload>(
+    public IJobQ Enqueue<TPayload>(
         IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayloadCommand
@@ -170,7 +170,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public IJobsChain EnqueueFifo<TPayload>(
+    public IJobQ EnqueueFifo<TPayload>(
         IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayloadCommand
@@ -301,7 +301,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
                 null);
 
             CancellationToken currentCt = RelatedCancelationToken(payloadCarrierRoot.Id);
-            AddToQueue(payloadCarrierRoot, isFifo: lease.IsFifo, currentCt);
+            Enqueue(payloadCarrierRoot, isFifo: lease.IsFifo, currentCt);
             return true;
         }
         return false;

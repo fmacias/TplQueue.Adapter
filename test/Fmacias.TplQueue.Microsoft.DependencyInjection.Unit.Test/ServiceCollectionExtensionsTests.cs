@@ -39,7 +39,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
@@ -113,12 +113,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         private sealed class DummyCoreApi : ICoreApi
         {
-            public IChainFactory DispatcherFactory => throw new NotImplementedException();
+            public IQFactory DispatcherFactory => throw new NotImplementedException();
             public IJobRootFactory RunnerRootFactory => throw new NotImplementedException();
             public IReadOnlyDictionary<string, RetryPolicyOptions> RetryPolicies => new Dictionary<string, RetryPolicyOptions>();
             public IReadOnlyDictionary<string, IChainOptions> Dispatchers => new Dictionary<string, IChainOptions>();
 
-            public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+            public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }

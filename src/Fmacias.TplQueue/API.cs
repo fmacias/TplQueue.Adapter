@@ -57,7 +57,7 @@ namespace Fmacias.TplQueue
             return CacheableChainFactory.Instance();
         }
 
-        public IChainFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
         {
             return _coreApi.GetTaskDispatcherFactory(options, retries);
         }

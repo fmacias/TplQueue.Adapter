@@ -38,9 +38,9 @@ namespace Fmacias.TplQueue.Test.Queues
             Assert.That(creationCount, Is.EqualTo(1));
         }
 
-        private static Mock<IJobsChain> CreateDispatcherMock()
+        private static Mock<IJobQ> CreateDispatcherMock()
         {
-            var dispatcherMock = new Mock<IJobsChain>();
+            var dispatcherMock = new Mock<IJobQ>();
             dispatcherMock.SetupProperty(d => d.InternalEventDelegator);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
             dispatcherMock.SetupGet(d => d.PulseMs).Returns(100);
@@ -54,7 +54,7 @@ namespace Fmacias.TplQueue.Test.Queues
             dispatcherMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());
             dispatcherMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
             dispatcherMock.Setup(d => d.EnqueueFifo(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
-            dispatcherMock.Setup(d => d.AddToQueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
+            dispatcherMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
             return dispatcherMock;
         }
     }

@@ -12,7 +12,7 @@ namespace Fmacias.TplQueue.Test
         private Mock<ICoreApi> _coreApi = null!;
         private Mock<IJobFactory> _runnerFactory = null!;
         private Mock<IJobRootFactory> _rootFactory = null!;
-        private Mock<IChainFactory> _dispatcherFactory = null!;
+        private Mock<IQFactory> _dispatcherFactory = null!;
         private Mock<IRetryPolicyFactory> _retryFactory = null!;
         private Dictionary<string, IChainOptions> _dispatcherOptions = null!;
 
@@ -21,7 +21,7 @@ namespace Fmacias.TplQueue.Test
         {
             _runnerFactory = new Mock<IJobFactory>();
             _rootFactory = new Mock<IJobRootFactory>();
-            _dispatcherFactory = new Mock<IChainFactory>();
+            _dispatcherFactory = new Mock<IQFactory>();
             _retryFactory = new Mock<IRetryPolicyFactory>();
 
             _coreApi = new Mock<ICoreApi>();

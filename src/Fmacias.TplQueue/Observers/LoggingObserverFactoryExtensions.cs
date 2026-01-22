@@ -11,7 +11,7 @@ namespace Fmacias.TplQueue.Observers
     public static class LoggingObserverFactoryExtensions
     {
         public static IDisposable SubscribeFileLogger(
-            this IJobsChain jobsChain,
+            this IJobQ jobsChain,
             ILoggerFactory loggerFactory,
             string queueName)
         {

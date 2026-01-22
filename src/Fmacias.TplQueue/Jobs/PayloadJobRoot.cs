@@ -91,7 +91,7 @@ namespace Fmacias.TplQueue.Jobs
             var json = serializer.Serialize(payload);
             return new PayloadJobRoot<TPayload>(root, payload, json, serializer);
         }
-        public IJobsChain Enqueue(IJobsChain queue, CancellationToken ct) 
+        public IJobQ Enqueue(IJobQ queue, CancellationToken ct) 
         {
             if (queue == null) throw new ArgumentNullException(nameof(queue));
             return _innerRoot.Enqueue(queue, ct);

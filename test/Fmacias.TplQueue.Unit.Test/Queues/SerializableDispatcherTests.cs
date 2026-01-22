@@ -46,7 +46,7 @@ namespace Fmacias.TplQueue.Test.Queues
             var dispatcherMock = CreateDispatcherMock(slots: 1);
 
             dispatcherMock
-                .Setup(d => d.AddToQueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                .Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .Callback<IJobRoot, bool, CancellationToken>((r, f, t) =>
                 {
                     addedRoot = r;
@@ -105,7 +105,7 @@ namespace Fmacias.TplQueue.Test.Queues
             // Arrange
             var logger = Mock.Of<ILogger<ICacheablePayloadChain>>();
             var cache = Mock.Of<IPayloadLeaseCache>();
-            var innerDispatcher = Mock.Of<IJobsChain>();
+            var innerDispatcher = Mock.Of<IJobQ>();
 
             var dispatcher = CacheableChain.Create(
                 logger,
@@ -135,9 +135,9 @@ namespace Fmacias.TplQueue.Test.Queues
             return evt.Object;
         }
 
-        private static Mock<IJobsChain> CreateDispatcherMock(int slots)
+        private static Mock<IJobQ> CreateDispatcherMock(int slots)
         {
-            var dispatcherMock = new Mock<IJobsChain>();
+            var dispatcherMock = new Mock<IJobQ>();
             dispatcherMock.SetupProperty(d => d.InternalEventDelegator);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             dispatcherMock.SetupGet(d => d.PulseMs).Returns(10_000);
@@ -176,7 +176,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public IJobInfo CopyInfo() => this;
             public Func<IRetryPolicy> GetRetryPolicyFactory() => () => Mock.Of<IRetryPolicy>();
             public Task WaitUntilFinishedAsync() => Task.CompletedTask;
-            public IJobsChain Enqueue(IJobsChain queue, CancellationToken ct) => queue;
+            public IJobQ Enqueue(IJobQ queue, CancellationToken ct) => queue;
         }
 
         private class TestLeaseEntry : ICacheLeaseEntry

@@ -18,7 +18,7 @@ namespace Fmacias.TplQueue.Queues
         public ICacheablePayloadChain Create(
             ILogger<ICacheablePayloadChain> logger,
             IPayloadLeaseCache payloadLeaseCache,
-            IJobsChain dispatcher)
+            IJobQ dispatcher)
         {
             if (payloadLeaseCache is null) throw new ArgumentNullException(nameof(payloadLeaseCache));
             return CacheableChain.Create(logger, payloadLeaseCache, dispatcher);

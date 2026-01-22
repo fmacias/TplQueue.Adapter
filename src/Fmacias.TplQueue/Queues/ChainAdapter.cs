@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 namespace Fmacias.TplQueue.Queues
 {
     /// <summary>
-    /// Thin MIT adapter that wraps a proprietary <see cref="IJobsChain"/> instance.
+    /// Thin MIT adapter that wraps a proprietary <see cref="IJobQ"/> instance.
     /// Uses lazy initialization to avoid constructing the proprietary object until first use.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
-    public class ChainAdapter : IJobsChain, IJobsChainAdapter
+    public class ChainAdapter : IJobQ, IJobsChainAdapter
     {
-        private readonly Lazy<IJobsChain> _innerChain;
+        private readonly Lazy<IJobQ> _innerChain;
 
         /// <summary>
         /// Creates an adapter from a factory delegate. The factory is invoked once, thread-safely, on first use.
         /// </summary>
-        public ChainAdapter(Func<IJobsChain> innerFactory)
+        public ChainAdapter(Func<IJobQ> innerFactory)
         {
             if (innerFactory is null) throw new ArgumentNullException(nameof(innerFactory));
-            _innerChain = new Lazy<IJobsChain>(() =>
+            _innerChain = new Lazy<IJobQ>(() =>
             {
                 var queue = innerFactory();
                 return queue ?? throw new InvalidOperationException("The inner dispatcher factory returned null.");
@@ -30,20 +30,20 @@ namespace Fmacias.TplQueue.Queues
         /// <summary>
         /// Creates an adapter over an already constructed proprietary queue.
         /// </summary>
-        public ChainAdapter(IJobsChain inner)
+        public ChainAdapter(IJobQ inner)
         {
-            _innerChain = new Lazy<IJobsChain>(() => inner ?? throw new ArgumentNullException(nameof(inner)), isThreadSafe: true);
+            _innerChain = new Lazy<IJobQ>(() => inner ?? throw new ArgumentNullException(nameof(inner)), isThreadSafe: true);
         }
 
-        private IJobsChain Q => _innerChain.Value;
+        private IJobQ Q => _innerChain.Value;
 
         // IObservable
         public IDisposable Subscribe(IObserver<IJobEvent> observer) => Q.Subscribe(observer);
 
-        public IJobsChain Enqueue(IJobRoot jobRoot, CancellationToken ct)
+        public IJobQ Enqueue(IJobRoot jobRoot, CancellationToken ct)
             => Q.Enqueue(jobRoot, ct);
 
-        public IJobsChain EnqueueFifo(IJobRoot jobRoot, CancellationToken ct)
+        public IJobQ EnqueueFifo(IJobRoot jobRoot, CancellationToken ct)
             => Q.EnqueueFifo(jobRoot, ct);
 
         // Lifecycle
@@ -76,14 +76,14 @@ namespace Fmacias.TplQueue.Queues
             Q.Dispose();
         }
 
-        public IJobsChain GetInnerChain()
+        public IJobQ GetInnerChain()
         {
             return Q;
         }
 
-        public IJobsChain AddToQueue(IJobRoot jobRoot, bool isFifo, CancellationToken cancellationToken)
+        public IJobQ Enqueue(IJobRoot jobRoot, bool isFifo, CancellationToken cancellationToken)
         {
-            return Q.AddToQueue(jobRoot, isFifo, cancellationToken);
+            return Q.Enqueue(jobRoot, isFifo, cancellationToken);
         }
 
         public async Task WaitRunnerUntilFinishedAsync(Guid jobId)
