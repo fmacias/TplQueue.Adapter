@@ -43,7 +43,6 @@ namespace Fmacias.TplQueue.Test.Queues
             var dispatcherMock = new Mock<IJobQ>();
             dispatcherMock.SetupProperty(d => d.OnEventChange);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
-            dispatcherMock.SetupGet(d => d.PulseMs).Returns(100);
             dispatcherMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());
             dispatcherMock.SetupGet(d => d.Name).Returns("inner");
             dispatcherMock.SetupGet(d => d.MaxParallelism).Returns(1);

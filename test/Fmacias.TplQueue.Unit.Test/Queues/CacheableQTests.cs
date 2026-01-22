@@ -140,7 +140,6 @@ namespace Fmacias.TplQueue.Test.Queues
             var dispatcherMock = new Mock<IJobQ>();
             dispatcherMock.SetupProperty(d => d.OnEventChange);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
-            dispatcherMock.SetupGet(d => d.PulseMs).Returns(10_000);
             dispatcherMock.Setup(d => d.Dispose());
             dispatcherMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());
             dispatcherMock.SetupGet(d => d.Name).Returns("dispatcher");

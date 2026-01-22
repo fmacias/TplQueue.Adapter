@@ -64,8 +64,6 @@ namespace Fmacias.TplQueue.Queues
 
         public Func<IRetryPolicy> RetryPolicyFactory => Q.RetryPolicyFactory;
 
-        public int PulseMs => Q.PulseMs;
-
         public SemaphoreSlim Semaphore => Q.Semaphore;
 
         // IDisposable
