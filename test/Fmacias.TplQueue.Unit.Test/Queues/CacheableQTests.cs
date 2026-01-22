@@ -6,16 +6,16 @@ using NUnit.Framework;
 namespace Fmacias.TplQueue.Test.Queues
 {
     [TestFixture]
-    public class SerializableDispatcherTests
+    public class CacheableQTests
     {
         [Test]
         public void TryLeaseWorkOnce_WhenNoSlots_DoesNotLease()
         {
             var leaseCache = new Mock<IPayloadLeaseCache>(MockBehavior.Strict);
             var dispatcherMock = CreateDispatcherMock(slots: 0);
-            var dispatcher = CacheableChain.Create(Mock.Of<ILogger<ICacheablePayloadChain>>(), leaseCache.Object, dispatcherMock.Object);
+            var dispatcher = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
 
-            var leased = ((CacheableChain)dispatcher).TryLeaseWorkOnce();
+            var leased = ((CacheableQ)dispatcher).TryLeaseWorkOnce();
 
             Assert.That(leased, Is.False);
             leaseCache.Verify(c => c.TryLeaseNextRoot(out It.Ref<IPayloadJobRoot>.IsAny!, out It.Ref<ICacheLeaseEntry>.IsAny!), Times.Never);
@@ -55,13 +55,13 @@ namespace Fmacias.TplQueue.Test.Queues
                 })
                 .Returns(dispatcherMock.Object);
 
-            var dispatcher = CacheableChain.Create(
-                Mock.Of<ILogger<ICacheablePayloadChain>>(),
+            var dispatcher = CacheableQ.Create(
+                Mock.Of<ILogger<ICacheablePayloadQ>>(),
                 leaseCache.Object,
                 dispatcherMock.Object);
 
             // Act
-            var leased = ((CacheableChain)dispatcher).TryLeaseWorkOnce();
+            var leased = ((CacheableQ)dispatcher).TryLeaseWorkOnce();
 
             // Assert
             Assert.That(leased, Is.True);
@@ -83,8 +83,8 @@ namespace Fmacias.TplQueue.Test.Queues
             runnerInfo.SetupGet(r => r.Id).Returns(runnerId);
             runnerInfo.SetupGet(r => r.PayloadSerializedData).Returns(payloadData);
 
-            var dispatcher = CacheableChain.Create(Mock.Of<ILogger<ICacheablePayloadChain>>(), leaseCache.Object, dispatcherMock.Object);
-            var callback = dispatcher.InternalEventDelegator;
+            var dispatcher = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
+            var callback = dispatcher.OnEventChange;
 
             await callback(CreateEvent(JobEventStatus.Successed, runnerInfo.Object));
             await callback(CreateEvent(JobEventStatus.Failed, runnerInfo.Object));
@@ -103,11 +103,11 @@ namespace Fmacias.TplQueue.Test.Queues
         public void LeasingPulseMs_NonPositiveValue_ResetsToDefault()
         {
             // Arrange
-            var logger = Mock.Of<ILogger<ICacheablePayloadChain>>();
+            var logger = Mock.Of<ILogger<ICacheablePayloadQ>>();
             var cache = Mock.Of<IPayloadLeaseCache>();
             var innerDispatcher = Mock.Of<IJobQ>();
 
-            var dispatcher = CacheableChain.Create(
+            var dispatcher = CacheableQ.Create(
                 logger,
                 cache,
                 innerDispatcher);
@@ -138,7 +138,7 @@ namespace Fmacias.TplQueue.Test.Queues
         private static Mock<IJobQ> CreateDispatcherMock(int slots)
         {
             var dispatcherMock = new Mock<IJobQ>();
-            dispatcherMock.SetupProperty(d => d.InternalEventDelegator);
+            dispatcherMock.SetupProperty(d => d.OnEventChange);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             dispatcherMock.SetupGet(d => d.PulseMs).Returns(10_000);
             dispatcherMock.Setup(d => d.Dispose());

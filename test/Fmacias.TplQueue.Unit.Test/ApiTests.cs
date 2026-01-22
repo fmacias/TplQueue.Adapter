@@ -14,7 +14,7 @@ namespace Fmacias.TplQueue.Test
         private Mock<IJobRootFactory> _rootFactory = null!;
         private Mock<IQFactory> _dispatcherFactory = null!;
         private Mock<IRetryPolicyFactory> _retryFactory = null!;
-        private Dictionary<string, IChainOptions> _dispatcherOptions = null!;
+        private Dictionary<string, IQOptions> _dispatcherOptions = null!;
 
         [SetUp]
         public void SetUp()
@@ -28,9 +28,9 @@ namespace Fmacias.TplQueue.Test
             _coreApi.Setup(a => a.GetJobFactory()).Returns(_runnerFactory.Object);
             _coreApi.Setup(a => a.GetJobRootFactory()).Returns(_rootFactory.Object);
 
-            _dispatcherOptions = new Dictionary<string, IChainOptions>
+            _dispatcherOptions = new Dictionary<string, IQOptions>
             {
-                { "default", Mock.Of<IChainOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
+                { "default", Mock.Of<IQOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
             };
             _coreApi.Setup(a => a.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object))
                 .Returns(_dispatcherFactory.Object);

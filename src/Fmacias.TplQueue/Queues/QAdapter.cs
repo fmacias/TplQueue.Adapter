@@ -10,17 +10,17 @@ namespace Fmacias.TplQueue.Queues
     /// Uses lazy initialization to avoid constructing the proprietary object until first use.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
-    public class ChainAdapter : IJobQ, IJobsChainAdapter
+    public class QAdapter : IJobQ, IJobQAdapter
     {
-        private readonly Lazy<IJobQ> _innerChain;
+        private readonly Lazy<IJobQ> _innerQ;
 
         /// <summary>
         /// Creates an adapter from a factory delegate. The factory is invoked once, thread-safely, on first use.
         /// </summary>
-        public ChainAdapter(Func<IJobQ> innerFactory)
+        public QAdapter(Func<IJobQ> innerFactory)
         {
             if (innerFactory is null) throw new ArgumentNullException(nameof(innerFactory));
-            _innerChain = new Lazy<IJobQ>(() =>
+            _innerQ = new Lazy<IJobQ>(() =>
             {
                 var queue = innerFactory();
                 return queue ?? throw new InvalidOperationException("The inner dispatcher factory returned null.");
@@ -30,12 +30,12 @@ namespace Fmacias.TplQueue.Queues
         /// <summary>
         /// Creates an adapter over an already constructed proprietary queue.
         /// </summary>
-        public ChainAdapter(IJobQ inner)
+        public QAdapter(IJobQ inner)
         {
-            _innerChain = new Lazy<IJobQ>(() => inner ?? throw new ArgumentNullException(nameof(inner)), isThreadSafe: true);
+            _innerQ = new Lazy<IJobQ>(() => inner ?? throw new ArgumentNullException(nameof(inner)), isThreadSafe: true);
         }
 
-        private IJobQ Q => _innerChain.Value;
+        private IJobQ Q => _innerQ.Value;
 
         // IObservable
         public IDisposable Subscribe(IObserver<IJobEvent> observer) => Q.Subscribe(observer);
@@ -52,10 +52,10 @@ namespace Fmacias.TplQueue.Queues
         public bool IsDisposed => Q.IsDisposed;
 
         /// <inheritdoc />
-        public virtual Func<IJobEvent, Task> InternalEventDelegator
+        public virtual Func<IJobEvent, Task> OnEventChange
         {
-            get => Q.InternalEventDelegator;
-            set => Q.InternalEventDelegator = value;
+            get => Q.OnEventChange;
+            set => Q.OnEventChange = value;
         }
 
         public string Name => Q.Name;

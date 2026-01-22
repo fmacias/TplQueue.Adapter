@@ -21,13 +21,13 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
             if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
 
             var retryPolicies = new Dictionary<string, RetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
-            var dispatchers = new Dictionary<string, IChainOptions>(StringComparer.OrdinalIgnoreCase);
+            var dispatchers = new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
 
             configurationSection.GetSection(RETRY_POLICIES).Bind(retryPolicies);
             configurationSection.GetSection(DISPATCHERS).Bind(dispatchers);
             services
                 .AddSingleton<IReadOnlyDictionary<string, RetryPolicyOptions>>(retryPolicies)
-                .AddSingleton<IReadOnlyDictionary<string, IChainOptions>>(dispatchers);
+                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(dispatchers);
 
             return AddApi(services, apiImplementation);
         }
@@ -46,7 +46,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
 
             services
                 .AddSingleton<IReadOnlyDictionary<string, RetryPolicyOptions>>(builder.RetryPolicies)
-                .AddSingleton<IReadOnlyDictionary<string, IChainOptions>>(builder.Dispatchers);
+                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(builder.Dispatchers);
 
             return AddApi(services, apiImplementation);
         }
@@ -55,7 +55,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
             this IServiceCollection services,
             IApi apiImplementation,
             IDictionary<string, RetryPolicyOptions> retryPolicies,
-            IDictionary<string, IChainOptions> dispatcherOptions)
+            IDictionary<string, IQOptions> dispatcherOptions)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (retryPolicies == null) throw new ArgumentNullException(nameof(retryPolicies));
@@ -67,9 +67,9 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                         ? rPolicies
                         : new Dictionary<string, RetryPolicyOptions>(retryPolicies, StringComparer.OrdinalIgnoreCase))
                 .AddSingleton(
-                    dispatcherOptions is IReadOnlyDictionary<string, IChainOptions> dOptions
+                    dispatcherOptions is IReadOnlyDictionary<string, IQOptions> dOptions
                         ? dOptions
-                        : new Dictionary<string, IChainOptions>(dispatcherOptions, StringComparer.OrdinalIgnoreCase));
+                        : new Dictionary<string, IQOptions>(dispatcherOptions, StringComparer.OrdinalIgnoreCase));
     
             return AddApi(services, apiImplementation);
         }
@@ -98,7 +98,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                     sp.GetRequiredService<IApi>().GetSerializableDispatcherFactory())
                 .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetTaskDispatcherFactory(
-                        sp.GetRequiredService<IReadOnlyDictionary<string, IChainOptions>>(),
+                        sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(),
                         sp.GetRequiredService<IRetryPolicyFactory>()));
         }
         /// <summary>
@@ -109,8 +109,8 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
             internal Dictionary<string, RetryPolicyOptions> RetryPolicies { get; } =
                 new Dictionary<string, RetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
 
-            internal Dictionary<string, IChainOptions> Dispatchers { get; } =
-                new Dictionary<string, IChainOptions>(StringComparer.OrdinalIgnoreCase);
+            internal Dictionary<string, IQOptions> Dispatchers { get; } =
+                new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
 
             public TplQueueOptionsBuilder AddRetryPolicy(string name, RetryPolicyOptions options)
             {
@@ -122,7 +122,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                 return this;
             }
 
-            public TplQueueOptionsBuilder AddDispatcher(string name, IChainOptions options)
+            public TplQueueOptionsBuilder AddDispatcher(string name, IQOptions options)
             {
                 if (string.IsNullOrWhiteSpace(name))
                     throw new ArgumentException("Name cannot be null or empty.", nameof(name));

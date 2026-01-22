@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 /// the durable lease cache and the in-memory task dispatcher.
 /// ]]>
 ///</summary>
-internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
+internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
 {
     /// <summary>
     /// <![CDATA[
@@ -39,7 +39,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     /// </summary>
     private const int LEASING_PULSE_MS = 100;
 
-    private readonly ILogger<ICacheablePayloadChain> _logger;
+    private readonly ILogger<ICacheablePayloadQ> _logger;
     private readonly IPayloadLeaseCache _leaseCache;
     private readonly Dictionary<Guid, CancellationToken> _cancelationTokentByRootId = new();
     private readonly CancellationTokenSource _leasingCts = new();
@@ -90,8 +90,8 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="logger"/> or <paramref name="leaseCache"/> is <c>null</c>.
     /// </exception>
-    private CacheableChain(
-        ILogger<ICacheablePayloadChain> logger,
+    private CacheableQ(
+        ILogger<ICacheablePayloadQ> logger,
         IPayloadLeaseCache leaseCache,
         IJobQ chain)
         : base(chain)
@@ -99,7 +99,7 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _leaseCache = leaseCache ?? throw new ArgumentNullException(nameof(leaseCache));
 
-        InternalEventDelegator = JobEventCallback;
+        OnEventChange = JobEventCallback;
         _isLeasingEnabled = false;
     }
 
@@ -113,12 +113,12 @@ internal sealed class CacheableChain : ChainAdapter, ICacheablePayloadChain
     /// <param name="cache">Lease cache used to persist and lease payload graphs.</param>
     /// <param name="chain">Inner task dispatcher that will execute leased graphs.</param>
     /// <returns>A configured ISerializablePayloadDispatcher instance.</returns>
-    public static ICacheablePayloadChain Create(
-        ILogger<ICacheablePayloadChain> logger,
+    public static ICacheablePayloadQ Create(
+        ILogger<ICacheablePayloadQ> logger,
         IPayloadLeaseCache cache,
         IJobQ chain)
     {
-        return new CacheableChain(logger, cache, chain);
+        return new CacheableQ(logger, cache, chain);
     }
 
     /// <summary>

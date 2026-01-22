@@ -9,12 +9,12 @@ using NUnit.Framework;
 namespace Fmacias.TplQueue.Test.Queues
 {
     [TestFixture]
-    public class TplTaskDispatcherAdapterTests
+    public class QAdapterTests
     {
         [Test]
         public void FactoryConstructor_ShouldThrowWhenFactoryReturnsNull()
         {
-            var adapter = new ChainAdapter(() => null!);
+            var adapter = new QAdapter(() => null!);
 
             Assert.Throws<InvalidOperationException>(() => _ = adapter.Name);
         }
@@ -25,7 +25,7 @@ namespace Fmacias.TplQueue.Test.Queues
             var creationCount = 0;
             var innerDispatcher = CreateDispatcherMock().Object;
 
-            var adapter = new ChainAdapter(() =>
+            var adapter = new QAdapter(() =>
             {
                 creationCount++;
                 return innerDispatcher;
@@ -41,7 +41,7 @@ namespace Fmacias.TplQueue.Test.Queues
         private static Mock<IJobQ> CreateDispatcherMock()
         {
             var dispatcherMock = new Mock<IJobQ>();
-            dispatcherMock.SetupProperty(d => d.InternalEventDelegator);
+            dispatcherMock.SetupProperty(d => d.OnEventChange);
             dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
             dispatcherMock.SetupGet(d => d.PulseMs).Returns(100);
             dispatcherMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());

@@ -52,12 +52,12 @@ namespace Fmacias.TplQueue
             return RetryPolicyFactory.Instance(options);
         }
 
-        public ICacheableChainFactory GetSerializableDispatcherFactory()
+        public ICacheableQFactory GetSerializableDispatcherFactory()
         {
-            return CacheableChainFactory.Instance();
+            return CacheableQFactory.Instance();
         }
 
-        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
         {
             return _coreApi.GetTaskDispatcherFactory(options, retries);
         }

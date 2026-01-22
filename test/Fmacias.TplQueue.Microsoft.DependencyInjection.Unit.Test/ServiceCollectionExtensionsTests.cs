@@ -29,7 +29,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public ICacheableChainFactory GetSerializableDispatcherFactory()
+        public ICacheableQFactory GetSerializableDispatcherFactory()
         {
             throw new NotImplementedException();
         }
@@ -39,7 +39,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
@@ -83,7 +83,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             {
                 { "default", RetryPolicyOptions.Linear(3, 100) }
             };
-            var dispatcherOptions = new Dictionary<string, IChainOptions>();
+            var dispatcherOptions = new Dictionary<string, IQOptions>();
 
             // Act
             services.AddTplQueue(
@@ -116,9 +116,9 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             public IQFactory DispatcherFactory => throw new NotImplementedException();
             public IJobRootFactory RunnerRootFactory => throw new NotImplementedException();
             public IReadOnlyDictionary<string, RetryPolicyOptions> RetryPolicies => new Dictionary<string, RetryPolicyOptions>();
-            public IReadOnlyDictionary<string, IChainOptions> Dispatchers => new Dictionary<string, IChainOptions>();
+            public IReadOnlyDictionary<string, IQOptions> Dispatchers => new Dictionary<string, IQOptions>();
 
-            public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IChainOptions> options, IRetryPolicyFactory retries)
+            public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }
