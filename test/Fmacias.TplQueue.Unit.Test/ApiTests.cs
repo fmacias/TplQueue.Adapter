@@ -32,28 +32,28 @@ namespace Fmacias.TplQueue.Test
             {
                 { "default", Mock.Of<IQOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
             };
-            _coreApi.Setup(a => a.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object))
+            _coreApi.Setup(a => a.GetQFactory(_dispatcherOptions, _retryFactory.Object))
                 .Returns(_dispatcherFactory.Object);
         }
 
         [Test]
         public void GetFactories_DelegatesToInnerCoreApi()
         {
-            var api = API.Instance(_coreApi.Object);
+            var api = API.Create(_coreApi.Object);
 
             Assert.That(api.GetJobFactory(), Is.SameAs(_runnerFactory.Object));
             Assert.That(api.GetJobRootFactory(), Is.SameAs(_rootFactory.Object));
-            Assert.That(api.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object), Is.SameAs(_dispatcherFactory.Object));
+            Assert.That(api.GetQFactory(_dispatcherOptions, _retryFactory.Object), Is.SameAs(_dispatcherFactory.Object));
 
             _coreApi.Verify(a => a.GetJobFactory(), Times.AtLeastOnce);
             _coreApi.Verify(a => a.GetJobRootFactory(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetTaskDispatcherFactory(_dispatcherOptions, _retryFactory.Object), Times.Once);
+            _coreApi.Verify(a => a.GetQFactory(_dispatcherOptions, _retryFactory.Object), Times.Once);
         }
 
         [Test]
         public void GetCacheFactory_ReturnsNewInstances()
         {
-            var api = API.Instance(_coreApi.Object);
+            var api = API.Create(_coreApi.Object);
 
             var first = api.GetCacheFactory();
             var second = api.GetCacheFactory();
@@ -64,7 +64,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void Instance_WhenCoreApiIsNull_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => API.Instance(null!));
+            Assert.Throws<ArgumentNullException>(() => API.Create(null!));
         }
         public sealed class RecordingPayload : IPayloadCommand
         {

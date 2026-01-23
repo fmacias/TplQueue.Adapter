@@ -48,7 +48,7 @@ namespace Fmacias.TplQueue.Jobs
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             if (jobFactory is null) throw new ArgumentNullException(nameof(jobFactory));
 
-            var inner = jobFactory.Create(
+            var inner = jobFactory.CreateJob(
                 func: async (ct, pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
                 name: name);
@@ -67,7 +67,7 @@ namespace Fmacias.TplQueue.Jobs
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             if (jobFactory is null) throw new ArgumentNullException(nameof(jobFactory));
 
-            var innerJob = jobFactory.Create(
+            var innerJob = jobFactory.CreateJob(
                 id: jobId,
                 body: async (ct, pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
@@ -85,7 +85,7 @@ namespace Fmacias.TplQueue.Jobs
 
             var json = cacheLeaseEntry.JobNodeDto.PayloadJson;
             var payload = serializer.Deserialize<TPayload>(json);
-            var inner = jobFactory.Create(
+            var inner = jobFactory.CreateJob(
                 id: cacheLeaseEntry.JobId,
                 body: async (ct, pl) =>
                 {

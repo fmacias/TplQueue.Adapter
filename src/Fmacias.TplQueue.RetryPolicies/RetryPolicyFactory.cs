@@ -118,7 +118,7 @@ namespace Fmacias.TplQueue.RetryPolicies
             => NoRetryPolicy.Create();
 
         /// <inheritdoc />
-        public IExponentialFactorRetryPolicy CreateExponentialBackoff(
+        public IExponentialBackoffRetryPolicy CreateExponentialBackoff(
             int maxRetries,
             double factor,
             bool shouldRetry,
@@ -129,7 +129,7 @@ namespace Fmacias.TplQueue.RetryPolicies
                 maxRetries: maxRetries,
                 factor: factor);
 
-            return (IExponentialFactorRetryPolicy)Create(options);
+            return (IExponentialBackoffRetryPolicy)Create(options);
         }
 
         /// <inheritdoc />

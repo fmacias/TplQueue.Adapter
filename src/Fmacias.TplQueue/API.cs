@@ -16,7 +16,7 @@ namespace Fmacias.TplQueue
         {
             _coreApi = api ?? throw new ArgumentNullException(nameof(api));
         }
-        public static IApi Instance(ICoreApi api)
+        public static IApi Create(ICoreApi api)
         {
             return new API(api);
         }
@@ -57,9 +57,9 @@ namespace Fmacias.TplQueue
             return CacheableQFactory.Instance();
         }
 
-        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
         {
-            return _coreApi.GetTaskDispatcherFactory(options, retries);
+            return _coreApi.GetQFactory(options, retries);
         }
         public IJobFactory GetJobFactory()
         {
@@ -68,6 +68,11 @@ namespace Fmacias.TplQueue
         public IJobRootFactory GetJobRootFactory()
         {
             return _coreApi.GetJobRootFactory();
+        }
+
+        public IQFactory GetQFactory(IRetryPolicyFactory retries)
+        {
+            return _coreApi.GetQFactory(retries);
         }
     }
 }

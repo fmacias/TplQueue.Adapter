@@ -243,7 +243,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
                 {
                     try
                     {
-                        var inner = GetInnerChain();
+                        var inner = GetInnerQ();
 
                         if (inner.Semaphore.CurrentCount > 0)
                         {
@@ -283,7 +283,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     /// </returns>
     internal bool TryLeaseWorkOnce()
     {
-        var semaphore = GetInnerChain().Semaphore;
+        var semaphore = GetInnerQ().Semaphore;
 
         if (semaphore.CurrentCount <= 0)
         {

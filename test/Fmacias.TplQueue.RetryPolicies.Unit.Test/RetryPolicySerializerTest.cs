@@ -23,7 +23,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
 
             // Assert
             Assert.That(policy, Is.TypeOf<ExponentialBackoffRetryPolicy>());
-            var exp = (IExponentialFactorRetryPolicy)policy;
+            var exp = (IExponentialBackoffRetryPolicy)policy;
             Assert.That(exp.MaxRetries, Is.EqualTo(5));
             Assert.That(exp.Delay.TotalMilliseconds, Is.EqualTo(350).Within(0.1));
             Assert.That(exp.Factor, Is.EqualTo(3.0));

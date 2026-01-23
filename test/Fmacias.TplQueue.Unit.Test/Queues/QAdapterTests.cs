@@ -40,21 +40,21 @@ namespace Fmacias.TplQueue.Test.Queues
 
         private static Mock<IJobQ> CreateDispatcherMock()
         {
-            var dispatcherMock = new Mock<IJobQ>();
-            dispatcherMock.SetupProperty(d => d.OnEventChange);
-            dispatcherMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
-            dispatcherMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());
-            dispatcherMock.SetupGet(d => d.Name).Returns("inner");
-            dispatcherMock.SetupGet(d => d.MaxParallelism).Returns(1);
-            dispatcherMock.SetupGet(d => d.IsDisposed).Returns(false);
-            dispatcherMock.Setup(d => d.Start());
-            dispatcherMock.Setup(d => d.Pause());
-            dispatcherMock.Setup(d => d.Dispose());
-            dispatcherMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());
-            dispatcherMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
-            dispatcherMock.Setup(d => d.EnqueueFifo(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
-            dispatcherMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Returns(dispatcherMock.Object);
-            return dispatcherMock;
+            var jobQMock = new Mock<IJobQ>();
+            jobQMock.SetupProperty(d => d.OnEventChange);
+            jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
+            jobQMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());
+            jobQMock.SetupGet(d => d.Name).Returns("inner");
+            jobQMock.SetupGet(d => d.MaxParallelism).Returns(1);
+            jobQMock.SetupGet(d => d.IsDisposed).Returns(false);
+            jobQMock.Setup(d => d.Start());
+            jobQMock.Setup(d => d.Pause());
+            jobQMock.Setup(d => d.Dispose());
+            jobQMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());
+            jobQMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(jobQMock.Object);
+            jobQMock.Setup(d => d.EnqueueFifo(It.IsAny<IJobRoot>(), It.IsAny<CancellationToken>())).Returns(jobQMock.Object);
+            jobQMock.Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Returns(jobQMock.Object);
+            return jobQMock;
         }
     }
 }

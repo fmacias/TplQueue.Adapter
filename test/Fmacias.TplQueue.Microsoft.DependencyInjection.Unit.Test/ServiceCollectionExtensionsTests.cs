@@ -39,7 +39,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+        public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
@@ -65,6 +65,11 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
         }
 
         public IRetryPolicySerializable GetRetryPolicySerializer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQFactory GetQFactory(IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
@@ -118,7 +123,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             public IReadOnlyDictionary<string, RetryPolicyOptions> RetryPolicies => new Dictionary<string, RetryPolicyOptions>();
             public IReadOnlyDictionary<string, IQOptions> Dispatchers => new Dictionary<string, IQOptions>();
 
-            public IQFactory GetTaskDispatcherFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+            public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }
@@ -129,6 +134,11 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             }
 
             public IJobRootFactory GetJobRootFactory()
+            {
+                throw new NotImplementedException();
+            }
+
+            public IQFactory GetQFactory(IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }

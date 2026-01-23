@@ -32,7 +32,7 @@ namespace Fmacias.TplQueue.Jobs
             var payload = serializer.Deserialize<TPayload>(json);
             
             var policyFactory = () => retrypolicyFactory.Create(cacheLeaseEntry.RetryDescriptor);
-            var root = jobRootFactory.Create(
+            var root = jobRootFactory.CreateJob(
                 id: cacheLeaseEntry.JobId,
                 body: async (ct, pl) =>
                 {
@@ -65,7 +65,7 @@ namespace Fmacias.TplQueue.Jobs
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             if (jobRootFactory is null) throw new ArgumentNullException(nameof(jobRootFactory));
-            var root = jobRootFactory.Create(
+            var root = jobRootFactory.CreateJob(
                 id: jobId,
                 body: async (ct,pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
@@ -83,7 +83,7 @@ namespace Fmacias.TplQueue.Jobs
             if (payload is null) throw new ArgumentNullException(nameof(payload));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             if (jobRootFactory is null) throw new ArgumentNullException(nameof(jobRootFactory));
-            var root = jobRootFactory.Create(
+            var root = jobRootFactory.CreateJob(
                 func: async (ct, pl) => await pl.ExecuteAsync(ct).ConfigureAwait(false),
                 arg: payload,
                 retryPolicyFactory: ResolveRetryPolicyFactory(retryPolicyFactory),

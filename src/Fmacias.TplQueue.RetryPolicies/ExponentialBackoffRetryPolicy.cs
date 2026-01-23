@@ -20,7 +20,7 @@ namespace Fmacias.TplQueue.RetryPolicies
     /// the IExponentialFactorRetryPolicy abstraction.
     /// ]]>
     /// </summary>
-    internal sealed class ExponentialBackoffRetryPolicy : IExponentialFactorRetryPolicy
+    internal sealed class ExponentialBackoffRetryPolicy : IExponentialBackoffRetryPolicy
     {
         private const double DefaultJitterPercent = 0.10;
         /// <summary>

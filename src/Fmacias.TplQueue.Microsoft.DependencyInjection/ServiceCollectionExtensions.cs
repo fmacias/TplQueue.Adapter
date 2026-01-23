@@ -97,7 +97,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                 .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetSerializableDispatcherFactory())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetTaskDispatcherFactory(
+                    sp.GetRequiredService<IApi>().GetQFactory(
                         sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(),
                         sp.GetRequiredService<IRetryPolicyFactory>()));
         }

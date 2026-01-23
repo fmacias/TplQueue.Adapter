@@ -41,10 +41,15 @@ namespace Fmacias.TplQueue.Queues
         public IDisposable Subscribe(IObserver<IJobEvent> observer) => Q.Subscribe(observer);
 
         public IJobQ Enqueue(IJobRoot jobRoot, CancellationToken ct)
-            => Q.Enqueue(jobRoot, ct);
-
+        {
+            _ = Q.Enqueue(jobRoot, ct);
+            return this;
+        }
         public IJobQ EnqueueFifo(IJobRoot jobRoot, CancellationToken ct)
-            => Q.EnqueueFifo(jobRoot, ct);
+        {
+            _ = Q.EnqueueFifo(jobRoot, ct);
+            return this;
+        }
 
         // Lifecycle
         public virtual void Start() => Q.Start();
@@ -61,10 +66,8 @@ namespace Fmacias.TplQueue.Queues
         public string Name => Q.Name;
 
         public int MaxParallelism => Q.MaxParallelism;
-
-        public Func<IRetryPolicy> RetryPolicyFactory => Q.RetryPolicyFactory;
-
         public SemaphoreSlim Semaphore => Q.Semaphore;
+        public Func<IRetryPolicy> RetryPolicyFactory => Q.RetryPolicyFactory;
 
         // IDisposable
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
@@ -74,19 +77,26 @@ namespace Fmacias.TplQueue.Queues
             Q.Dispose();
         }
 
-        public IJobQ GetInnerChain()
+        public IJobQ GetInnerQ()
         {
             return Q;
         }
 
         public IJobQ Enqueue(IJobRoot jobRoot, bool isFifo, CancellationToken cancellationToken)
         {
-            return Q.Enqueue(jobRoot, isFifo, cancellationToken);
+            _ = Q.Enqueue(jobRoot, isFifo, cancellationToken);
+            return this;
         }
 
         public async Task WaitRunnerUntilFinishedAsync(Guid jobId)
         {
             await Q.WaitRunnerUntilFinishedAsync(jobId).ConfigureAwait(false);
+        }
+
+        public IJobQ SetRetryPolicyFactory(Func<IRetryPolicy> retryPolicy)
+        {
+            Q.SetRetryPolicyFactory(retryPolicy);
+            return this;
         }
     }
 }
