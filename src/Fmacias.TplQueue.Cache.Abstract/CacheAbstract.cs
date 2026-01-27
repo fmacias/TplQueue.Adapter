@@ -12,7 +12,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
     public abstract class CacheAbstract : IPayloadLeaseCache
     {
         private readonly object _syncDataOperations = new object();
-        private readonly IUniversalPayloadSerializer _universalPayloadSerializer;
+        private readonly IJsonUniversalPayloadSerializer _universalPayloadSerializer;
 
         /// <summary>
         /// Synchronization object for derived classes. Use this for all stateful operations that
@@ -23,13 +23,13 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// <summary>
         /// Serializer used to (de)serialize payloads.
         /// </summary>
-        protected IUniversalPayloadSerializer Serializer => _universalPayloadSerializer;
+        protected IJsonUniversalPayloadSerializer Serializer => _universalPayloadSerializer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CacheAbstract"/> class.
         /// </summary>
         protected CacheAbstract(
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
         {
 //            _retryPolicySerializer = retryPolicySerializer
 //                                     ?? throw new ArgumentNullException(nameof(retryPolicySerializer));

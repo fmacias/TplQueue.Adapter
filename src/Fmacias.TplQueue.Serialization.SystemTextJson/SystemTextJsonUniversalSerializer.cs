@@ -1,6 +1,6 @@
+using Fmacias.TplQueue.Contracts;
 using System;
 using System.Text.Json;
-using Fmacias.TplQueue.Contracts;
 
 namespace Fmacias.TplQueue.Serialization.SystemTextJson
 {
@@ -8,7 +8,7 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
     /// Universal payload serializer backed by System.Text.Json.
     /// Provides both Type-based and generic helpers for IPayloadCommand payloads.
     /// </summary>
-    public sealed class SystemTextJsonUniversalSerializer : ISystemTextJsonUniversalSerializer
+    internal sealed class SystemTextJsonUniversalSerializer : ISystemTextJsonUniversalSerializer
     {
         private readonly JsonSerializerOptions _options;
 

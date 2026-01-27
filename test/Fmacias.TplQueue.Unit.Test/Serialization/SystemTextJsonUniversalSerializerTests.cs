@@ -27,7 +27,7 @@ namespace Fmacias.TplQueue.Test.Serialization
         [Test]
         public void SerializeDeserialize_RoundTripGenericPayload()
         {
-            var serializer = SystemTextJsonUniversalSerializer.Create();
+            var serializer =  SystemTextJsonUniversalSerializer.Create();
             var payload = new TestPayload("alpha");
 
             var json = serializer.Serialize(payload);

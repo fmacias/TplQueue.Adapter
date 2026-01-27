@@ -1,6 +1,4 @@
-using Fmacias.TplQueue;
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
 
@@ -10,44 +8,37 @@ namespace Fmacias.TplQueue.Test
     public class ApiTests
     {
         private Mock<ICoreApi> _coreApi = null!;
-        private Mock<IJobFactory> _runnerFactory = null!;
-        private Mock<IJobRootFactory> _rootFactory = null!;
-        private Mock<IQFactory> _dispatcherFactory = null!;
-        private Mock<IRetryPolicyFactory> _retryFactory = null!;
-        private Dictionary<string, IQOptions> _dispatcherOptions = null!;
+        private Mock<IJobFactory> _jobFactoryMock = null!;
+        private Mock<IJobRootFactory> _jobRootFactoryMock = null!;
+        private Mock<IQFactoryCore> _queueFactoryCoreMock = null!;
+        private Dictionary<string, IQOptions> _queueOptions = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _runnerFactory = new Mock<IJobFactory>();
-            _rootFactory = new Mock<IJobRootFactory>();
-            _dispatcherFactory = new Mock<IQFactory>();
-            _retryFactory = new Mock<IRetryPolicyFactory>();
+            _jobFactoryMock = new Mock<IJobFactory>();
+            _jobRootFactoryMock = new Mock<IJobRootFactory>();
+            _queueFactoryCoreMock = Helper.GetQFactoryCoreMock();
 
-            _coreApi = new Mock<ICoreApi>();
-            _coreApi.Setup(a => a.GetJobFactory()).Returns(_runnerFactory.Object);
-            _coreApi.Setup(a => a.GetJobRootFactory()).Returns(_rootFactory.Object);
-
-            _dispatcherOptions = new Dictionary<string, IQOptions>
+            _coreApi = Helper.GetCoreApiMock(_jobFactoryMock.Object,
+                _jobRootFactoryMock.Object, _queueFactoryCoreMock.Object);
+            _queueOptions = new Dictionary<string, IQOptions>
             {
-                { "default", Mock.Of<IQOptions>(o => o.MaxParallelism == 1 && o.PulseMs == 5 && o.RetryPolicy == "none") }
+                { "default", Mock.Of<IQOptions>(o => o.MaxParallelism == 1 && o.RetryPolicy == "none") }
             };
-            _coreApi.Setup(a => a.GetQFactory(_dispatcherOptions, _retryFactory.Object))
-                .Returns(_dispatcherFactory.Object);
         }
 
         [Test]
         public void GetFactories_DelegatesToInnerCoreApi()
         {
             var api = API.Create(_coreApi.Object);
+            Assert.That(api.GetJobFactoryCore(), Is.SameAs(_jobFactoryMock.Object));
+            Assert.That(api.GetJobRootFactoryCore(), Is.SameAs(_jobRootFactoryMock.Object));
+            Assert.That(api.GetQFactoryCore(), Is.SameAs(_queueFactoryCoreMock.Object));
 
-            Assert.That(api.GetJobFactory(), Is.SameAs(_runnerFactory.Object));
-            Assert.That(api.GetJobRootFactory(), Is.SameAs(_rootFactory.Object));
-            Assert.That(api.GetQFactory(_dispatcherOptions, _retryFactory.Object), Is.SameAs(_dispatcherFactory.Object));
-
-            _coreApi.Verify(a => a.GetJobFactory(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetJobRootFactory(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetQFactory(_dispatcherOptions, _retryFactory.Object), Times.Once);
+            _coreApi.Verify(a => a.GetJobFactoryCore(), Times.AtLeastOnce);
+            _coreApi.Verify(a => a.GetJobRootFactoryCore(), Times.AtLeastOnce);
+            _coreApi.Verify(a => a.GetQFactoryCore(), Times.Once);
         }
 
         [Test]

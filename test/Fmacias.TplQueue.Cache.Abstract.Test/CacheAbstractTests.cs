@@ -14,7 +14,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             // Arrange
             var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Loose);
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
 
             var cache = new FakeCache(
                 retrySerializer.Object,
@@ -32,7 +32,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             // Arrange
             var retrySerializer = new Mock<IRetryPolicySerializable>();
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>();
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>();
 
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
@@ -67,7 +67,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             // Arrange
             var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Loose);
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
 
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))

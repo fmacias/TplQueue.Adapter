@@ -12,14 +12,14 @@ namespace Fmacias.TplQueue.Jobs
     {
         private readonly IJobRoot _innerRoot;
         private PayloadJobRoot(IJobRoot innerRoot, TPayload payload,
-            string jsonSerialized, IUniversalPayloadSerializer serializer)
+            string jsonSerialized, IJsonUniversalPayloadSerializer serializer)
             :base(innerRoot, payload, jsonSerialized, serializer)
         {
             _innerRoot = innerRoot;
         }
         public static PayloadJobRoot<TPayload> Load(
             ICacheLeaseEntry cacheLeaseEntry,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IJobRootFactory jobRootFactory,
             IRetryPolicyFactory retrypolicyFactory)
         {
@@ -46,7 +46,7 @@ namespace Fmacias.TplQueue.Jobs
         }
 
         public static PayloadJobRoot<TPayload> Create(IJobRoot root,
-            TPayload payload, IUniversalPayloadSerializer serializer)
+            TPayload payload, IJsonUniversalPayloadSerializer serializer)
         {
             if (root is null) throw new ArgumentNullException(nameof(root));
             if (payload is null) throw new ArgumentNullException(nameof(payload));
@@ -58,7 +58,7 @@ namespace Fmacias.TplQueue.Jobs
         public static PayloadJobRoot<TPayload> Create(
             Guid jobId,
             TPayload payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IJobRootFactory jobRootFactory,
             Func<IRetryPolicy>? retryPolicyFactory = null, string name = "")
         {
@@ -76,7 +76,7 @@ namespace Fmacias.TplQueue.Jobs
         }
         public static PayloadJobRoot<TPayload> Create(
             TPayload payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IJobRootFactory jobRootFactory,
             Func<IRetryPolicy>? retryPolicyFactory = null, string name = "")
         {

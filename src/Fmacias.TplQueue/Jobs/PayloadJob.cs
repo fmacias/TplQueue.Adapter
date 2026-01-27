@@ -16,9 +16,9 @@ namespace Fmacias.TplQueue.Jobs
         private readonly IJob _inner;
         private readonly TPayload _payload;
         private readonly string _jsonSerializedInput;
-        private readonly IUniversalPayloadSerializer _serializer;
+        private readonly IJsonUniversalPayloadSerializer _serializer;
         protected PayloadJob(IJob inner, TPayload payload, string jsonSerialized,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
         {
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
             _payload = payload ?? throw new ArgumentNullException(nameof(payload));
@@ -40,7 +40,7 @@ namespace Fmacias.TplQueue.Jobs
 
         public static PayloadJob<TPayload> Create(
             TPayload payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IJobFactory jobFactory,
             string name = "")
         {
@@ -59,7 +59,7 @@ namespace Fmacias.TplQueue.Jobs
         public static PayloadJob<TPayload> Create(
             Guid jobId,
             TPayload payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IJobFactory jobFactory,
             string name = "")
         {
@@ -77,7 +77,7 @@ namespace Fmacias.TplQueue.Jobs
         }
 
         public static PayloadJob<TPayload> Load(ICacheLeaseEntry cacheLeaseEntry,
-            IUniversalPayloadSerializer serializer, IJobFactory jobFactory)
+            IJsonUniversalPayloadSerializer serializer, IJobFactory jobFactory)
         {
             cacheLeaseEntry = cacheLeaseEntry ?? throw new ArgumentNullException(nameof(cacheLeaseEntry));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));

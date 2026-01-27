@@ -17,7 +17,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
         public FakeCache(
             IRetryPolicySerializable retryPolicySerializer,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             Guid knownRootId,
             ICacheLeaseEntry knownEntry)
             : base(serializer)

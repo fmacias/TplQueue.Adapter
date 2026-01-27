@@ -24,12 +24,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IPayloadJobFactory GetPayloadJobFactory()
+        public IPayloadJobFactory GetPayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options = null)
         {
             throw new NotImplementedException();
         }
 
-        public ICacheableQFactory GetSerializableDispatcherFactory()
+        public ICacheableQFactory GetCacheableQFactory()
         {
             throw new NotImplementedException();
         }
@@ -39,17 +39,17 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+        public IQFactoryCore GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
         {
             throw new NotImplementedException();
         }
 
-        public IJobFactory GetJobFactory()
+        public IJobFactory GetJobFactoryCore()
         {
             throw new NotImplementedException();
         }
 
-        public IJobRootFactory GetJobRootFactory()
+        public IJobRootFactory GetJobRootFactoryCore()
         {
             throw new NotImplementedException();
         }
@@ -69,7 +69,17 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IQFactory GetQFactory(IRetryPolicyFactory retries)
+        public IQFactoryCore GetQFactoryCore()
+        {
+            throw new NotImplementedException();
+        }
+
+        IQFactoryAdapter IApi.GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISystemTextJsonSerializerFactory GetSystemTextJsonSerializerFactory()
         {
             throw new NotImplementedException();
         }
@@ -88,13 +98,13 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             {
                 { "default", RetryPolicyOptions.Linear(3, 100) }
             };
-            var dispatcherOptions = new Dictionary<string, IQOptions>();
+            var queueOptions = new Dictionary<string, IQOptions>();
 
             // Act
             services.AddTplQueue(
                 new FakeApi(new DummyCoreApi()),
                 retryPolicies,
-                dispatcherOptions);
+                queueOptions);
 
             var provider = services.BuildServiceProvider();
 
@@ -118,27 +128,27 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         private sealed class DummyCoreApi : ICoreApi
         {
-            public IQFactory DispatcherFactory => throw new NotImplementedException();
+            public IQFactoryCore DispatcherFactory => throw new NotImplementedException();
             public IJobRootFactory RunnerRootFactory => throw new NotImplementedException();
             public IReadOnlyDictionary<string, RetryPolicyOptions> RetryPolicies => new Dictionary<string, RetryPolicyOptions>();
             public IReadOnlyDictionary<string, IQOptions> Dispatchers => new Dictionary<string, IQOptions>();
 
-            public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+            public IQFactoryCore GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
             {
                 throw new NotImplementedException();
             }
 
-            public IJobFactory GetJobFactory()
+            public IJobFactory GetJobFactoryCore()
             {
                 throw new NotImplementedException();
             }
 
-            public IJobRootFactory GetJobRootFactory()
+            public IJobRootFactory GetJobRootFactoryCore()
             {
                 throw new NotImplementedException();
             }
 
-            public IQFactory GetQFactory(IRetryPolicyFactory retries)
+            public IQFactoryCore GetQFactoryCore()
             {
                 throw new NotImplementedException();
             }

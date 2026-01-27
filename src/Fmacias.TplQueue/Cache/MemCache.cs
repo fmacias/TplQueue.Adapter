@@ -13,7 +13,7 @@ namespace Fmacias.TplQueue.Cache
         private readonly ConcurrentDictionary<Guid, ICacheLeaseEntry> _indexedEntries = new();
         private readonly IPayloadJobFactory _payloadRunnerFactory;
         private MemCache(IPayloadJobFactory payloadRunnerFactory,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
             : base(serializer)
         {
             if (payloadRunnerFactory == null) throw new ArgumentNullException(nameof(payloadRunnerFactory));
@@ -22,7 +22,7 @@ namespace Fmacias.TplQueue.Cache
         }
 
         public static MemCache Create(IPayloadJobFactory payloadRunnerFactory,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
             => new MemCache(payloadRunnerFactory, serializer);
 
         protected override Action<IJobNodeDto, Guid> AppendNodeCallBack 

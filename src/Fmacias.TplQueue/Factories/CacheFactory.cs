@@ -1,6 +1,7 @@
-﻿using Fmacias.TplQueue.Contracts;
+﻿using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Contracts;
 
-namespace Fmacias.TplQueue.Cache
+namespace Fmacias.TplQueue.Factories
 {
     internal sealed class CacheFactory : ICacheFactory
     {
@@ -12,7 +13,7 @@ namespace Fmacias.TplQueue.Cache
         }
 
         public IMemCache CreateMemCache(IPayloadJobFactory payloadRunnerFactory,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
         {
             return MemCache.Create(payloadRunnerFactory, serializer);
         }

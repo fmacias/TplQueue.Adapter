@@ -11,7 +11,7 @@ namespace Fmacias.TplQueue.Test.Cache
         [Test]
         public void TryLeaseNextRoot_WhenCacheIsEmpty_ReturnsFalse()
         {
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Strict);
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
             var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
             var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
 
@@ -27,7 +27,7 @@ namespace Fmacias.TplQueue.Test.Cache
         [Test]
         public void TryLeaseNextRoot_WhenEntriesExist_LeasesRootAndDependencies()
         {
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Strict);
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>()))
                 .Returns("{}");
@@ -89,7 +89,7 @@ namespace Fmacias.TplQueue.Test.Cache
         [Test]
         public void Clean_RemovesEntriesMarkedAsRemoved_AndMarksFailedEntries()
         {
-            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Strict);
+            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>()))
                 .Returns("{}");

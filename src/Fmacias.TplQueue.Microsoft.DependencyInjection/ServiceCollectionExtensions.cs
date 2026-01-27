@@ -89,17 +89,19 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                             sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
                         ))
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetJobFactory())
+                    sp.GetRequiredService<IApi>().GetJobFactoryCore())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetJobRootFactory())
+                    sp.GetRequiredService<IApi>().GetJobRootFactoryCore())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetPayloadJobFactory())
+                    sp.GetRequiredService<IApi>()
+                        .GetPayloadJobFactory(
+                            sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
+                        ))
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetSerializableDispatcherFactory())
+                    sp.GetRequiredService<IApi>().GetCacheableQFactory())
                 .AddTransient(sp =>
                     sp.GetRequiredService<IApi>().GetQFactory(
-                        sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(),
-                        sp.GetRequiredService<IRetryPolicyFactory>()));
+                        sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(), sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()));
         }
         /// <summary>
         /// Fluent builder for code-based configuration of retry policies and dispatcher options.

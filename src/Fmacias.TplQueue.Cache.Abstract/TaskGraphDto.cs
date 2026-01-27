@@ -10,12 +10,12 @@ namespace Fmacias.TplQueue.Cache.Abstract
     /// </summary>
     internal sealed class TaskGraphDto : ITaskGraphDto
     {
-        private readonly IUniversalPayloadSerializer _serializer;
+        private readonly IJsonUniversalPayloadSerializer _serializer;
         private readonly IPayloadJobRoot _rootGraph;
         private readonly bool _isFifo;
 
         private TaskGraphDto(
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IPayloadJobRoot rootGraph,
             bool isFifo)
         {
@@ -30,7 +30,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// Factory method to create a new <see cref="ITaskGraphDto"/> instance.
         /// </summary>
         public static ITaskGraphDto Create(
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             IPayloadJobRoot rootGraph, bool isFifo)
         {
             return new TaskGraphDto(serializer, rootGraph, isFifo);

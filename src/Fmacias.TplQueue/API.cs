@@ -1,9 +1,8 @@
-using Fmacias.TplQueue.Cache;
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Jobs;
-using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Factories;
 using Fmacias.TplQueue.Queues;
 using Fmacias.TplQueue.RetryPolicies;
+using Fmacias.TplQueue.Serialization.SystemTextJson;
 using System;
 using System.Collections.Generic;
 
@@ -34,15 +33,13 @@ namespace Fmacias.TplQueue
         {
             return ObserverFactory.Instance();
         }
-        public IPayloadJobFactory GetPayloadJobFactory()
+        public IPayloadJobFactory GetPayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
         {
-            var retryFactory = RetryPolicyFactory.Instance(
-                new Dictionary<string, RetryPolicyOptions>());
-
+            var retryPolicyOptions = options ?? new Dictionary<string, RetryPolicyOptions>();
             return PayloadRunnerFactory.Instance(
-                _coreApi.GetJobFactory(),
-                _coreApi.GetJobRootFactory(),
-                retryFactory);
+                _coreApi.GetJobFactoryCore(),
+                _coreApi.GetJobRootFactoryCore(),
+                RetryPolicyFactory.Instance(retryPolicyOptions));
         }
 
         public IRetryPolicyFactory GetRetryPolicyFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options)
@@ -52,27 +49,35 @@ namespace Fmacias.TplQueue
             return RetryPolicyFactory.Instance(options);
         }
 
-        public ICacheableQFactory GetSerializableDispatcherFactory()
+        public ICacheableQFactory GetCacheableQFactory()
         {
             return CacheableQFactory.Instance();
         }
 
-        public IQFactory GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IRetryPolicyFactory retries)
+        public IQFactoryAdapter GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions = null)
         {
-            return _coreApi.GetQFactory(options, retries);
+            var retryOptions = retryPolicyOptions ?? new Dictionary<string, RetryPolicyOptions>();
+            return QFactoryAdapter.Create(_coreApi.GetQFactoryCore(),
+                options, RetryPolicyFactory.Instance(retryOptions));
         }
-        public IJobFactory GetJobFactory()
+    
+        public IJobFactory GetJobFactoryCore()
         {
-            return _coreApi.GetJobFactory();
+            return _coreApi.GetJobFactoryCore();
         }
-        public IJobRootFactory GetJobRootFactory()
+        public IJobRootFactory GetJobRootFactoryCore()
         {
-            return _coreApi.GetJobRootFactory();
+            return _coreApi.GetJobRootFactoryCore();
         }
 
-        public IQFactory GetQFactory(IRetryPolicyFactory retries)
+        public IQFactoryCore GetQFactoryCore()
         {
-            return _coreApi.GetQFactory(retries);
+            return _coreApi.GetQFactoryCore();
+        }
+
+        public ISystemTextJsonSerializerFactory GetSystemTextJsonSerializerFactory()
+        {
+            return JsonSerializerFactory.Create();
         }
     }
 }

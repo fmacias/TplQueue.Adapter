@@ -1,4 +1,3 @@
-using Fmacias.TplQueue;
 using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.Generic;
@@ -36,9 +35,9 @@ namespace Fmacias.TplQueue.RetryPolicies
         /// <summary>
         /// Factory method hiding the concrete type.
         /// </summary>
-        public static IRetryPolicyFactory Instance(IReadOnlyDictionary<string, RetryPolicyOptions> options)
+        public static IRetryPolicyFactory Instance(IReadOnlyDictionary<string, RetryPolicyOptions> retryPolicyOptions)
         {
-            return new RetryPolicyFactory(options);
+            return new RetryPolicyFactory(retryPolicyOptions);
         }
 
         /// <inheritdoc />

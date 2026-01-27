@@ -1,8 +1,9 @@
 ﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Jobs;
 using System;
 using System.Reflection;
 
-namespace Fmacias.TplQueue.Jobs
+namespace Fmacias.TplQueue.Factories
 {
     /// <summary>
     /// <![CDATA[
@@ -49,7 +50,7 @@ namespace Fmacias.TplQueue.Jobs
         /// <inheritdoc />
         public IPayloadJob<T> Create<T>(
             T payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             string name = "")
             where T : IPayloadCommand
         {
@@ -67,7 +68,7 @@ namespace Fmacias.TplQueue.Jobs
         public IPayloadJob<T> Create<T>(
             Guid jobId,
             T payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             string name = "")
             where T : IPayloadCommand
         {
@@ -86,7 +87,7 @@ namespace Fmacias.TplQueue.Jobs
         public IPayloadJobRoot<T> CreateRoot<T>(
             Guid jobId,
             T payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             Func<IRetryPolicy>? retryPolicyFactory = null,
             string name = "")
             where T : IPayloadCommand
@@ -106,7 +107,7 @@ namespace Fmacias.TplQueue.Jobs
         /// <inheritdoc />
         public IPayloadJobRoot<T> CreateRoot<T>(
             T payload,
-            IUniversalPayloadSerializer serializer,
+            IJsonUniversalPayloadSerializer serializer,
             Func<IRetryPolicy>? retryPolicyFactory = null,
             string name = "")
             where T : IPayloadCommand
@@ -125,7 +126,7 @@ namespace Fmacias.TplQueue.Jobs
         /// <inheritdoc />
         public IPayloadCarrierJob Load(
             ICacheLeaseEntry lease,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
         {
             if (lease == null) throw new ArgumentNullException(nameof(lease));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
@@ -145,7 +146,7 @@ namespace Fmacias.TplQueue.Jobs
                 types: new[]
                 {
                     typeof(ICacheLeaseEntry),
-                    typeof(IUniversalPayloadSerializer),
+                    typeof(IJsonUniversalPayloadSerializer),
                     typeof(IJobFactory)
                 },
                 modifiers: null);
@@ -169,7 +170,7 @@ namespace Fmacias.TplQueue.Jobs
         /// <inheritdoc />
         public IPayloadJobRoot LoadRoot(
             ICacheLeaseEntry lease,
-            IUniversalPayloadSerializer serializer)
+            IJsonUniversalPayloadSerializer serializer)
         {
             if (lease == null) throw new ArgumentNullException(nameof(lease));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
@@ -189,7 +190,7 @@ namespace Fmacias.TplQueue.Jobs
                 types: new[]
                 {
                     typeof(ICacheLeaseEntry),
-                    typeof(IUniversalPayloadSerializer),
+                    typeof(IJsonUniversalPayloadSerializer),
                     typeof(IJobRootFactory),
                     typeof(IRetryPolicyFactory)
                 },

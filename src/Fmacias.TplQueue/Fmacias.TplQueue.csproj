@@ -9,25 +9,17 @@
 
   <ItemGroup>
     <Compile Remove="Cache\**" />
-    <Compile Remove="Factories\**" />
-    <Compile Remove="NewFolder\**" />
     <Compile Remove="Observers\**" />
     <EmbeddedResource Remove="Cache\**" />
-    <EmbeddedResource Remove="Factories\**" />
-    <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="Observers\**" />
     <None Remove="Cache\**" />
-    <None Remove="Factories\**" />
-    <None Remove="NewFolder\**" />
     <None Remove="Observers\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Cache\CacheFactory.cs" />
     <Compile Include="Cache\MemCache.cs" />
     <Compile Include="Observers\DirectObserverDispatcher.cs" />
     <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />
-    <Compile Include="Observers\ObserverFactory.cs" />
     <Compile Include="Observers\LoggingObserver.cs" />
     <Compile Include="Observers\ConsoleObserver.cs" />
     <Compile Include="Observers\FileLoggingObserver.cs" />
