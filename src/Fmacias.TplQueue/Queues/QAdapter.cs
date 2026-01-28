@@ -57,10 +57,10 @@ namespace Fmacias.TplQueue.Queues
         public bool IsDisposed => Q.IsDisposed;
 
         /// <inheritdoc />
-        public virtual Func<IJobEvent, Task> OnEventChange
+        public virtual Func<IJobEvent, Task> OnJobEventChanged
         {
-            get => Q.OnEventChange;
-            set => Q.OnEventChange = value;
+            get => Q.OnJobEventChanged;
+            set => Q.OnJobEventChanged = value;
         }
 
         public string Name => Q.Name;

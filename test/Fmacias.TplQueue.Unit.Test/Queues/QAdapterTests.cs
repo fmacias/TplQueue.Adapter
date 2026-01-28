@@ -41,7 +41,7 @@ namespace Fmacias.TplQueue.Test.Queues
         private static Mock<IJobQ> CreateDispatcherMock()
         {
             var jobQMock = new Mock<IJobQ>();
-            jobQMock.SetupProperty(d => d.OnEventChange);
+            jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
             jobQMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());
             jobQMock.SetupGet(d => d.Name).Returns("inner");

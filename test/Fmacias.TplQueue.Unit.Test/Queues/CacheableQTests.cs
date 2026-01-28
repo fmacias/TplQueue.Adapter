@@ -84,7 +84,7 @@ namespace Fmacias.TplQueue.Test.Queues
             runnerInfo.SetupGet(r => r.PayloadSerializedData).Returns(payloadData);
 
             var dispatcher = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
-            var callback = dispatcher.OnEventChange;
+            var callback = dispatcher.OnJobEventChanged;
 
             await callback(CreateEvent(JobEventStatus.Successed, runnerInfo.Object));
             await callback(CreateEvent(JobEventStatus.Failed, runnerInfo.Object));
@@ -138,7 +138,7 @@ namespace Fmacias.TplQueue.Test.Queues
         private static Mock<IJobQ> CreateDispatcherMock(int slots)
         {
             var jobQMock = new Mock<IJobQ>();
-            jobQMock.SetupProperty(d => d.OnEventChange);
+            jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             jobQMock.Setup(d => d.Dispose());
             jobQMock.Setup(d => d.Subscribe(It.IsAny<IObserver<IJobEvent>>())).Returns(Mock.Of<IDisposable>());

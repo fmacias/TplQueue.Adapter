@@ -99,7 +99,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _leaseCache = leaseCache ?? throw new ArgumentNullException(nameof(leaseCache));
 
-        OnEventChange = JobEventCallback;
+        OnJobEventChanged = JobEventCallback;
         _isLeasingEnabled = false;
     }
 

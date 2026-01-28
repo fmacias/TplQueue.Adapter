@@ -234,7 +234,7 @@ namespace Fmacias.TplQueue.Test.Factories
     {
         public bool IsDisposed => throw new NotImplementedException();
 
-        public Func<IJobEvent, Task> OnEventChange { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Func<IJobEvent, Task> OnJobEventChanged { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public string Name => throw new NotImplementedException();
 
