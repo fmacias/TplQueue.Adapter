@@ -24,7 +24,7 @@ namespace Fmacias.TplQueue.Observers
 
         public void OnNext(IJobEvent e)
         {
-            var name = e?.JobDTO?.Name ?? "<unknown>";
+            var name = e?.JobInfo?.Name ?? "<unknown>";
             switch (e?.Status)
             {
                 case JobEventStatus.Cache: _logEnqueueing(_logger, name, null); break;

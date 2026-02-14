@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Threading;
-using Fmacias.TplQueue;
+using Fmacias.TplQueue.Cache.DomainModels;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -26,7 +25,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             var cacheUtc = DateTime.UtcNow;
 
             // Act
-            var entry = CacheLeaseEntry.Create(
+            var entry = CacheEntry.Create(
                 leaseId,
                 jobRootId,
                 jobId,
@@ -52,7 +51,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             var nodeDto = Mock.Of<IJobNodeDto>();
 
             Assert.Throws<ArgumentException>(() =>
-                CacheLeaseEntry.Create(
+                CacheEntry.Create(
                     Guid.Empty,
                     Guid.NewGuid(),
                     Guid.NewGuid(),
@@ -61,7 +60,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
                     DateTime.UtcNow));
 
             Assert.Throws<ArgumentException>(() =>
-                CacheLeaseEntry.Create(
+                CacheEntry.Create(
                     Guid.NewGuid(),
                     Guid.Empty,
                     Guid.NewGuid(),
@@ -70,7 +69,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
                     DateTime.UtcNow));
 
             Assert.Throws<ArgumentException>(() =>
-                CacheLeaseEntry.Create(
+                CacheEntry.Create(
                     Guid.NewGuid(),
                     Guid.NewGuid(),
                     Guid.Empty,
@@ -94,9 +93,11 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             // Arrange
             var nodeDto = new Mock<IJobNodeDto>();
-            nodeDto.SetupGet(n => n.RetryDescriptor).Returns(Mock.Of<IRetryPolicyDescriptor>());
+            nodeDto
+                .SetupGet(n => n.RetryDescriptor)
+                .Returns(Mock.Of<IRetryPolicyDescriptor>());
 
-            var entry = CacheLeaseEntry.Create(
+            var entry = CacheEntry.Create(
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 Guid.NewGuid(),
@@ -104,14 +105,20 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
                 nodeDto.Object,
                 DateTime.UtcNow);
 
-            var payload = new Mock<ISerializedPayload>();
-            payload.SetupGet(p => p.JsonOutput).Returns("{\"result\":1}");
+            var payloadSerializable = new Mock<ISerializable>();
+            payloadSerializable
+                .Setup(p => 
+                    p.Serialize(It.IsAny<IUniversalPayloadSerializer>())
+                ).Returns("{\"result\":1}");
 
             // Act
-            entry.MarkAck(payload.Object);
+            entry.MarkAck(
+                payloadSerializable.Object, 
+                Mock.Of<IUniversalPayloadSerializer>());
 
             // Assert
-            nodeDto.Verify(n => n.UpdatePayloadJson("{\"result\":1}"), Times.Once);
+            nodeDto.Verify(n => n.UpdatePayloadJson("{\"result\":1}"), 
+                Times.Once);
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Acknownledged));
         }
 
@@ -119,8 +126,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         public void MarkAck_WithNullPayload_Throws()
         {
             var entry = CreateDefaultEntry();
-
-            Assert.Throws<ArgumentNullException>(() => entry.MarkAck(null!));
+            Assert.Throws<ArgumentNullException>(() => entry.MarkAck(null!, Mock.Of<IUniversalPayloadSerializer>()));
+            Assert.Throws<ArgumentNullException>(() => entry.MarkAck(Mock.Of<ISerializable>(), null!));
         }
 
         [Test]
@@ -155,12 +162,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
         }
 
-        private static CacheLeaseEntry CreateDefaultEntry()
+        private static CacheEntry CreateDefaultEntry()
         {
             var nodeDto = new Mock<IJobNodeDto>();
             nodeDto.SetupGet(n => n.RetryDescriptor).Returns(Mock.Of<IRetryPolicyDescriptor>());
 
-            return (CacheLeaseEntry)CacheLeaseEntry.Create(
+            return (CacheEntry)CacheEntry.Create(
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 Guid.NewGuid(),

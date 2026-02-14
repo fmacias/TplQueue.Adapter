@@ -1,14 +1,13 @@
 ﻿using System;
-using Fmacias.TplQueue;
 using Fmacias.TplQueue.Contracts;
 
-namespace Fmacias.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.DomainModels
 {
     /// <summary>
-    /// Default in-memory implementation of <see cref="ICacheLeaseEntry"/>.
+    /// Default in-memory implementation of <see cref="ICacheEntry"/>.
     /// Represents the cached state and lifecycle of a single task runner node.
     /// </summary>
-    internal sealed class CacheLeaseEntry : ICacheLeaseEntry
+    internal sealed class CacheEntry : ICacheEntry
     {
         public Guid LeaseId { get; }
         public Guid JobRootId { get; }
@@ -23,7 +22,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
         public bool Deleted { get; private set; }
         public bool RootSuccessed { get; private set; }
 
-        private CacheLeaseEntry(
+        private CacheEntry(
             Guid leaseId,
             Guid jobRootId,
             Guid jobId,
@@ -37,7 +36,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
             if (jobNodeDto is null) throw new ArgumentNullException(nameof(jobNodeDto));
 
             LeaseId = leaseId;
-            this.JobRootId = jobRootId;
+            JobRootId = jobRootId;
             JobId = jobId;
             ParentJobId = parentJobId;
             JobNodeDto = jobNodeDto;
@@ -49,9 +48,9 @@ namespace Fmacias.TplQueue.Cache.Abstract
         }
 
         /// <summary>
-        /// Factory method to create a new <see cref="ICacheLeaseEntry"/> instance.
+        /// Factory method to create a new <see cref="ICacheEntry"/> instance.
         /// </summary>
-        public static ICacheLeaseEntry Create(
+        public static ICacheEntry Create(
             Guid leaseId,
             Guid jobRootId,
             Guid jobId,
@@ -59,7 +58,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
             IJobNodeDto jobNodeDto,
             DateTime cacheUtc)
         {
-            return new CacheLeaseEntry(
+            return new CacheEntry(
                 leaseId,
                 jobRootId,
                 jobId,
@@ -79,11 +78,12 @@ namespace Fmacias.TplQueue.Cache.Abstract
         /// <summary>
         /// Marks the entry as acknowledged, updating the payload JSON if the execution produced an output.
         /// </summary>
-        public void MarkAck(ISerializedPayload payloadData)
+        public void MarkAck(ISerializable payloadData, IUniversalPayloadSerializer jsonUniversalPayloadSerializer)
         {
             if (payloadData is null) throw new ArgumentNullException(nameof(payloadData));
+            if (jsonUniversalPayloadSerializer == null) throw new ArgumentNullException(nameof(jsonUniversalPayloadSerializer));
 
-            var jsonOutput = payloadData.JsonOutput ?? string.Empty;
+            var jsonOutput = payloadData.Serialize(jsonUniversalPayloadSerializer);
 
             if (!string.IsNullOrEmpty(jsonOutput))
             {

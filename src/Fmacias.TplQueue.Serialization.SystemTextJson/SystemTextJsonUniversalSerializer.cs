@@ -57,13 +57,13 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
             return result;
         }
 
-        public string Serialize<T>(T value) where T : IPayloadCommand
+        public string Serialize<T>(T value)
         {
             if (value is null) throw new ArgumentNullException(nameof(value));
             return JsonSerializer.Serialize(value, _options);
         }
 
-        public T Deserialize<T>(string json) where T : IPayloadCommand
+        public T Deserialize<T>(string json)
         {
             if (json is null) throw new ArgumentNullException(nameof(json));
             var result = JsonSerializer.Deserialize<T>(json, _options);

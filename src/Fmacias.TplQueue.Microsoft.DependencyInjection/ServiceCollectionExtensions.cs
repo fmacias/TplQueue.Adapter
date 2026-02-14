@@ -80,12 +80,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                 .AddSingleton(sp =>
                     sp.GetRequiredService<IApi>().GetCoreApi())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetObserverFactory())
+                    sp.GetRequiredService<IApi>().ObserverFactory())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetCacheFactory())
+                    sp.GetRequiredService<IApi>().CacheFactory())
                 .AddTransient(sp =>
                     sp.GetRequiredService<IApi>()
-                        .GetRetryPolicyFactory(
+                        .RetryPolicyFactory(
                             sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
                         ))
                 .AddTransient(sp =>
@@ -94,13 +94,13 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                     sp.GetRequiredService<IApi>().GetJobRootFactoryCore())
                 .AddTransient(sp =>
                     sp.GetRequiredService<IApi>()
-                        .GetPayloadJobFactory(
+                        .PayloadJobFactory(
                             sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
                         ))
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetCacheableQFactory())
+                    sp.GetRequiredService<IApi>().CacheableQFactory())
                 .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetQFactory(
+                    sp.GetRequiredService<IApi>().QFactory(
                         sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(), sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()));
         }
         /// <summary>

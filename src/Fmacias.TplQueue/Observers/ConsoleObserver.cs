@@ -40,7 +40,7 @@ namespace Fmacias.TplQueue.Observers
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            Console.WriteLine($"[EVENT] {value.Status} - {value.JobDTO.Name}");
+            Console.WriteLine($"[EVENT] {value.Status} - {value.JobInfo.Name}");
         }
     }
 }

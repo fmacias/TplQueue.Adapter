@@ -220,7 +220,7 @@ namespace Fmacias.TplQueue.Test.Factories
     {
         public int MaxParallelism { get; set; } = 2;
         public string RetryPolicy { get; set; } = "rp";
-        public IPayloadLeaseCache PayloadLeaseCache { get; set; } = Mock.Of<IPayloadLeaseCache>();
+        public IPayloadJobCache PayloadLeaseCache { get; set; } = Mock.Of<IPayloadJobCache>();
         public IPayloadJobFactory PayloadRunnerFactory { get; set; } = Mock.Of<IPayloadJobFactory>();
     }
 
@@ -284,7 +284,7 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public Task WaitRunnerUntilFinishedAsync(Guid jobId)
+        public Task Wait(int stateAtMs = 0)
         {
             throw new NotImplementedException();
         }

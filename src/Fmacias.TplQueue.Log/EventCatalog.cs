@@ -13,26 +13,26 @@ namespace Fmacias.TplQueue.Log
     public static class EventCatalog
     {
         // ---- Dispatcher / task lifecycle ----
-        public static readonly EventId TaskStateChanged =
-            new EventId(1001, nameof(TaskStateChanged));
+        public static readonly EventId jobStateChanged =
+            new EventId(1001, nameof(jobStateChanged));
 
-        public static readonly EventId PayloadCarrierRootDeserialized =
-            new EventId(1002, nameof(PayloadCarrierRootDeserialized));
+        public static readonly EventId PayloadJobSerialization =
+            new EventId(1002, nameof(PayloadJobSerialization));
 
-        public static readonly EventId TaskStarted =
-            new EventId(1003, nameof(TaskStarted));
+        public static readonly EventId JobStarted =
+            new EventId(1003, nameof(JobStarted));
 
-        public static readonly EventId TaskRunning =
-            new EventId(1004, nameof(TaskRunning));
+        public static readonly EventId JobRunning =
+            new EventId(1004, nameof(JobRunning));
 
-        public static readonly EventId TaskCompleted =
-            new EventId(1005, nameof(TaskCompleted));
+        public static readonly EventId JobCompleted =
+            new EventId(1005, nameof(JobCompleted));
 
-        public static readonly EventId TaskCanceled =
-            new EventId(1006, nameof(TaskCanceled));
+        public static readonly EventId JobCanceled =
+            new EventId(1006, nameof(JobCanceled));
 
-        public static readonly EventId TaskFailed =
-            new EventId(1007, nameof(TaskFailed));
+        public static readonly EventId JobFailed =
+            new EventId(1007, nameof(JobFailed));
 
         // "Observer lifecycle"
         public static readonly EventId ObserverCompleted =

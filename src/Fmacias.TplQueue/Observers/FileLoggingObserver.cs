@@ -48,10 +48,10 @@ namespace Fmacias.TplQueue.Observers
 
             var sb = new StringBuilder();
             sb.Append("Status=").Append(value.Status)
-              .Append(" | Runner=").Append(value.JobDTO?.Name ?? "(null)")
-              .Append(" | Start=").Append(value.JobDTO?.ExecutionStart.ToString("O"))
-              .Append(" | End=").Append(value.JobDTO?.ExecutionEnd.ToString("O"))
-              .Append(" | Elapsed=").Append(value.JobDTO?.ExecutionTime)
+              .Append(" | Runner=").Append(value.JobInfo?.Name ?? "(null)")
+              .Append(" | Start=").Append(value.JobInfo?.ExecutionStart.ToString("O"))
+              .Append(" | End=").Append(value.JobInfo?.ExecutionEnd.ToString("O"))
+              .Append(" | Elapsed=").Append(value.JobInfo?.ExecutionTime)
               .Append(" | Retries=").Append(value.RetryCount);
 
             if (value.Exception != null)

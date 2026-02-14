@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Cache.Abstract.Test;
 using Moq;
 using NUnit.Framework;
 
@@ -10,90 +9,125 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
     public sealed class CacheAbstractTests
     {
         [Test]
-        public void Append_NullRoot_ThrowsArgumentNullException()
+        public void Dehydrate_NullRoot_ThrowsArgumentNullException()
         {
             // Arrange
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
-
-            var cache = new FakeCache(
-                retrySerializer.Object,
-                payloadSerializer.Object,
-                Guid.Empty,
-                knownEntry: null);
+            var cache = CreateCache();
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                cache.Append<IPayloadCommand>(null!, isFifo: false));
+                cache.Dehydrate<IPayload>(null!, isFifo: false));
         }
 
         [Test]
-        public void Append_WhenEntryNotFound_DoesNotPersist()
+        public void Dehydrate_ValidRoot_ExtractsAtLeastTheRootNode()
         {
             // Arrange
-            var retrySerializer = new Mock<IRetryPolicySerializable>();
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>();
-
-            payloadSerializer
-                .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
-                .Returns("{}");
-
-            var cache = new FakeCache(
-                retrySerializer.Object,
-                payloadSerializer.Object,
-                knownRootId: Guid.NewGuid(),
-                knownEntry: null);
-
-            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
-            root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
-            root.SetupGet(r => r.Name).Returns("root");
-
-            var rootAsCarrier = root.As<IPayloadCarrierJob>();
-            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
-            rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
-            Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
-            rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+            var cache = CreateCache();
+            var root = CreateRoot();
 
             // Act
-            cache.Append(root.Object, isFifo: false);
+            var nodes = cache.Dehydrate(root.Object, isFifo: false);
 
             // Assert
-            Assert.That(cache.PersistedEntries, Is.Empty);
+            Assert.That(nodes, Is.Not.Null);
+            Assert.That(nodes.Count, Is.GreaterThanOrEqualTo(1));
+            Assert.That(cache.AppendedNodes.Count, Is.EqualTo(nodes.Count));
         }
 
         [Test]
-        public void Append_WhenEntryDoesNotExist_DoesNotThrow()
+        public void AckNode_EmptyJobId_ThrowsArgumentException()
         {
             // Arrange
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
+            var cache = CreateCache();
+            var payload = Mock.Of<ISerializable>();
 
-            payloadSerializer
-                .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
-                .Returns("{}");
-
-            var rootId = Guid.NewGuid();
-
-            var cache = new FakeCache(
-                retrySerializer.Object,
-                payloadSerializer.Object,
-                knownRootId: Guid.NewGuid(), // different, so no entry found
-                knownEntry: null);
-
-            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
-            root.SetupGet(r => r.Id).Returns(rootId);
-            root.SetupGet(r => r.Name).Returns("root");
-
-            var rootAsCarrier = root.As<IPayloadCarrierJob>();
-            rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
-            rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
-            Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
-            rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
             // Act & Assert
-            Assert.DoesNotThrow(() =>
-                cache.Append(root.Object, isFifo: false));
+            Assert.Throws<ArgumentException>(() => cache.AckNode(Guid.Empty, payload));
+        }
+
+        [Test]
+        public void AckNode_NullPayload_ThrowsArgumentNullException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => cache.AckNode(Guid.NewGuid(), null!));
+        }
+
+        [Test]
+        public void FailNode_EmptyJobId_ThrowsArgumentException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => cache.FailNode(Guid.Empty, "boom"));
+        }
+
+        [Test]
+        public void CancelNode_EmptyJobId_ThrowsArgumentException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => cache.CancelNode(Guid.Empty));
+        }
+
+        [Test]
+        public void SuccessRootNode_EmptyRootId_ThrowsArgumentException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => cache.SuccessRootNode(Guid.Empty));
+        }
+
+        [Test]
+        public void DeleteRootNode_EmptyRootId_ThrowsArgumentException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => cache.DeleteRootNode(Guid.Empty));
+        }
+
+        [Test]
+        public void GetByJobId_EmptyJobId_ThrowsArgumentException()
+        {
+            // Arrange
+            var cache = CreateCache();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => cache.GetByJobId(Guid.Empty));
+        }
+
+        private static FakeCache CreateCache()
+        {
+            return new FakeCache(
+                Mock.Of<IUniversalPayloadSerializer>(),
+                Mock.Of<ICacheRepository>(),
+                Mock.Of<INodeTypeResolver>(),
+                Mock.Of<IPayloadJobFactory>(),
+                Mock.Of<ICacheEntryFactory>());
+        }
+
+        private static Mock<IPayloadJobRoot<IPayload>> CreateRoot()
+        {
+            var root = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Loose);
+            root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
+            root.SetupGet(r => r.Name).Returns("root");
+            root.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+            root.Setup(c => c.GetPayload()).Returns("payload-root");
+            root.As<ISerializable>()
+                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
+            root.Setup(c => c.GetRetryPolicyFactory()).Returns(() => Mock.Of<IRetryPolicy>());
+            return root;
         }
     }
 }

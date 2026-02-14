@@ -137,7 +137,7 @@ namespace Fmacias.TplQueue.Observers.ViewModel
 
         private static string FormatEvent(IJobEvent value)
         {
-            var runnerName = value.JobDTO?.Name ?? "<unknown>";
+            var runnerName = value.JobInfo?.Name ?? "<unknown>";
             var status = value.Status.ToString();
             var timestamp = value.Timestamp.ToString("O");
             var retries = value.RetryCount;

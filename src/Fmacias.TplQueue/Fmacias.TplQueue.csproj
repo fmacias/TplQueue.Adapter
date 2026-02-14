@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Factories\SerializedPayloadFactory.cs" />
+    <Compile Remove="Jobs\SerializedPayloadSnapshot.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="Cache\MemCache.cs" />
     <Compile Include="Observers\DirectObserverDispatcher.cs" />
     <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />

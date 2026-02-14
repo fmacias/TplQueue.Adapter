@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Cache;
+using Fmacias.TplQueue.Cache.Factories;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -11,13 +12,15 @@ namespace Fmacias.TplQueue.Test.Cache
         [Test]
         public void TryLeaseNextRoot_WhenCacheIsEmpty_ReturnsFalse()
         {
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
-            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
+            var payloadSerializer = MockFactory.CreatePayloadSerializerMock(MockBehavior.Strict);
 
-            var cache = MemCache.Create(runnerFactory.Object, payloadSerializer.Object);
+            var cache = MemCache.Create(
+                payloadSerializer.Object,
+                Mock.Of<INodeTypeResolver>(),
+                Mock.Of<IPayloadJobFactory>(),
+                CacheEntryFactory.Create());
 
-            var leased = cache.TryLeaseNextRoot(out var payloadCarrierRoot, out var lease);
+            var leased = cache.TryHydrateNextJob(out var payloadCarrierRoot, out var lease);
 
             Assert.That(leased, Is.False);
             Assert.That(payloadCarrierRoot, Is.Null);
@@ -27,50 +30,73 @@ namespace Fmacias.TplQueue.Test.Cache
         [Test]
         public void TryLeaseNextRoot_WhenEntriesExist_LeasesRootAndDependencies()
         {
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
-            payloadSerializer
-                .Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>()))
-                .Returns("{}");
+            var payloadSerializer = MockFactory.CreatePayloadSerializerMock(MockBehavior.Strict);
+            payloadSerializer.Setup(s => s.Deserialize(It.IsAny<string>(), It.IsAny<Type>()))
+                .Returns(new DummyPayload());
 
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
-            var retryDescriptor = Mock.Of<IRetryPolicyDescriptor>();
-            retrySerializer
-                .Setup(s => s.ToDescriptor())
-                .Returns(retryDescriptor);
-
-            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
+            var payloadJobFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
 
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
 
-            var rootCarrier = new Mock<IPayloadJobRoot>(MockBehavior.Strict);
+            var payloadJobRoot = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Strict);
             var capturedDependencies = new List<IJob>();
 
-            rootCarrier.SetupGet(r => r.Id).Returns(rootId);
-            rootCarrier
+            payloadJobRoot.SetupGet(r => r.Id).Returns(rootId);
+            payloadJobRoot
                 .Setup(r => r.After(It.IsAny<IJob[]>()))
                 .Callback<IJob[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<IJob>()))
-                .Returns(rootCarrier.Object);
+                .Returns(payloadJobRoot.Object);
 
-            var childCarrier = new Mock<IPayloadCarrierJob>(MockBehavior.Strict);
-            childCarrier.SetupGet(c => c.Id).Returns(childId);
-            childCarrier
+            var payloadJobChild = new Mock<IPayloadJob<IPayload>>(MockBehavior.Strict);
+            payloadJobChild.SetupGet(c => c.Id).Returns(childId);
+            payloadJobChild
                 .Setup(c => c.After(It.IsAny<IJob[]>()))
-                .Returns(childCarrier.Object);
-
-            runnerFactory
-                .Setup(f => f.LoadRoot(It.Is<ICacheLeaseEntry>(e => e.JobId == rootId), payloadSerializer.Object))
-                .Returns(rootCarrier.Object);
-            runnerFactory
-                .Setup(f => f.Load(It.Is<ICacheLeaseEntry>(e => e.JobId == childId), payloadSerializer.Object))
-                .Returns(childCarrier.Object);
+                .Returns(payloadJobChild.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJobRoot<IPayload>(
+                    It.IsAny<IPayload>(),
+                    It.IsAny<string>()))
+                .Returns(payloadJobRoot.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJobRoot<IPayload>(
+                    It.IsAny<Guid>(),
+                    It.IsAny<IPayload>(),
+                    It.IsAny<string>()))
+                .Returns(payloadJobRoot.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJob<IPayload>(
+                    It.IsAny<IPayload>(),
+                    It.IsAny<string>()))
+                .Returns(payloadJobChild.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJob<IPayload>(
+                    It.IsAny<Guid>(),
+                    It.IsAny<IPayload>(),
+                    It.IsAny<string>()))
+                .Returns(payloadJobChild.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJob(
+                    It.IsAny<IJobNodeDto>(),
+                    It.IsAny<IPayload>()))
+                .Returns(payloadJobChild.Object);
+            payloadJobFactory
+                .Setup(f => f.CreateJobRoot(
+                    It.IsAny<IJobNodeDto>(),
+                    It.IsAny<IPayload>()))
+                .Returns(payloadJobRoot.Object);
 
             var (rootRunner, _) = CreateTaskGraph(rootId, childId);
 
-            var cache = MemCache.Create(runnerFactory.Object, payloadSerializer.Object);
-            cache.Append(rootRunner.Object, isFifo: true);
+            var cache = MemCache.Create(
+                payloadSerializer.Object,
+                Mock.Of<INodeTypeResolver>(),
+                payloadJobFactory.Object,
+                CacheEntryFactory.Create());
 
-            var leased = cache.TryLeaseNextRoot(out var payloadCarrierRoot, out var lease);
+            cache.Dehydrate(rootRunner.Object, isFifo: true);
+
+            var leased = cache.TryHydrateNextJob(out var payloadCarrierRoot, out var lease);
 
             var rootLease = cache.GetByJobId(rootId);
             var childLease = cache.GetByJobId(childId);
@@ -78,42 +104,35 @@ namespace Fmacias.TplQueue.Test.Cache
             Assert.Multiple(() =>
             {
                 Assert.That(leased, Is.True);
-                Assert.That(payloadCarrierRoot, Is.SameAs(rootCarrier.Object));
+                Assert.That(payloadCarrierRoot, Is.SameAs(payloadJobRoot.Object));
                 Assert.That(lease, Is.SameAs(rootLease));
                 Assert.That(rootLease.Status, Is.EqualTo(EntryStatus.Pending));
                 Assert.That(childLease.Status, Is.EqualTo(EntryStatus.Pending));
-                Assert.That(capturedDependencies.Single(), Is.SameAs(childCarrier.Object));
+                Assert.That(rootLease.JobNodeDto.PayloadTypeName, Does.Contain(nameof(DummyPayload)));
+                Assert.That(capturedDependencies.Single(), Is.SameAs(payloadJobChild.Object));
             });
         }
 
         [Test]
         public void Clean_RemovesEntriesMarkedAsRemoved_AndMarksFailedEntries()
         {
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Strict);
-            payloadSerializer
-                .Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>()))
-                .Returns("{}");
-
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
-            retrySerializer
-                .Setup(s => s.ToDescriptor())
-                .Returns(Mock.Of<IRetryPolicyDescriptor>());
-
-            var runnerFactory = new Mock<IPayloadJobFactory>(MockBehavior.Strict);
-
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
-            var (rootRunner, _) = CreateTaskGraph(rootId, childId);
+            var (payloadJobRoot, _) = CreateTaskGraph(rootId, childId);
 
-            var cache = MemCache.Create(runnerFactory.Object, payloadSerializer.Object);
-            cache.Append(rootRunner.Object, isFifo: false);
+            var cache = MemCache.Create(
+                Mock.Of<IUniversalPayloadSerializer>(),
+                Mock.Of<INodeTypeResolver>(),
+                Mock.Of<IPayloadJobFactory>(),
+                CacheEntryFactory.Create());
+
+            cache.Dehydrate(payloadJobRoot.Object, isFifo: false);
 
             var rootLease = cache.GetByJobId(rootId);
             var childLease = cache.GetByJobId(childId);
 
             rootLease.MarkAsDeleted();
             childLease.MarkFailed();
-
             cache.CleanDeleted();
 
             Assert.Multiple(() =>
@@ -123,7 +142,7 @@ namespace Fmacias.TplQueue.Test.Cache
             });
         }
 
-        private static (Mock<IPayloadJobRoot<IPayloadCommand>> root, Mock<IPayloadCarrierJob> child) CreateTaskGraph(
+        private static (Mock<IPayloadJobRoot<IPayload>> root, Mock<IPayloadCarrierJob> child) CreateTaskGraph(
             Guid rootId,
             Guid childId)
         {
@@ -136,24 +155,39 @@ namespace Fmacias.TplQueue.Test.Cache
             child.Setup(c => c.GetPayload()).Returns(childPayload);
             child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             child.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
+            child.As<ISerializable>().Setup(r => r.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
 
             var rootPayload = new DummyPayload();
-            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Strict);
+            var root = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Strict);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             root.As<IPayloadCarrierJob>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
             root.As<IPayloadCarrierJob>().Setup(c => c.GetPayload()).Returns(rootPayload);
             root.As<IPayloadCarrierJob>().Setup(c => c.GetPayloadDependencies()).Returns(new[] { child.Object });
             root.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
-
+            root.As<ISerializable>().Setup(r => r.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
             return (root, child);
         }
 
-        private sealed class DummyPayload : IPayloadCommand
+        private sealed class DummyPayload : IPayload
         {
-            public string HandlerId => nameof(DummyPayload);
+            public string PayloadId => nameof(DummyPayload);
 
-            public Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
+            public DateTime CollectionTime => DateTime.UtcNow;
+
+            public Guid HandlerId => Guid.NewGuid();
+        }
+
+        private static class MockFactory
+        {
+            public static Mock<IUniversalPayloadSerializer> CreatePayloadSerializerMock(MockBehavior behavior)
+            {
+                var serializer = new Mock<IUniversalPayloadSerializer>(behavior);
+                serializer.Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>())).Returns("{}");
+                return serializer;
+            }
         }
     }
 }

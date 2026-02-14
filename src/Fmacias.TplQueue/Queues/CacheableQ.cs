@@ -40,7 +40,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     private const int LEASING_PULSE_MS = 100;
 
     private readonly ILogger<ICacheablePayloadQ> _logger;
-    private readonly IPayloadLeaseCache _leaseCache;
+    private readonly IPayloadJobCache _leaseCache;
     private readonly Dictionary<Guid, CancellationToken> _cancelationTokentByRootId = new();
     private readonly CancellationTokenSource _leasingCts = new();
     private int _leasingPulseMs = LEASING_PULSE_MS;
@@ -92,7 +92,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     /// </exception>
     private CacheableQ(
         ILogger<ICacheablePayloadQ> logger,
-        IPayloadLeaseCache leaseCache,
+        IPayloadJobCache leaseCache,
         IJobQ chain)
         : base(chain)
     {
@@ -115,7 +115,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     /// <returns>A configured ISerializablePayloadDispatcher instance.</returns>
     public static ICacheablePayloadQ Create(
         ILogger<ICacheablePayloadQ> logger,
-        IPayloadLeaseCache cache,
+        IPayloadJobCache cache,
         IJobQ chain)
     {
         return new CacheableQ(logger, cache, chain);
@@ -143,7 +143,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     public IJobQ Enqueue<TPayload>(
         IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
-        where TPayload : IPayloadCommand
+        where TPayload : IPayload
     {
         if (payloadJobRoot is null) throw new ArgumentNullException(nameof(payloadJobRoot));
         CacheNode(payloadJobRoot, isFifo:false, ct);
@@ -173,7 +173,7 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     public IJobQ EnqueueFifo<TPayload>(
         IPayloadJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
-        where TPayload : IPayloadCommand
+        where TPayload : IPayload
     {
         if (payloadJobRoot is null) throw new ArgumentNullException(nameof(payloadJobRoot));
         CacheNode(payloadJobRoot, isFifo:true, ct);
@@ -290,18 +290,18 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
             return false;
         }
 
-        if (_leaseCache.TryLeaseNextRoot(out var payloadCarrierRoot, out var lease))
+        if (_leaseCache.TryHydrateNextJob(out var payloadCarrierRoot, out var rootLeaseNode))
         {
-            _leaseCache.LeaseRootNode(lease);
+            _leaseCache.LeaseRootNode(rootLeaseNode);
 
-            LogMessages.PayloadCarrierRootDeserialized(
+            LogMessages.PayloadJobRootDeserialized(
                 _logger,
                 payloadCarrierRoot.Id,
                 payloadCarrierRoot.Name ?? string.Empty,
                 null);
 
             CancellationToken currentCt = RelatedCancelationToken(payloadCarrierRoot.Id);
-            Enqueue(payloadCarrierRoot, isFifo: lease.IsFifo, currentCt);
+            Enqueue(payloadCarrierRoot, isFifo: rootLeaseNode.IsFifo, currentCt);
             return true;
         }
         return false;
@@ -336,20 +336,26 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
     [SuppressMessage("Design", "CA1031", Justification = "Observers must not break the dispatcher.")]
     private Task JobEventCallback(IJobEvent e)
     {
-        if (e is null || e.JobDTO is null)
+        if (e is null || e.JobInfo is null)
         {
             return Task.CompletedTask;
         }
 
-        var dto = e.JobDTO;
-        var jobId = dto.Id;
+        if (e.JobInfo is not ISerializable serializedPayload)
+        {
+            LogMessages.PayloadJobNotSerializableError(_logger,null);
+            return Task.CompletedTask;
+        }
+
+        var jobInfoDto = e.JobInfo;
+        var jobId = jobInfoDto.Id;
 
         try
         {
             switch (e.Status)
             {
                 case JobEventStatus.Successed:
-                    _leaseCache.AckNode(jobId, dto.PayloadSerializedData);
+                    _leaseCache.AckNode(jobId, serializedPayload);
                     break;
 
                 case JobEventStatus.Failed:
@@ -413,10 +419,9 @@ internal sealed class CacheableQ : QAdapter, ICacheablePayloadQ
         _leasingCts.Dispose();
         base.Dispose();
     }
-    private void CacheNode<TPayload>(IPayloadJobRoot<TPayload> payloadRunnerRoot, bool isFifo, CancellationToken ct) where TPayload : IPayloadCommand
+    private void CacheNode<TPayload>(IPayloadJobRoot<TPayload> payloadRunnerRoot, bool isFifo, CancellationToken ct) where TPayload : IPayload
     {
-        _ = _leaseCache.Append(payloadRunnerRoot, isFifo);
+        IReadOnlyList<IJobNodeDto> jobNodes = _leaseCache.Dehydrate(payloadRunnerRoot, isFifo);
         _cancelationTokentByRootId.Add(payloadRunnerRoot.Id, ct);
     }
-
 }

@@ -88,9 +88,9 @@ namespace Fmacias.TplQueue.Queues
             return this;
         }
 
-        public async Task WaitRunnerUntilFinishedAsync(Guid jobId)
+        public async Task Wait(int stateAtMs = 0)
         {
-            await Q.WaitRunnerUntilFinishedAsync(jobId).ConfigureAwait(false);
+            await Q.Wait(stateAtMs).ConfigureAwait(false);
         }
 
         public IJobQ SetRetryPolicyFactory(Func<IRetryPolicy> retryPolicy)

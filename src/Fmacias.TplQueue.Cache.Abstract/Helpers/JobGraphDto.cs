@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fmacias.TplQueue.Cache.DomainModels;
 using Fmacias.TplQueue.Contracts;
 
-namespace Fmacias.TplQueue.Cache.Abstract
+namespace Fmacias.TplQueue.Cache.Helpers
 {
     /// <summary>
-    /// Default implementation of <see cref="ITaskGraphDto"/> that transforms a payload runner graph
+    /// Default implementation of <see cref="IJobGraphDto"/> that transforms a payload runner graph
     /// into a list of <see cref="IJobNodeDto"/> instances and invokes a callback for each node.
     /// </summary>
-    internal sealed class TaskGraphDto : ITaskGraphDto
+    internal sealed class JobGraphDto : IJobGraphDto
     {
-        private readonly IJsonUniversalPayloadSerializer _serializer;
+        private readonly IUniversalPayloadSerializer _serializer;
         private readonly IPayloadJobRoot _rootGraph;
         private readonly bool _isFifo;
 
-        private TaskGraphDto(
-            IJsonUniversalPayloadSerializer serializer,
+        private JobGraphDto(
+            IUniversalPayloadSerializer serializer,
             IPayloadJobRoot rootGraph,
             bool isFifo)
         {
@@ -27,18 +28,19 @@ namespace Fmacias.TplQueue.Cache.Abstract
         }
 
         /// <summary>
-        /// Factory method to create a new <see cref="ITaskGraphDto"/> instance.
+        /// Factory method to create a new <see cref="IJobGraphDto"/> instance.
         /// </summary>
-        public static ITaskGraphDto Create(
-            IJsonUniversalPayloadSerializer serializer,
+        public static IJobGraphDto Create(
+            IUniversalPayloadSerializer serializer,
             IPayloadJobRoot rootGraph, bool isFifo)
         {
-            return new TaskGraphDto(serializer, rootGraph, isFifo);
+            return new JobGraphDto(serializer, rootGraph, isFifo);
         }
 
         /// <inheritdoc />
         public IReadOnlyList<IJobNodeDto> ExtractNodes(Action<IJobNodeDto, Guid> edgedNodeCallBack)
         {
+            if (edgedNodeCallBack is null) throw new ArgumentNullException(nameof(edgedNodeCallBack));
             return ExtractDtoNodesAndEdges(edgedNodeCallBack);
         }
 
@@ -89,39 +91,25 @@ namespace Fmacias.TplQueue.Cache.Abstract
             MaterializeDtoNode(current, nodes, callBack, rootId, parent);
         }
 
-        private void MaterializeDtoNode(IPayloadCarrierJob current, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId, IPayloadCarrierJob? parent)
+        private void MaterializeDtoNode(IPayloadCarrierJob payloadJob, 
+            IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, 
+            Guid rootId, IPayloadCarrierJob? parent)
         {
-            if (!nodes.TryGetValue(current.Id, out var dto))
+            if (!nodes.TryGetValue(payloadJob.Id, out var dto))
             {
-                var parentId = parent?.Id ?? Guid.Empty;
-                var isRoot = current is IPayloadJobRoot;
-
-                var (typeName, json) = SerializePayload(current);
-                var policyFactory = current.GetRetryPolicyFactory();
-                var policy = policyFactory();
-                var retryDescriptor = policy.ToDescriptor();
-
-                dto = JobNodeDto.Create(
-                    jobId: current.Id,
-                    parentJobId: parentId,
-                    payloadType: typeName,
-                    payloadJson: json,
-                    isRoot: isRoot,
-                    isFifo: current.Id == _rootGraph.Id && _isFifo,
-                    retryPolicyDescriptor: retryDescriptor,
-                    name: current.Name);
-
-                nodes[current.Id] = dto;
-                callBack?.Invoke(dto, rootId);
+                var isFifo = payloadJob.Id == _rootGraph.Id && _isFifo;
+                dto = JobNodeDto.Create(_serializer,payloadJob,isFifo,parent);
+                nodes[payloadJob.Id] = dto;
+                callBack(dto, rootId);
             }
         }
 
-        private void TraverseDependentsFirst(IPayloadCarrierJob current, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId)
+        private void TraverseDependentsFirst(IPayloadCarrierJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId)
         {
-            foreach (var child in current.GetPayloadDependencies())
+            foreach (var job in payloadJob.GetPayloadDependencies())
             {
-                if (child is null) continue;
-                DfsBuild(child, visited, nodes, callBack, rootId, current);
+                if (job is null) continue;
+                DfsBuild(job, visited, nodes, callBack, rootId, payloadJob);
             }
         }
 
@@ -133,26 +121,6 @@ namespace Fmacias.TplQueue.Cache.Abstract
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Serializes the payload associated with the given carrier into JSON and returns its type name.
-        /// </summary>
-        private (string typeName, string json) SerializePayload(IPayloadCarrierJob carrier)
-        {
-            if (carrier is null) throw new ArgumentNullException(nameof(carrier));
-
-            var payload = carrier.GetPayload();
-            var type = carrier.PayloadType
-                       ?? payload?.GetType()
-                       ?? throw new InvalidOperationException("Payload type cannot be determined.");
-
-            var json = _serializer.Serialize(payload, type);
-            var typeName = type.AssemblyQualifiedName
-                           ?? type.FullName
-                           ?? type.Name;
-
-            return (typeName, json);
         }
     }
 }

@@ -18,8 +18,8 @@ namespace Fmacias.TplQueue.Test
             var jobFactoryMock = new Mock<IJobFactory>();
             var jobRootFactoryMock = new Mock<IJobRootFactory>();
             var queueFactoryCoreMock = GetQFactoryCoreMock();
-            return GetCoreApiMock(jobFactoryMock.Object, jobRootFactoryMock.Object,
-                queueFactoryCoreMock.Object);
+            return GetCoreApiMock(jobFactoryMock.Object, 
+                jobRootFactoryMock.Object, queueFactoryCoreMock.Object);
         }
 
         public static Mock<ICoreApi> GetCoreApiMock(IJobFactory jobFactory,

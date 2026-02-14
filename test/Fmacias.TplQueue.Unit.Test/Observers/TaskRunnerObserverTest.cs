@@ -23,7 +23,7 @@ namespace Fmacias.TplQueue.Test.Observers
 
             _eventMock = new Mock<IJobEvent>();
             _eventMock.Setup(e => e.Status).Returns(JobEventStatus.Successed);
-            _eventMock.Setup(e => e.JobDTO).Returns(_infoMock.Object);
+            _eventMock.Setup(e => e.JobInfo).Returns(_infoMock.Object);
             _eventMock.Setup(e => e.Timestamp).Returns(_now);
         }
 

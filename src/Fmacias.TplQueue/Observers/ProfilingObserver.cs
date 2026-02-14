@@ -36,7 +36,7 @@ namespace Fmacias.TplQueue.Observers
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            var jobName = value.JobDTO?.Name ?? "<unknown>";
+            var jobName = value.JobInfo?.Name ?? "<unknown>";
 
             long currentMemory = GC.GetTotalMemory(forceFullCollection: false);
             int[] currentGcCollections = GetGcCollectionCounts();
@@ -108,7 +108,7 @@ namespace Fmacias.TplQueue.Observers
         private static readonly Action<ILogger, DateTime, string, string, long, long, string, Exception?> _logTaskStateChanged =
             LoggerMessage.Define<DateTime, string, string, long, long, string>(
                 LogLevel.Information,
-                EventCatalog.TaskStateChanged,
+                EventCatalog.jobStateChanged,
                 "[{EventTime}] Task '{TaskName}' changed state to '{Status}'. Memory: {Memory:N0} bytes (Δ: {Delta:N0}). GC: {GcOccurred}"
             );
 

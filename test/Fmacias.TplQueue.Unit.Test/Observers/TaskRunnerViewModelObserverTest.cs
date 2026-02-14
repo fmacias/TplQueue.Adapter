@@ -16,7 +16,7 @@ namespace Fmacias.TplQueue.Test.Observers
         {
             public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-            public IJobInfo JobDTO { get; set; }
+            public IJobInfo JobInfo { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
             public JobEventStatus Status { get; set; } = JobEventStatus.Successed;
 
@@ -44,7 +44,7 @@ namespace Fmacias.TplQueue.Test.Observers
             mockedRunnerDto.Setup(o => o.Name).Returns("Dummy");
             var dummyEvent = new DummyEvent()
             {
-                JobDTO = mockedRunnerDto.Object
+                JobInfo = mockedRunnerDto.Object
             };
             observer.OnNext(dummyEvent);
 

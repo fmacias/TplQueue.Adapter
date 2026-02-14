@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Queues;
 using Moq;
@@ -23,12 +20,12 @@ namespace Fmacias.TplQueue.Test.Queues
         public void FactoryConstructor_ShouldInvokeFactoryOnce()
         {
             var creationCount = 0;
-            var innerDispatcher = CreateDispatcherMock().Object;
+            var innerQ = CreateDispatcherMock().Object;
 
             var adapter = new QAdapter(() =>
             {
                 creationCount++;
-                return innerDispatcher;
+                return innerQ;
             });
 
             adapter.Start();

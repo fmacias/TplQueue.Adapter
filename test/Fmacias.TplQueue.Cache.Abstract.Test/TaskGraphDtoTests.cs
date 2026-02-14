@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fmacias.TplQueue.Cache.Helpers;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -10,11 +11,33 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
     public sealed class TaskGraphDtoTests
     {
         [Test]
+        public void ExtractNodes_NullCallback_ThrowsArgumentNullException()
+        {
+            // Arrange
+            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Loose);
+            payloadSerializer
+                .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
+                .Returns("{}");
+
+            var root = GetRootGraphMock(Guid.NewGuid());
+            root.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+            root.Setup(c => c.GetPayload()).Returns("payload");
+            root.As<ISerializable>()
+                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
+            root.Setup(c => c.GetRetryPolicyFactory()).Returns(() => Mock.Of<IRetryPolicy>());
+
+            var dto = JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => dto.ExtractNodes(null!));
+        }
+
+        [Test]
         public void ExtractNodes_SingleNodeGraph_ProducesSingleNodeAndInvokesCallback()
         {
             // Arrange
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
+            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Loose);
 
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
@@ -22,19 +45,22 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             var rootId = Guid.NewGuid();
 
             // Root mock (also an IPayloadCarrier)
-            Mock<IPayloadJobRoot<IPayloadCommand>> root = GetRootGraphMock(rootId);
+            Mock<IPayloadJobRoot<IPayload>> root = GetRootGraphMock(rootId);
 
             var rootAsCarrier = root.As<IPayloadCarrierJob>();
             rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload");
+            root.As<ISerializable>()
+                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
             rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
 
             // GetRetryPolicyFactory is not configured; MockBehavior.Loose will return default,
             // and Mock<IRetryPolicySerializer> will accept it.
 
-            var dto = (TaskGraphDto)TaskGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
+            var dto = (JobGraphDto)JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
 
   
             var callbackNodes = new List<(IJobNodeDto Node, Guid RootId)>();
@@ -55,9 +81,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             Assert.That(callbackNodes[0].RootId, Is.EqualTo(rootId));
         }
 
-        private static Mock<IPayloadJobRoot<IPayloadCommand>> GetRootGraphMock(Guid rootId)
+        private static Mock<IPayloadJobRoot<IPayload>> GetRootGraphMock(Guid rootId)
         {
-            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             return root;
@@ -66,8 +92,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         [Test]
         public void ExtractNodes_LinearGraph_ProducesCorrectParentChildRelationship()
         {
-            var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Loose);
-            var payloadSerializer = new Mock<IJsonUniversalPayloadSerializer>(MockBehavior.Loose);
+            var payloadSerializer = new Mock<IUniversalPayloadSerializer>(MockBehavior.Loose);
 
             payloadSerializer
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
@@ -75,13 +100,16 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
             var rootId = Guid.NewGuid();
             var childId = Guid.NewGuid();
-            var root = new Mock<IPayloadJobRoot<IPayloadCommand>>(MockBehavior.Loose);
+            var root = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Loose);
             var child = new Mock<IPayloadCarrierJob>(MockBehavior.Loose);
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
             child.SetupGet(c => c.PayloadType).Returns(typeof(string));
             child.Setup(c => c.GetPayload()).Returns("payload-child");
+            child.As<ISerializable>()
+                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
             Func<IRetryPolicy> childRetryPolicyFactory = () => Mock.Of<IRetryPolicy>();
             child.Setup(c => c.GetRetryPolicyFactory()).Returns(childRetryPolicyFactory);
 
@@ -90,9 +118,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             root.Setup(c => c.GetPayloadDependencies()).Returns(new[] { child.Object });
             root.SetupGet(c => c.PayloadType).Returns(typeof(string));
             root.Setup(c => c.GetPayload()).Returns("payload-root");
+            root.As<ISerializable>()
+                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Returns("{}");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
             root.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
-            var dto = (TaskGraphDto)TaskGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
+            var dto = (JobGraphDto)JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
             var nodes = dto.ExtractNodes((n, rid) => { });
             Assert.That(nodes, Has.Count.EqualTo(2));
             var rootNode = AssertSingle(nodes, n => n.JobId == rootId);

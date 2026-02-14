@@ -46,8 +46,8 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(_coreApi.Object);
 
-            var first = api.GetCacheFactory();
-            var second = api.GetCacheFactory();
+            var first = api.CacheFactory();
+            var second = api.CacheFactory();
 
             Assert.That(first, Is.Not.SameAs(second));
         }
@@ -57,23 +57,20 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(null!));
         }
-        public sealed class RecordingPayload : IPayloadCommand
+        public sealed class RecordingPayload : IPayload
         {
             public RecordingPayload(string name)
             {
                 Name = name;
+                HandlerId = Guid.NewGuid();
             }
 
             public string Name { get; }
-            public string HandlerId => "recording";
-            public bool Executed { get; private set; }
+            public string PayloadId => "recording";
 
-            public Task ExecuteAsync(CancellationToken ct)
-            {
-                Executed = true;
-                return Task.CompletedTask;
-            }
+            public DateTime CollectionTime => DateTime.UtcNow;
 
+            public Guid HandlerId { get; }
             public override string ToString() => Name;
         }
     }

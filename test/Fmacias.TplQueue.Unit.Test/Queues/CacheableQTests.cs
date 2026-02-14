@@ -11,41 +11,43 @@ namespace Fmacias.TplQueue.Test.Queues
         [Test]
         public void TryLeaseWorkOnce_WhenNoSlots_DoesNotLease()
         {
-            var leaseCache = new Mock<IPayloadLeaseCache>(MockBehavior.Strict);
+            //Arrange
+            var leaseCache = new Mock<IPayloadJobCache>(MockBehavior.Strict);
             var dispatcherMock = CreateDispatcherMock(slots: 0);
-            var dispatcher = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
+            using var queue = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
 
-            var leased = ((CacheableQ)dispatcher).TryLeaseWorkOnce();
-
+            //Act
+            var leased = ((CacheableQ)queue).TryLeaseWorkOnce();
+            
+            //Assert
             Assert.That(leased, Is.False);
-            leaseCache.Verify(c => c.TryLeaseNextRoot(out It.Ref<IPayloadJobRoot>.IsAny!, out It.Ref<ICacheLeaseEntry>.IsAny!), Times.Never);
-            dispatcher.Dispose();
+            leaseCache.Verify(c => c.TryHydrateNextJob(out It.Ref<IPayloadJobRoot>.IsAny!, 
+                out It.Ref<ICacheEntry>.IsAny!), Times.Never);
         }
 
         [Test]
-        public void TryLeaseWorkOnce_WhenLeaseAvailable_AddsToQueue()
+        public void TryLeaseWorkOnce_WhenLeaseAvailable()
         {
             // Arrange
-            var leaseCache = new Mock<IPayloadLeaseCache>();
-
+            var leaseCache = new Mock<IPayloadJobCache>();
             var lease = new TestLeaseEntry { IsFifo = true, CancellationToken = new CancellationTokenSource().Token };
             var runnerRoot = new TestPayloadCarrierRoot();
 
             // IMPORTANT: provide actual out vars
             IPayloadJobRoot outRoot = runnerRoot;
-            ICacheLeaseEntry outLease = lease;
+            ICacheEntry outLease = lease;
 
             leaseCache
-                .Setup(x => x.TryLeaseNextRoot(out outRoot, out outLease))
+                .Setup(x => x.TryHydrateNextJob(out outRoot, out outLease))
                 .Returns(true);
 
             IJobRoot? addedRoot = null;
             bool? addedFifo = null;
             CancellationToken? addedToken = null;
 
-            var dispatcherMock = CreateDispatcherMock(slots: 1);
+            var jobQueueMock = CreateDispatcherMock(slots: 1);
 
-            dispatcherMock
+            jobQueueMock
                 .Setup(d => d.Enqueue(It.IsAny<IJobRoot>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .Callback<IJobRoot, bool, CancellationToken>((r, f, t) =>
                 {
@@ -53,58 +55,56 @@ namespace Fmacias.TplQueue.Test.Queues
                     addedFifo = f;
                     addedToken = t;
                 })
-                .Returns(dispatcherMock.Object);
+                .Returns(jobQueueMock.Object);
 
-            var dispatcher = CacheableQ.Create(
+            var CacheQ = CacheableQ.Create(
                 Mock.Of<ILogger<ICacheablePayloadQ>>(),
                 leaseCache.Object,
-                dispatcherMock.Object);
+                jobQueueMock.Object);
 
             // Act
-            var leased = ((CacheableQ)dispatcher).TryLeaseWorkOnce();
+            var leased = ((CacheableQ)CacheQ).TryLeaseWorkOnce();
 
             // Assert
             Assert.That(leased, Is.True);
             Assert.That(addedRoot, Is.SameAs(runnerRoot));
             Assert.That(addedFifo, Is.True);
 
-            dispatcher.Dispose();
+            CacheQ.Dispose();
         }
 
         [Test]
-        public async Task JobEventCallback_AcknowledgesLifecycle()
+        public async Task OnJobEventChanged_CallBack_AcknowledgesLifecycle()
         {
-            var leaseCache = new Mock<IPayloadLeaseCache>();
-            var dispatcherMock = CreateDispatcherMock(slots: 1);
-            var payloadData = Mock.Of<ISerializedPayload>();
-            var runnerInfo = new Mock<IJobInfo>();
-            var runnerId = Guid.NewGuid();
+            var leaseCache = new Mock<IPayloadJobCache>();
+            var jobQueueMock = CreateDispatcherMock(slots: 1);
+            var jobInfo = new Mock<IPayloadJobInfo>();
+            var jobId = Guid.NewGuid();
 
-            runnerInfo.SetupGet(r => r.Id).Returns(runnerId);
-            runnerInfo.SetupGet(r => r.PayloadSerializedData).Returns(payloadData);
+            jobInfo.SetupGet(r => r.Id).Returns(jobId);
 
-            var dispatcher = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
-            var callback = dispatcher.OnJobEventChanged;
+            var CacheQ = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, jobQueueMock.Object);
+            var callback = CacheQ.OnJobEventChanged;
 
-            await callback(CreateEvent(JobEventStatus.Successed, runnerInfo.Object));
-            await callback(CreateEvent(JobEventStatus.Failed, runnerInfo.Object));
-            await callback(CreateEvent(JobEventStatus.Canceled, runnerInfo.Object));
-            await callback(CreateEvent(JobEventStatus.RootSuccessed, runnerInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Successed, jobInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Failed, jobInfo.Object));
+            await callback(CreateEvent(JobEventStatus.Canceled, jobInfo.Object));
+            await callback(CreateEvent(JobEventStatus.RootSuccessed, jobInfo.Object));
             
-            leaseCache.Verify(c => c.AckNode(runnerId, payloadData), Times.Once);
-            leaseCache.Verify(c => c.FailNode(runnerId, It.IsAny<string?>()), Times.Once);
-            leaseCache.Verify(c => c.CancelNode(runnerId), Times.Once);
-            leaseCache.Verify(c => c.SuccessRootNode(runnerId), Times.Once);
-            leaseCache.Verify(c => c.DeleteRootNode(runnerId), Times.Exactly(4));
+            leaseCache.Verify(c => c.AckNode(jobId, jobInfo.Object), Times.Once);
+            leaseCache.Verify(c => c.FailNode(jobId, It.IsAny<string?>()), Times.Once);
+            leaseCache.Verify(c => c.CancelNode(jobId), Times.Once);
+            leaseCache.Verify(c => c.SuccessRootNode(jobId), Times.Once);
+            leaseCache.Verify(c => c.DeleteRootNode(jobId), Times.Exactly(4));
 
-            dispatcher.Dispose();
+            CacheQ.Dispose();
         }
         [Test]
         public void LeasingPulseMs_NonPositiveValue_ResetsToDefault()
         {
             // Arrange
             var logger = Mock.Of<ILogger<ICacheablePayloadQ>>();
-            var cache = Mock.Of<IPayloadLeaseCache>();
+            var cache = Mock.Of<IPayloadJobCache>();
             var innerDispatcher = Mock.Of<IJobQ>();
 
             var dispatcher = CacheableQ.Create(
@@ -128,9 +128,10 @@ namespace Fmacias.TplQueue.Test.Queues
 
         private static IJobEvent CreateEvent(JobEventStatus status, IJobInfo info)
         {
+            
             var evt = new Mock<IJobEvent>();
             evt.SetupGet(e => e.Status).Returns(status);
-            evt.SetupGet(e => e.JobDTO).Returns(info);
+            evt.SetupGet(e => e.JobInfo).Returns(info);
             evt.SetupGet(e => e.Timestamp).Returns(DateTime.UtcNow);
             return evt.Object;
         }
@@ -164,7 +165,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public DateTime ExecutionEnd => DateTime.UtcNow;
             public TaskStatus Status => TaskStatus.Created;
             public IReadOnlyCollection<IJobInfo> Dependencies { get; } = Array.Empty<IJobInfo>();
-            public ISerializedPayload PayloadSerializedData { get; } = Mock.Of<ISerializedPayload>();
+            public ISerializable PayloadSerializedData { get; } = Mock.Of<ISerializable>();
             public object GetPayload() => new object();
             public Type PayloadType => typeof(object);
             public IReadOnlyList<IPayloadCarrierJob> GetPayloadDependencies() => Array.Empty<IPayloadCarrierJob>();
@@ -176,9 +177,14 @@ namespace Fmacias.TplQueue.Test.Queues
             public Func<IRetryPolicy> GetRetryPolicyFactory() => () => Mock.Of<IRetryPolicy>();
             public Task WaitUntilFinishedAsync() => Task.CompletedTask;
             public IJobQ Enqueue(IJobQ queue, CancellationToken ct) => queue;
+
+            public string Serialize(IUniversalPayloadSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        private class TestLeaseEntry : ICacheLeaseEntry
+        private class TestLeaseEntry : ICacheEntry
         {
             public Guid LeaseId { get; } = Guid.NewGuid();
             public Guid JobRootId { get; } = Guid.NewGuid();
@@ -197,7 +203,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public bool RootSuccessed => throw new NotImplementedException();
 
             public void MarkLeased() { }
-            public void MarkAck(ISerializedPayload payloadData) { }
+            public void MarkAck(ISerializable payloadData, IUniversalPayloadSerializer jsonUniversalPayloadSerializer) { }
             public void MarkFailed() { }
             public void MarkCanceled() { }
             public void MarkAsDeleted() { }

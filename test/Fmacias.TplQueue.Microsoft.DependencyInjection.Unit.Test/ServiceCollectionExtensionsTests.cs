@@ -14,27 +14,31 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             CoreApi = coreApi ?? throw new ArgumentNullException(nameof(coreApi));
         }
 
-        public IObserverFactory GetObserverFactory()
+        public IObserverFactory ObserverFactory()
         {
             throw new NotImplementedException();
         }
 
-        public ICacheFactory GetCacheFactory()
+        public ICacheFactory CacheFactory()
         {
             throw new NotImplementedException();
         }
 
-        public IPayloadJobFactory GetPayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options = null)
+        public IPayloadJobFactory PayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
+        {
+            throw new NotImplementedException();
+        }
+        public IPayloadJobFactory PayloadJobFactory(IJobHandlerResolver2 jobHandlerResolver, IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
         {
             throw new NotImplementedException();
         }
 
-        public ICacheableQFactory GetCacheableQFactory()
+        public ICacheableQFactory CacheableQFactory()
         {
             throw new NotImplementedException();
         }
 
-        public IRetryPolicyFactory GetRetryPolicyFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options)
+        public IRetryPolicyFactory RetryPolicyFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options)
         {
             throw new NotImplementedException();
         }
@@ -74,12 +78,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        IQFactoryAdapter IApi.GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions = null)
+        IQFactoryAdapter IApi.QFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions)
         {
             throw new NotImplementedException();
         }
 
-        public ISystemTextJsonSerializerFactory GetSystemTextJsonSerializerFactory()
+        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory()
         {
             throw new NotImplementedException();
         }

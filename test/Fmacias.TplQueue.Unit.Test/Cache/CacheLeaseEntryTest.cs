@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
 using Moq;
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Cache.Abstract;
+using Fmacias.TplQueue.Cache.DomainModels;
+using Fmacias.TplQueue.Cache.Factories;
 
 namespace Fmacias.TplQueue.Test.Cache
 {
@@ -21,18 +22,16 @@ namespace Fmacias.TplQueue.Test.Cache
                 n.ParentJobId == parentRunnerId &&
                 n.Name == "node" &&
                 n.PayloadJson == "{}" &&
-                n.PayloadType == "type" && 
+                n.PayloadTypeName == "type" && 
                 n.IsFifo == true &&
                 n.IsRoot == true &&
                 n.RetryDescriptor == mockRetryDescriptor.Object);
 
             var ct = new CancellationTokenSource().Token;
 
-            var entry = Facade.CreateLeaseEntry(
+            var entry = CacheEntryFactory.Create().CreateCacheEntry(
                 leaseId,
                 rootId,
-                runnerId,
-                parentRunnerId,
                 nodeDto,
                 cacheUtc: DateTime.UtcNow);
             Assert.That(entry.LeaseId, Is.EqualTo(leaseId));
@@ -58,10 +57,10 @@ namespace Fmacias.TplQueue.Test.Cache
         public void MarkAck_ChangesStatusToAcknowledged()
         {
             var entry = BuildEntry();
-            var serializedPayloadMock = new Mock<ISerializedPayload>(MockBehavior.Strict);
-            serializedPayloadMock.Setup(o => o.JsonOutput).Returns("{ }");
+            var serializedPayloadMock = new Mock<ISerializable>(MockBehavior.Strict);
+            serializedPayloadMock.Setup(o => o.Serialize(It.IsAny<IUniversalPayloadSerializer>())).Returns("{ }");
 
-            entry.MarkAck(serializedPayloadMock.Object);
+            entry.MarkAck(serializedPayloadMock.Object, Mock.Of<IUniversalPayloadSerializer>());
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Acknownledged));
         }
 
@@ -81,7 +80,7 @@ namespace Fmacias.TplQueue.Test.Cache
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Canceled));
         }
 
-        private static CacheLeaseEntry BuildEntry()
+        private static CacheEntry BuildEntry()
         {
             var leaseId = Guid.NewGuid();
             var rootId = Guid.NewGuid();
@@ -91,15 +90,13 @@ namespace Fmacias.TplQueue.Test.Cache
                 n.JobId == runnerId &&
                 n.Name == "node" &&
                 n.PayloadJson == "{}" &&
-                n.PayloadType == "type" &&
+                n.PayloadTypeName == "type" &&
                 n.IsRoot == false);
 
             var desc = Mock.Of<IRetryPolicyDescriptor>();
-            return (CacheLeaseEntry) Facade.CreateLeaseEntry(
+            return (CacheEntry) CacheEntryFactory.Create().CreateCacheEntry(
                 leaseId,
                 rootId,
-                runnerId,
-                parentJobId: Guid.Empty,
                 nodeDto,
                 cacheUtc: DateTime.UtcNow);
         }

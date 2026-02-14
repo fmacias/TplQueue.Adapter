@@ -3,25 +3,24 @@ using Fmacias.TplQueue.Serialization.SystemTextJson;
 using Moq;
 using NUnit.Framework;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Fmacias.TplQueue.Test.Serialization
 {
     [TestFixture]
     public class SystemTextJsonUniversalSerializerTests
     {
-        private sealed class TestPayload : IPayloadCommand
+        private sealed class TestPayload : IPayload
         {
             public TestPayload(string name)
             {
                 Name = name;
+                HandlerId = Guid.NewGuid();
             }
-
             public string Name { get; }
-            public string HandlerId => "test";
+            public string PayloadId => "test";
+            public DateTime CollectionTime => DateTime.UtcNow;
 
-            public Task ExecuteAsync(CancellationToken ct) => Task.CompletedTask;
+            public Guid HandlerId { get; }
         }
 
         [Test]

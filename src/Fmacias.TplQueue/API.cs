@@ -1,5 +1,6 @@
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Factories;
+using Fmacias.TplQueue.Handlers;
 using Fmacias.TplQueue.Queues;
 using Fmacias.TplQueue.RetryPolicies;
 using Fmacias.TplQueue.Serialization.SystemTextJson;
@@ -19,9 +20,9 @@ namespace Fmacias.TplQueue
         {
             return new API(api);
         }
-        public ICacheFactory GetCacheFactory()
+        public ICacheFactory CacheFactory()
         {
-            return CacheFactory.Instance();
+            return Factories.CacheFactory.Create();
         }
 
         public ICoreApi GetCoreApi()
@@ -29,36 +30,50 @@ namespace Fmacias.TplQueue
             return _coreApi;
         }
 
-        public IObserverFactory GetObserverFactory()
+        public IObserverFactory ObserverFactory()
         {
-            return ObserverFactory.Instance();
+            return Factories.ObserverFactory.Instance();
         }
-        public IPayloadJobFactory GetPayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
+        public IPayloadJobFactory PayloadJobFactory(IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
         {
             var retryPolicyOptions = options ?? new Dictionary<string, RetryPolicyOptions>();
-            return PayloadRunnerFactory.Instance(
+            return Factories.PayloadJobFactory.Create(
                 _coreApi.GetJobFactoryCore(),
                 _coreApi.GetJobRootFactoryCore(),
-                RetryPolicyFactory.Instance(retryPolicyOptions));
+                RetryPolicies.RetryPolicyFactory.Instance(retryPolicyOptions),
+                new ThrowingJobHandlerResolver());
         }
 
-        public IRetryPolicyFactory GetRetryPolicyFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options)
+        public IPayloadJobFactory PayloadJobFactory(IJobHandlerResolver2 jobHandlerResolver,
+            IReadOnlyDictionary<string, RetryPolicyOptions>? options = null)
+        {
+            if (jobHandlerResolver == null) throw new ArgumentNullException(nameof(jobHandlerResolver));
+
+            var retryPolicyOptions = options ?? new Dictionary<string, RetryPolicyOptions>();
+            return Factories.PayloadJobFactory.Create(
+                _coreApi.GetJobFactoryCore(),
+                _coreApi.GetJobRootFactoryCore(),
+                RetryPolicies.RetryPolicyFactory.Instance(retryPolicyOptions),
+                jobHandlerResolver);
+        }
+
+        public IRetryPolicyFactory RetryPolicyFactory(IReadOnlyDictionary<string, RetryPolicyOptions> options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return RetryPolicyFactory.Instance(options);
+            return RetryPolicies.RetryPolicyFactory.Instance(options);
         }
 
-        public ICacheableQFactory GetCacheableQFactory()
+        public ICacheableQFactory CacheableQFactory()
         {
-            return CacheableQFactory.Instance();
+            return Queues.CacheableQFactory.Instance();
         }
 
-        public IQFactoryAdapter GetQFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions = null)
+        public IQFactoryAdapter QFactory(IReadOnlyDictionary<string, IQOptions> options, IReadOnlyDictionary<string, RetryPolicyOptions>? retryPolicyOptions = null)
         {
             var retryOptions = retryPolicyOptions ?? new Dictionary<string, RetryPolicyOptions>();
             return QFactoryAdapter.Create(_coreApi.GetQFactoryCore(),
-                options, RetryPolicyFactory.Instance(retryOptions));
+                options, RetryPolicies.RetryPolicyFactory.Instance(retryOptions));
         }
     
         public IJobFactory GetJobFactoryCore()
@@ -75,7 +90,7 @@ namespace Fmacias.TplQueue
             return _coreApi.GetQFactoryCore();
         }
 
-        public ISystemTextJsonSerializerFactory GetSystemTextJsonSerializerFactory()
+        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory()
         {
             return JsonSerializerFactory.Create();
         }

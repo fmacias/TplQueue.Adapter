@@ -10,59 +10,65 @@ namespace Fmacias.TplQueue.Log
     /// </summary>
     public static class LogMessages
     {
-        public static readonly Action<ILogger, Guid, string, Exception?> PayloadCarrierRootDeserialized =
+        public static readonly Action<ILogger, Guid, string, Exception?> PayloadJobRootDeserialized =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Debug,
-                EventCatalog.PayloadCarrierRootDeserialized,
-                "Cache-Collected: runner {RunnerId} ({RunnerName}).");
+                EventCatalog.PayloadJobSerialization,
+                "Cache-Collected: Job {Id} ({Name}).");
 
-        public static readonly Action<ILogger, Exception?> PayloadCarrierRootDeserializedInfo =
+        public static readonly Action<ILogger, Exception?> PayloadJobRootDeserializedInfo =
             LoggerMessage.Define(
                 LogLevel.Information,
-                EventCatalog.PayloadCarrierRootDeserialized,
-                "No PayloadCarrierRoot found for deserialization.");
+                EventCatalog.PayloadJobSerialization,
+                "No PayloadJobRoot found for deserialization.");
+        
+        public static readonly Action<ILogger, Exception?> PayloadJobNotSerializableError =
+            LoggerMessage.Define(
+                LogLevel.Error,
+                EventCatalog.PayloadJobSerialization,
+                "Job must implement ISerializedPayload to be included into the CacheableQ workflow");
 
-        public static readonly Action<ILogger, Guid, string, Exception?> TaskStarted =
+        public static readonly Action<ILogger, Guid, string, Exception?> JobStarted =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Information,
-                EventCatalog.TaskStarted,
-                "Starting runner {RunnerId} ({RunnerName}).");
+                EventCatalog.JobStarted,
+                "Starting Job {Id} ({Name}).");
 
-        public static readonly Action<ILogger, Guid, string, Exception?> TaskRunning =
+        public static readonly Action<ILogger, Guid, string, Exception?> JobRunning =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Debug,
-                EventCatalog.TaskRunning,
-                "Running runner {RunnerId} ({RunnerName}).");
+                EventCatalog.JobRunning,
+                "Running Job {Id} ({Name}).");
 
-        public static readonly Action<ILogger, Guid, string, Exception?> TaskCompleted =
+        public static readonly Action<ILogger, Guid, string, Exception?> JobCompleted =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Information,
-                EventCatalog.TaskCompleted,
-                "Completed runner {RunnerId} ({RunnerName}).");
+                EventCatalog.JobCompleted,
+                "Completed Job {Id} ({Name}).");
 
-        public static readonly Action<ILogger, Guid, string, Exception?> TaskCanceled =
+        public static readonly Action<ILogger, Guid, string, Exception?> JobCanceled =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Warning,
-                EventCatalog.TaskCanceled,
-                "Canceled runner {RunnerId} ({RunnerName}).");
+                EventCatalog.JobCanceled,
+                "Canceled Job {Id} ({Name}).");
 
-        public static readonly Action<ILogger, Guid, string, Exception?> TaskFailed =
+        public static readonly Action<ILogger, Guid, string, Exception?> JobFailed =
             LoggerMessage.Define<Guid, string>(
                 LogLevel.Error,
-                EventCatalog.TaskFailed,
-                "Runner {RunnerId} ({RunnerName}) failed.");
+                EventCatalog.JobFailed,
+                "Job {Id} ({Name}) failed.");
 
-        public static readonly Action<ILogger, Guid, string, string, Exception?> TaskStateChanged =
+        public static readonly Action<ILogger, Guid, string, string, Exception?> JobStateChanged =
             LoggerMessage.Define<Guid, string, string>(
                 LogLevel.Debug,
-                EventCatalog.TaskStateChanged,
-                "Runner {RunnerId} ({RunnerName}) -> {NewState}.");
+                EventCatalog.jobStateChanged,
+                "Job {Id} ({Name}) -> {NewState}.");
 
         public static readonly Action<ILogger, Guid, Guid, Exception?> CacheLeaseDequeued =
             LoggerMessage.Define<Guid, Guid>(
                 LogLevel.Debug,
                 EventCatalog.CacheLeaseDequeued,
-                "Dequeued lease for Root {RootId} / Runner {RunnerId}.");
+                "Dequeued lease for Root {Id} / Job {Id}.");
 
         public static readonly Action<ILogger, Guid, Guid, Exception?> CacheLeaseDequeueFailed =
             LoggerMessage.Define<Guid, Guid>(
