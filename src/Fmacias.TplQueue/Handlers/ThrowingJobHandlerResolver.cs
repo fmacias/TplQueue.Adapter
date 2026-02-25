@@ -6,9 +6,9 @@ using Fmacias.TplQueue.Contracts;
 
 namespace Fmacias.TplQueue.Handlers
 {
-    internal sealed class ThrowingJobHandlerResolver : IJobHandlerResolver2
+    internal sealed class ThrowingJobHandlerResolver : IPayloadHandlerResolver
     {
-        public IUniversaDtoHandler2 Resolve(Guid handlerId)
+        public IUniversaPayloadHandler Resolve(Guid handlerId)
         {
             throw new KeyNotFoundException($"No handler was registered for HandlerId '{handlerId}'.");
         }

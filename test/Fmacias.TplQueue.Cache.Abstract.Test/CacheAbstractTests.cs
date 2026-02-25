@@ -1,4 +1,5 @@
 using System;
+using Fmacias.TplQueue.Cache.Contracts;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -109,22 +110,22 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         private static FakeCache CreateCache()
         {
             return new FakeCache(
-                Mock.Of<IUniversalPayloadSerializer>(),
+                Mock.Of<IUniversalDataSerializer>(),
                 Mock.Of<ICacheRepository>(),
                 Mock.Of<INodeTypeResolver>(),
-                Mock.Of<IPayloadJobFactory>(),
+                Mock.Of<IDataJobFactory>(),
                 Mock.Of<ICacheEntryFactory>());
         }
 
-        private static Mock<IPayloadJobRoot<IPayload>> CreateRoot()
+        private static Mock<IDataJobRoot<IPayload>> CreateRoot()
         {
-            var root = new Mock<IPayloadJobRoot<IPayload>>(MockBehavior.Loose);
+            var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
             root.SetupGet(r => r.Name).Returns("root");
-            root.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+            root.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             root.Setup(c => c.GetPayload()).Returns("payload-root");
             root.As<ISerializable>()
-                .Setup(s => s.Serialize(It.IsAny<IUniversalPayloadSerializer>()))
+                .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
             root.Setup(c => c.GetRetryPolicyFactory()).Returns(() => Mock.Of<IRetryPolicy>());
             return root;

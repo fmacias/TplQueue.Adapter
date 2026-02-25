@@ -10,7 +10,10 @@ namespace Fmacias.TplQueue.Test
         private Mock<ICoreApi> _coreApi = null!;
         private Mock<IJobFactory> _jobFactoryMock = null!;
         private Mock<IJobRootFactory> _jobRootFactoryMock = null!;
-        private Mock<IQFactoryCore> _queueFactoryCoreMock = null!;
+        private Mock<ICoreQFactory> _queueFactoryCoreMock = null!;
+        private Mock<IPayloadHandlerResolver> _jobHandlerResolver = null!;
+        private Mock<IRetryPolicyGenericFactory> _retryPolicyFactory = null!;
+        private Mock<INodeTypeResolver> _nodeTypeResolver = null!;
         private Dictionary<string, IQOptions> _queueOptions = null!;
 
         [SetUp]
@@ -19,9 +22,14 @@ namespace Fmacias.TplQueue.Test
             _jobFactoryMock = new Mock<IJobFactory>();
             _jobRootFactoryMock = new Mock<IJobRootFactory>();
             _queueFactoryCoreMock = Helper.GetQFactoryCoreMock();
+            _jobHandlerResolver = Helper.GetJobHandlerResolverMock();
+            _retryPolicyFactory = Helper.GetRetryPolicyFactoryMock();
+            _nodeTypeResolver = Helper.GetNodeTypeResolverMock();
 
-            _coreApi = Helper.GetCoreApiMock(_jobFactoryMock.Object,
-                _jobRootFactoryMock.Object, _queueFactoryCoreMock.Object);
+            _coreApi = Helper.GetCoreApiMock(
+                _jobFactoryMock.Object,
+                _jobRootFactoryMock.Object,
+                _queueFactoryCoreMock.Object);
             _queueOptions = new Dictionary<string, IQOptions>
             {
                 { "default", Mock.Of<IQOptions>(o => o.MaxParallelism == 1 && o.RetryPolicy == "none") }
@@ -31,47 +39,64 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void GetFactories_DelegatesToInnerCoreApi()
         {
-            var api = API.Create(_coreApi.Object);
-            Assert.That(api.GetJobFactoryCore(), Is.SameAs(_jobFactoryMock.Object));
-            Assert.That(api.GetJobRootFactoryCore(), Is.SameAs(_jobRootFactoryMock.Object));
-            Assert.That(api.GetQFactoryCore(), Is.SameAs(_queueFactoryCoreMock.Object));
+            var api = API.Create(
+                _coreApi.Object,
+                _retryPolicyFactory.Object,
+                new Dictionary<string, IRetryPolicyDescriptor>(),
+                _queueOptions);
 
-            _coreApi.Verify(a => a.GetJobFactoryCore(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetJobRootFactoryCore(), Times.AtLeastOnce);
-            _coreApi.Verify(a => a.GetQFactoryCore(), Times.Once);
+            Assert.That(api.JobFactory, Is.SameAs(_jobFactoryMock.Object));
+            Assert.That(api.JobRootFactory, Is.SameAs(_jobRootFactoryMock.Object));
+            Assert.That(api.CoreQFactories.Value, Is.SameAs(_queueFactoryCoreMock.Object));
+
+            _coreApi.Verify(a => a.JobFactory, Times.AtLeastOnce);
+            _coreApi.Verify(a => a.JobRootFactory, Times.AtLeastOnce);
+            _coreApi.Verify(a => a.QFactory, Times.Once);
         }
 
         [Test]
-        public void GetCacheFactory_ReturnsNewInstances()
+        public void Create_WhenCoreApiIsNull_ThrowsArgumentNullException()
         {
-            var api = API.Create(_coreApi.Object);
-
-            var first = api.CacheFactory();
-            var second = api.CacheFactory();
-
-            Assert.That(first, Is.Not.SameAs(second));
+            Assert.Throws<ArgumentNullException>(() => API.Create(
+                null!,
+                _retryPolicyFactory.Object,
+                new Dictionary<string, IRetryPolicyDescriptor>(),
+                _queueOptions));
         }
 
         [Test]
-        public void Instance_WhenCoreApiIsNull_Throws()
+        public void Create_WhenQueueOptionsIsNull_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => API.Create(null!));
+            Assert.Throws<ArgumentNullException>(() => API.Create(
+                _coreApi.Object,
+                _retryPolicyFactory.Object,
+                null!,
+                _queueOptions));
         }
-        public sealed class RecordingPayload : IPayload
+
+        [Test]
+        public void RetryPolicyFactory_WhenOptionsIsNull_ThrowsArgumentNullException()
         {
-            public RecordingPayload(string name)
-            {
-                Name = name;
-                HandlerId = Guid.NewGuid();
-            }
+            var api = API.Create(
+                _coreApi.Object,
+                _retryPolicyFactory.Object,
+                new Dictionary<string, IRetryPolicyDescriptor>(),
+                _queueOptions);
 
-            public string Name { get; }
-            public string PayloadId => "recording";
+            Assert.Throws<ArgumentNullException>(() => api.RetryPolicy<IExponentialBackoff>(null!,"someName"));
+        }
+        
+        [Test]
+        public void DataJobFactory_WithNullResolver_ThrowsArgumentNullException()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                _retryPolicyFactory.Object,
+                new Dictionary<string, IRetryPolicyDescriptor>(),
+                _queueOptions);
 
-            public DateTime CollectionTime => DateTime.UtcNow;
-
-            public Guid HandlerId { get; }
-            public override string ToString() => Name;
+            Assert.Throws<ArgumentNullException>(() =>
+                api.DataJobFactory(null!));
         }
     }
 }

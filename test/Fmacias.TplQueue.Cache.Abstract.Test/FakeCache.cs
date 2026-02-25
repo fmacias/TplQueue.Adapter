@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fmacias.TplQueue.Cache.Contracts;
 using Fmacias.TplQueue.Contracts;
 
 namespace Fmacias.TplQueue.Cache.Abstract.Test
@@ -11,12 +12,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         public IReadOnlyList<(IJobNodeDto Node, Guid RootId)> AppendedNodes => _appendedNodes;
 
         public FakeCache(
-            IUniversalPayloadSerializer serializer,
+            IUniversalDataSerializer serializer,
             ICacheRepository cacheRepository,
             INodeTypeResolver typeResolver,
-            IPayloadJobFactory payloadJobFactory,
+            IDataJobFactory payloadJobFactory,
             ICacheEntryFactory cacheEntryFactory)
-            : base(serializer,cacheRepository,typeResolver,payloadJobFactory,cacheEntryFactory)
+            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver)
         {
         }
 

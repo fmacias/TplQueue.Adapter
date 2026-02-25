@@ -31,6 +31,9 @@ function Ensure-NugetLocal {
   param([string]$RepoRoot)
 
   $nugetRoot = Join-Path $RepoRoot '..\TplQueue.NugetLocal'
+  
+  Write-Host "---> Nuget root1  $nugetRoot..."
+
   if (-not (Test-Path $nugetRoot)) {
     New-Item -ItemType Directory -Path $nugetRoot -Force | Out-Null
   }
@@ -56,14 +59,44 @@ function Ensure-NugetSource {
   }
 }
 
+# Resolve NuGet global-packages folder dynamically.
+function Get-GlobalPackagesPath {
+  $output = (& dotnet nuget locals global-packages -l) | Out-String
+  if ($LASTEXITCODE -ne 0) {
+    throw 'dotnet nuget locals global-packages failed.'
+  }
+
+  $match = [regex]::Match($output, ':\s*(.+)$')
+  if ($match.Success) {
+    return $match.Groups[1].Value.Trim()
+  }
+
+  if ($env:NUGET_PACKAGES) {
+    return $env:NUGET_PACKAGES
+  }
+
+  return (Join-Path $env:USERPROFILE '.nuget\\packages')
+}
+
+# Clear stale local cache entries for Fmacias packages before packing.
+function Clear-LocalNugetCache {
+  $packagesRoot = Get-GlobalPackagesPath
+  if (-not (Test-Path $packagesRoot)) {
+    return
+  }
+
+  Get-ChildItem -Path $packagesRoot -Directory |
+    Where-Object { $_.Name -like 'fmacias.tplqueue*' -or $_.Name -like 'fmaciasruano.tplqueue*' } |
+    Remove-Item -Recurse -Force
+}
+
 # Return the dependency pack-local scripts that should run before packing this repo.
 # Example: includes ..\TplQueue.Abstractions\pack-local.ps1 and ..\TplQueue.Cache.Abstract\pack-local.ps1.
 function Get-DependencyScripts {
   param([string]$RepoRoot)
 
   return @(
-    (Join-Path $RepoRoot '..\TplQueue.Abstractions\pack-local.ps1'),
-    (Join-Path $RepoRoot '..\TplQueue.Cache.Abstract\pack-local.ps1')
+    (Join-Path $RepoRoot '..\TplQueue.Abstractions\pack-local.ps1')
   )
 }
 
@@ -89,12 +122,13 @@ function Get-LocalProjects {
   param([string]$RepoRoot)
 
   return @(
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),    
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj')
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj')
   )
 }
 
@@ -107,9 +141,20 @@ function Pack-LocalProjects {
   )
 
   foreach ($projectPath in $ProjectPaths) {
+  Write-Host "---> ---> Project Path  $projectPath..."
+  Write-Host "---> ---> Project Path  $NugetRoot..."
+
     if (Test-Path $projectPath) {
       Write-Host "Packing $projectPath to $NugetRoot..."
-      Invoke-Dotnet -DotnetArgs @('pack', $projectPath, '-c', 'Release', '-o', $NugetRoot, '-p:SkipPackLocal=true')
+      Invoke-Dotnet -DotnetArgs @(
+        'pack',
+        $projectPath,
+        '-c', 'Release',
+        '-o', $NugetRoot,
+        '-p:SkipPackLocal=true',
+        '-p:RestoreNoCache=true',
+        '-p:RestoreForce=true'
+      )
     }
   }
 }
@@ -136,11 +181,26 @@ function Get-PackTarget {
 function Pack-Local {
   param(
     [string]$PackTarget,
-    [string]$NugetRoot
+    [string]$NugetRoot,
+    [string]$RepoRoot
   )
 
+  $nugetConfigPath = Join-Path $RepoRoot 'NuGet.config'
+  if (-not (Test-Path $nugetConfigPath)) {
+    throw "NuGet.config not found at: $nugetConfigPath"
+  }
+
   Write-Host "Packing $PackTarget to $NugetRoot..."
-  Invoke-Dotnet -DotnetArgs @('pack', $PackTarget, '-c', 'Release', '-o', $NugetRoot, '-p:SkipPackLocal=true')
+  Invoke-Dotnet -DotnetArgs @(
+    'pack',
+    $PackTarget,
+    '-c', 'Release',
+    '-o', $NugetRoot,
+    '--configfile', $nugetConfigPath,
+    '-p:SkipPackLocal=true',
+    '-p:RestoreNoCache=true',
+    '-p:RestoreForce=true'
+  )
   Write-Host 'Local NuGet packages created successfully.'
 }
 
@@ -150,15 +210,23 @@ function Main {
   $repoRoot = Get-RepoRoot
   $nugetRoot = Ensure-NugetLocal -RepoRoot $repoRoot
   Ensure-NugetSource -SourceName 'TplQueue.NugetLocal' -SourcePath $nugetRoot
+  Clear-LocalNugetCache
 
   $dependencyScripts = Get-DependencyScripts -RepoRoot $repoRoot
   Pack-Dependencies -ScriptPaths $dependencyScripts
 
+  
   $localProjects = Get-LocalProjects -RepoRoot $repoRoot
   Pack-LocalProjects -ProjectPaths $localProjects -NugetRoot $nugetRoot
+   
+  Write-Host 'Pack local Project success'
 
   $packTarget = Get-PackTarget -RepoRoot $repoRoot
-  Pack-Local -PackTarget $packTarget -NugetRoot $nugetRoot
+
+  Write-Host "Packing local not working $PackTarget to $NugetRoot..."  
+  Pack-Local -PackTarget $packTarget -NugetRoot $nugetRoot -RepoRoot $repoRoot
+  Write-Host 'Pack Local success.'
+
 }
 
 try {

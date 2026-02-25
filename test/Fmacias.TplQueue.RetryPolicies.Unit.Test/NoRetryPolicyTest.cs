@@ -1,4 +1,5 @@
 using Fmacias.TplQueue;
+using Fmacias.TplQueue.Defaults;
 using NUnit.Framework;
 
 namespace Fmacias.TplQueue.RetryPolicies.Test
@@ -40,6 +41,15 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
 
             Assert.That(calls, Is.EqualTo(1));
             Assert.That(policy.RetryCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ExecuteAsync_WithNullAction_ThrowsArgumentNullException()
+        {
+            var policy = NoRetryPolicy.Create();
+
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await policy.ExecuteAsync<int>(null!, CancellationToken.None));
         }
     }
 }

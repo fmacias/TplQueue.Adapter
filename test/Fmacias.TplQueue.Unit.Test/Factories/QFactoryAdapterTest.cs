@@ -13,35 +13,48 @@ namespace Fmacias.TplQueue.Test.Factories
         public void Create_SameInput_IsNeverSingletone()
         {
             var options = new Dictionary<string, IQOptions>();
-            var retryFactory = Mock.Of<IRetryPolicyFactory>();
+            var retryPolicyOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryFactory = Mock.Of<IRetryPolicyGenericFactory>();
             var coreFactory = Helper.GetQFactoryCoreMock();
-            var first = QFactoryAdapter.Create(coreFactory.Object, options, retryFactory);
-            var second = QFactoryAdapter.Create(coreFactory.Object, options, retryFactory);
+            var first = CoreQFactoryAdapter.Create(coreFactory.Object, 
+                retryFactory, options, retryPolicyOptions);
+            var second = CoreQFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
             Assert.That(second, Is.Not.SameAs(first));
         }
 
         [Test]
         public void Create_DifferentInputs_NeverSingletone()
         {
-            var retryFactory1 = Mock.Of<IRetryPolicyFactory>();
-            var retryFactory2 = Mock.Of<IRetryPolicyFactory>();
             var coreFactory1 = Helper.GetQFactoryCoreMock();
             var coreFactory2 = Helper.GetQFactoryCoreMock();
+            var retryPolicygenericFactory = Mock.Of<IRetryPolicyGenericFactory>();
 
-            var first = QFactoryAdapter.Create(coreFactory1.Object, new Dictionary<string, IQOptions>(), retryFactory1);
-            var second = QFactoryAdapter.Create(coreFactory2.Object, new Dictionary<string, IQOptions>(), retryFactory2);
+            var first = CoreQFactoryAdapter.Create(
+                coreFactory1.Object, 
+                retryPolicygenericFactory, 
+                new Dictionary<string, IQOptions>(), 
+                new Dictionary<string, IRetryPolicyDescriptor>());
+
+            var second = CoreQFactoryAdapter.Create(
+                coreFactory2.Object,
+                retryPolicygenericFactory, 
+                new Dictionary<string, IQOptions>(),
+                new Dictionary<string, IRetryPolicyDescriptor>());
+
             Assert.That(second, Is.Not.SameAs(first));
         }
 
         [Test]
         public void Create_ValidatesArguments()
         {
-            var coreFactory = Mock.Of<IQFactoryCore>();
-            var retryFactory = Mock.Of<IRetryPolicyFactory>();
+            var coreFactory = Mock.Of<ICoreQFactory>();
+            var retryFactory = Mock.Of<IRetryPolicyGenericFactory>();
             var options = new Dictionary<string, IQOptions>();
-            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(null!,options,retryFactory));
-            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(coreFactory, null!, retryFactory));
-            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(coreFactory,options,null!));
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+
+            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(null!, retryFactory, options, retryOptions));
+            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(coreFactory, retryFactory, null!, retryOptions));
+            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(coreFactory, null!, options, retryOptions));
         }
 
         [Test]
@@ -53,14 +66,16 @@ namespace Fmacias.TplQueue.Test.Factories
             };
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var queueFatoryAdapter = QFactoryAdapter.Create(
-                coreQFactory.Object, 
-                options, 
-                retryFactory.Object);
+            var queueFatoryAdapter = CoreQFactoryAdapter.Create(
+                coreQFactory.Object,
+                retryFactory.Object,
+                options,
+                retryOptions);
 
             Assert.Throws<InvalidCastException>(() =>
-                queueFatoryAdapter.GetCoreQ<ICacheablePayloadQ>("ser", Helper.GetLogger<ICacheablePayloadQ>()));
+                queueFatoryAdapter.GetCoreQ<ICacheQ>("ser", Helper.GetLogger<ICacheQ>()));
         }
 
         [Test]
@@ -72,10 +87,12 @@ namespace Fmacias.TplQueue.Test.Factories
             };
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var qfactoryAdapter = QFactoryAdapter.Create(
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+
+            var qfactoryAdapter = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                options,
-                retryFactory.Object);
+                retryFactory.Object,
+                options, retryOptions);
 
             using var queue = qfactoryAdapter
                 .GetCoreQ<IFifoQ>("fifo", Helper.GetLogger<IFifoQ>());
@@ -95,10 +112,11 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var qfactoryAdapter = QFactoryAdapter.Create(
+            var qfactoryAdapter = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                options, retryFactory.Object);
+                retryFactory.Object, options, retryOptions);
 
             using var queue = qfactoryAdapter.GetCoreQ<IParallelQ>("par", Helper.GetLogger<IParallelQ>());
 
@@ -116,11 +134,12 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var qfactoryAdapter = QFactoryAdapter.Create(
+            var qfactoryAdapter = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                options, 
-                retryFactory.Object);
+                retryFactory.Object,
+                options, retryOptions);
 
             Assert.Throws<InvalidCastException>(() =>
             {
@@ -133,11 +152,12 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var f = QFactoryAdapter.Create(
+            var f = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                new Dictionary<string, IQOptions>(),
-                retryFactory.Object);
+                retryFactory.Object,
+                new Dictionary<string, IQOptions>(), retryOptions);
             
             Assert.Throws<ArgumentException>(() =>
                 f.GetCoreQ<IParallelQ>("", Helper.GetLogger<IParallelQ>()));
@@ -151,14 +171,16 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var f = QFactoryAdapter.Create(
+            var f = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                new Dictionary<string, IQOptions>(),
-                retryFactory.Object);
+                retryFactory.Object,
+                new Dictionary<string, IQOptions>(), 
+                retryOptions);
 
             Assert.Throws<ArgumentNullException>(() =>
-                f.CreateParallel(null!, "x", Mock.Of<ILogger<IParallelQ>>()));
+                f.Parallel(null!, "x", Mock.Of<ILogger<IParallelQ>>()));
         }
 
         [Test]
@@ -166,14 +188,16 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var f = QFactoryAdapter.Create(
+            var f = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                new Dictionary<string, IQOptions>(),
-                retryFactory.Object);
+                retryFactory.Object,
+                new Dictionary<string, IQOptions>(), 
+                retryOptions);
 
             Assert.Throws<ArgumentNullException>(() =>
-                f.CreateFifo(null!, "x", Mock.Of<ILogger<IFifoQ>>()));
+                f.Fifo(null!, "x", Mock.Of<ILogger<IFifoQ>>()));
         }
 
         [Test]
@@ -181,14 +205,16 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var f = QFactoryAdapter.Create(
+            var f = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                new Dictionary<string, IQOptions>(),
-                retryFactory.Object);
+                retryFactory.Object,
+                new Dictionary<string, IQOptions>(), 
+                retryOptions);
 
             Assert.Throws<KeyNotFoundException>(() =>
-                f.CreateParallel("unknown", Mock.Of<ILogger<IParallelQ>>()));
+                f.Parallel("unknown", Mock.Of<ILogger<IParallelQ>>()));
         }
 
         [Test]
@@ -204,15 +230,16 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
-            var f = QFactoryAdapter.Create(
+            var f = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                badMap,
-                retryFactory.Object);
+                retryFactory.Object,
+                badMap, retryOptions);
 
             Assert.Throws<ArgumentException>(() =>
             {
-                f.CreateParallel("bad", Mock.Of<ILogger<IParallelQ>>());
+                f.Parallel("bad", Mock.Of<ILogger<IParallelQ>>());
             });
         }
     }
@@ -220,8 +247,8 @@ namespace Fmacias.TplQueue.Test.Factories
     {
         public int MaxParallelism { get; set; } = 2;
         public string RetryPolicy { get; set; } = "rp";
-        public IPayloadJobCache PayloadLeaseCache { get; set; } = Mock.Of<IPayloadJobCache>();
-        public IPayloadJobFactory PayloadRunnerFactory { get; set; } = Mock.Of<IPayloadJobFactory>();
+        public IDataJobCache PayloadLeaseCache { get; set; } = Mock.Of<IDataJobCache>();
+        public IDataJobFactory PayloadRunnerFactory { get; set; } = Mock.Of<IDataJobFactory>();
     }
 
     internal class TestParallelOptions : IQOptions
@@ -230,7 +257,7 @@ namespace Fmacias.TplQueue.Test.Factories
         public string RetryPolicy { get; set; } = "rp";
     }
 
-    public class XQ : IJobQ
+    public class XQ : IQ
     {
         public bool IsDisposed => throw new NotImplementedException();
 
@@ -249,17 +276,17 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public IJobQ Enqueue(IJobRoot jobRoot, bool isFifo, CancellationToken cancellationToken)
+        public IQ Enqueue(IJobRoot jobRoot, bool isFifo, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public IJobQ Enqueue(IJobRoot jobRoot, CancellationToken ct)
+        public IQ Enqueue(IJobRoot jobRoot, CancellationToken ct)
         {
             throw new NotImplementedException();
         }
 
-        public IJobQ EnqueueFifo(IJobRoot jobRoot, CancellationToken ct)
+        public IQ EnqueueFifo(IJobRoot jobRoot, CancellationToken ct)
         {
             throw new NotImplementedException();
         }
@@ -269,7 +296,7 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public IJobQ SetRetryPolicyFactory(Func<IRetryPolicy> retryPolicy)
+        public IQ SetRetryPolicyFactory(Func<IRetryPolicy> retryPolicy)
         {
             throw new NotImplementedException();
         }

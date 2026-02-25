@@ -11,13 +11,13 @@ namespace Fmacias.TplQueue.Cache.Helpers
     /// </summary>
     internal sealed class JobGraphDto : IJobGraphDto
     {
-        private readonly IUniversalPayloadSerializer _serializer;
-        private readonly IPayloadJobRoot _rootGraph;
+        private readonly IUniversalDataSerializer _serializer;
+        private readonly IDataJobRoot _rootGraph;
         private readonly bool _isFifo;
 
         private JobGraphDto(
-            IUniversalPayloadSerializer serializer,
-            IPayloadJobRoot rootGraph,
+            IUniversalDataSerializer serializer,
+            IDataJobRoot rootGraph,
             bool isFifo)
         {
             _serializer = serializer
@@ -31,8 +31,8 @@ namespace Fmacias.TplQueue.Cache.Helpers
         /// Factory method to create a new <see cref="IJobGraphDto"/> instance.
         /// </summary>
         public static IJobGraphDto Create(
-            IUniversalPayloadSerializer serializer,
-            IPayloadJobRoot rootGraph, bool isFifo)
+            IUniversalDataSerializer serializer,
+            IDataJobRoot rootGraph, bool isFifo)
         {
             return new JobGraphDto(serializer, rootGraph, isFifo);
         }
@@ -68,12 +68,12 @@ namespace Fmacias.TplQueue.Cache.Helpers
         /// Depth-first traversal that builds <see cref="IJobNodeDto"/> instances lazily and calls the callback.
         /// </summary>
         private void DfsBuild(
-            IPayloadCarrierJob current,
+            IDataJob current,
             ISet<Guid> visited,
             IDictionary<Guid, IJobNodeDto> nodes,
             Action<IJobNodeDto, Guid> callBack,
             Guid rootId,
-            IPayloadCarrierJob? parent)
+            IDataJob? parent)
         {
             if (current is null) throw new ArgumentNullException(nameof(current));
             if (visited is null) throw new ArgumentNullException(nameof(visited));
@@ -91,9 +91,9 @@ namespace Fmacias.TplQueue.Cache.Helpers
             MaterializeDtoNode(current, nodes, callBack, rootId, parent);
         }
 
-        private void MaterializeDtoNode(IPayloadCarrierJob payloadJob, 
+        private void MaterializeDtoNode(IDataJob payloadJob, 
             IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, 
-            Guid rootId, IPayloadCarrierJob? parent)
+            Guid rootId, IDataJob? parent)
         {
             if (!nodes.TryGetValue(payloadJob.Id, out var dto))
             {
@@ -104,16 +104,16 @@ namespace Fmacias.TplQueue.Cache.Helpers
             }
         }
 
-        private void TraverseDependentsFirst(IPayloadCarrierJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId)
+        private void TraverseDependentsFirst(IDataJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId)
         {
-            foreach (var job in payloadJob.GetPayloadDependencies())
+            foreach (var job in payloadJob.GetDependentDataJobs())
             {
                 if (job is null) continue;
                 DfsBuild(job, visited, nodes, callBack, rootId, payloadJob);
             }
         }
 
-        private static bool AvoidCyclesAndDuplicateNodes(IPayloadCarrierJob current, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes)
+        private static bool AvoidCyclesAndDuplicateNodes(IDataJob current, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes)
         {
             if (!visited.Add(current.Id) || nodes.ContainsKey(current.Id))
             {

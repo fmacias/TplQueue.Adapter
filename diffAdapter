@@ -1,0 +1,947 @@
+diff --git a/src/Fmacias.TplQueue.Cache.Abstract/CacheAbstract.cs b/src/Fmacias.TplQueue.Cache.Abstract/CacheAbstract.cs
+index 8ab79df..c850fa3 100644
+--- a/src/Fmacias.TplQueue.Cache.Abstract/CacheAbstract.cs
++++ b/src/Fmacias.TplQueue.Cache.Abstract/CacheAbstract.cs
+@@ -13,6 +13,7 @@ namespace Fmacias.TplQueue.Cache
+     {
+         private readonly object _syncDataOperations = new object();
+         private readonly IJsonUniversalPayloadSerializer _universalPayloadSerializer;
++        private readonly IPayloadGraphDehydrator _payloadGraphDehydrator;
+ 
+         /// <summary>
+         /// Synchronization object for derived classes. Use this for all stateful operations that
+@@ -30,9 +31,21 @@ namespace Fmacias.TplQueue.Cache
+         /// </summary>
+         protected CacheAbstract(
+             IJsonUniversalPayloadSerializer serializer)
++            : this(serializer, PayloadGraphDehydrator.Create())
++        {
++        }
++
++        /// <summary>
++        /// Initializes a new instance of the <see cref="CacheAbstract"/> class.
++        /// </summary>
++        protected CacheAbstract(
++            IJsonUniversalPayloadSerializer serializer,
++            IPayloadGraphDehydrator payloadGraphDehydrator)
+         {
+             _universalPayloadSerializer = serializer
+                                           ?? throw new ArgumentNullException(nameof(serializer));
++            _payloadGraphDehydrator = payloadGraphDehydrator
++                                      ?? throw new ArgumentNullException(nameof(payloadGraphDehydrator));
+         }
+ 
+         /// <summary>
+@@ -89,9 +102,11 @@ namespace Fmacias.TplQueue.Cache
+         {
+             if (JobRoot is null) throw new ArgumentNullException(nameof(JobRoot));
+ 
+-            return TaskGraphDto
+-                .Create(_universalPayloadSerializer, JobRoot, isFifo)
+-                .ExtractNodes(AppendNodeCallBack);
++            return _payloadGraphDehydrator.Dehydrate(
++                JobRoot,
++                isFifo,
++                _universalPayloadSerializer,
++                AppendNodeCallBack);
+         }
+ 
+         /// <summary>
+diff --git a/src/Fmacias.TplQueue.Cache.Abstract/JobNodeDto.cs b/src/Fmacias.TplQueue.Cache.Abstract/JobNodeDto.cs
+index 3d25c06..9c2ccbe 100644
+--- a/src/Fmacias.TplQueue.Cache.Abstract/JobNodeDto.cs
++++ b/src/Fmacias.TplQueue.Cache.Abstract/JobNodeDto.cs
+@@ -7,7 +7,7 @@ namespace Fmacias.TplQueue.Cache
+     /// Concrete DTO for a payload task runner node.
+     /// Enforces non-null <see cref="PayloadTypeName"/> and <see cref="PayloadJson"/>.
+     /// </summary>
+-    internal sealed class JobNodeDto : IJobNodeDto
++    internal sealed class JobNodeDto : IJobNodeDto, IJobNodeRecord
+     {
+         /// <inheritdoc/>
+         public Guid JobId { get; private set; }
+@@ -53,9 +53,15 @@ namespace Fmacias.TplQueue.Cache
+         public static JobNodeDto Create(IJsonUniversalPayloadSerializer jsonSerializer, 
+             IPayloadCarrierJob payloadJob, bool isFifo, IPayloadCarrierJob? parentJob) 
+         {
++            if (jsonSerializer is null) throw new ArgumentNullException(nameof(jsonSerializer));
++            if (payloadJob is null) throw new ArgumentNullException(nameof(payloadJob));
++
+             var parentId = parentJob?.Id ?? Guid.Empty;
+             var isRoot = payloadJob is IPayloadJobRoot;
+-            var (typeName, json) = SerializePayload(payloadJob, jsonSerializer);
++            var payload = payloadJob.GetPayload()
++                          ?? throw new InvalidOperationException($"Payload cannot be null for job '{payloadJob.Id}'.");
++            var runtimeType = payload.GetType();
++            var (_, json) = SerializePayload(payloadJob, jsonSerializer);
+             var policyFactory = payloadJob.GetRetryPolicyFactory();
+             var policy = policyFactory();
+             var retryDescriptor = policy.ToDescriptor();
+@@ -63,11 +69,11 @@ namespace Fmacias.TplQueue.Cache
+                     jobId: payloadJob.Id,
+                     parentJobId: parentId,
+                     payloadJson: json,
+-                    payloadType: payloadJob.PayloadType,
++                    payloadType: runtimeType,
+                     isRoot: isRoot,
+                     isFifo: isFifo,
+                     retryPolicyDescriptor: retryDescriptor,
+-                    name: json);
++                    name: payloadJob.Name);
+         }
+ 
+         public void UpdatePayloadJson(string payloadJson)
+@@ -78,11 +84,12 @@ namespace Fmacias.TplQueue.Cache
+         private static (string typeName, string json) SerializePayload(IPayloadCarrierJob payloadJob, IJsonUniversalPayloadSerializer serializer)
+         {
+             if (payloadJob is null) throw new ArgumentNullException(nameof(payloadJob));
++            if (serializer is null) throw new ArgumentNullException(nameof(serializer));
+             
+             var payload = payloadJob.GetPayload();
+-            var type = payloadJob.PayloadType
+-                       ?? payload.GetType()
+-                       ?? throw new InvalidOperationException("Payload type cannot be determined.");
++            if (payload is null)
++                throw new InvalidOperationException($"Payload cannot be null for job '{payloadJob.Id}'.");
++            var type = payload.GetType();
+ 
+             var json = payloadJob.Serialize(serializer); 
+             var typeName = type.AssemblyQualifiedName
+diff --git a/src/Fmacias.TplQueue/Cache/MemCache.cs b/src/Fmacias.TplQueue/Cache/MemCache.cs
+index 7e208fa..dba0e66 100644
+--- a/src/Fmacias.TplQueue/Cache/MemCache.cs
++++ b/src/Fmacias.TplQueue/Cache/MemCache.cs
+@@ -1,4 +1,4 @@
+-﻿using Fmacias.TplQueue.Contracts;
++using Fmacias.TplQueue.Contracts;
+ using Fmacias.TplQueue.Exceptions;
+ using System;
+ using System.Collections.Concurrent;
+@@ -10,36 +10,57 @@ namespace Fmacias.TplQueue.Cache
+     internal sealed class MemCache : CacheAbstract, IMemCache
+     {
+         private readonly ConcurrentDictionary<Guid, ICacheLeaseEntry> _indexedEntries = new();
++        private readonly InMemoryCacheLeaseEntryStore _entryStore;
+         private readonly IPayloadJobFactory _payloadJobFactory;
+         private readonly ICacheFacade _cacheFacade;
+-        private MemCache(IPayloadJobFactory payloadRunnerFactory,
+-            IJsonUniversalPayloadSerializer serializer, 
+-            ICacheFacade cacheFacade)
+-            : base(serializer)
++        private readonly IRootLeaseSelector _leaseSelector;
++        private readonly IPayloadGraphHydrator _payloadGraphHydrator;
++
++        private MemCache(
++            IPayloadJobFactory payloadRunnerFactory,
++            IJsonUniversalPayloadSerializer serializer,
++            ICacheFacade cacheFacade,
++            IRootLeaseSelector leaseSelector,
++            IPayloadGraphHydrator payloadGraphHydrator,
++            IPayloadGraphDehydrator payloadGraphDehydrator)
++            : base(serializer, payloadGraphDehydrator)
+         {
+-            if (payloadRunnerFactory == null) throw new ArgumentNullException(nameof(payloadRunnerFactory));
+-            if (cacheFacade == null) throw new ArgumentNullException(nameof(cacheFacade));
+-
+-            _payloadJobFactory = payloadRunnerFactory;
+-            _cacheFacade = cacheFacade;
++            _payloadJobFactory = payloadRunnerFactory ?? throw new ArgumentNullException(nameof(payloadRunnerFactory));
++            _cacheFacade = cacheFacade ?? throw new ArgumentNullException(nameof(cacheFacade));
++            _leaseSelector = leaseSelector ?? throw new ArgumentNullException(nameof(leaseSelector));
++            _payloadGraphHydrator = payloadGraphHydrator ?? throw new ArgumentNullException(nameof(payloadGraphHydrator));
++            _entryStore = new InMemoryCacheLeaseEntryStore(_indexedEntries);
+         }
+ 
+-        public static MemCache Create(IPayloadJobFactory payloadRunnerFactory,
+-            IJsonUniversalPayloadSerializer serializer, ICacheFacade cacheFacade)
+-            => new MemCache(payloadRunnerFactory, serializer, cacheFacade);
++        public static MemCache Create(
++            IPayloadJobFactory payloadRunnerFactory,
++            IJsonUniversalPayloadSerializer serializer,
++            ICacheFacade cacheFacade)
++        {
++            var leaseSelector = CacheLeaseSelector.Create();
++            var payloadGraphHydrator = PayloadGraphHydrator.Create(leaseSelector);
++            var payloadGraphDehydrator = PayloadGraphDehydrator.Create();
++            return new MemCache(
++                payloadRunnerFactory,
++                serializer,
++                cacheFacade,
++                leaseSelector,
++                payloadGraphHydrator,
++                payloadGraphDehydrator);
++        }
+ 
+-        protected override Action<IJobNodeDto, Guid> AppendNodeCallBack 
+-            => (nodeDto, rootId) =>
++        protected override Action<IJobNodeDto, Guid> AppendNodeCallBack =>
++            (nodeDto, rootId) =>
+             {
+                 AddDtoNodeToCache(
+                     edgedNode: nodeDto,
+                     leaseId: Guid.NewGuid(),
+                     jobRootId: rootId);
+             };
++
+         public override void AckNode(Guid nodeId, ISerializable payloadData)
+         {
+             var lease = GetByIdOrDefault(nodeId);
+-
+             lease?.MarkAck(payloadData, Serializer);
+         }
+ 
+@@ -58,47 +79,37 @@ namespace Fmacias.TplQueue.Cache
+         public override void SuccessRootNode(Guid jobRootId)
+         {
+             var leaseRoot = GetByJobId(jobRootId);
+-            
+-            if (leaseRoot == null) return;
+-
+-            if (!leaseRoot.IsRoot) return;
++            if (leaseRoot == null || !leaseRoot.IsRoot) return;
+             SuccessedRootFinalized(jobRootId);
+         }
+ 
+         public override bool DeleteRootNode(Guid rootId)
+         {
+-            var leaseRoot = GetByJobId(rootId);
+-
+-            if (leaseRoot == null || !leaseRoot.IsFinalized())
++            lock (SyncDataOperations)
+             {
+-                return false;
+-            }
++                var leaseRoot = GetByJobId(rootId);
++                if (leaseRoot == null || !leaseRoot.IsFinalized())
++                {
++                    return false;
++                }
+ 
+-            if (AreRootChildsNotFinalized(rootId))
+-                throw new TplQueueErrorException($"Non finalized Cache entries found for finalized root([{rootId}])");
++                if (AreRootChildsNotFinalized(rootId))
++                    throw new TplQueueErrorException($"Non finalized Cache entries found for finalized root([{rootId}])");
+ 
+-            MarkAsDeleted(leaseRoot);
+-            return true;
++                MarkAsDeleted(leaseRoot);
++                return true;
++            }
+         }
+ 
+         private void MarkAsDeleted(ICacheLeaseEntry leaseRoot)
+         {
+             leaseRoot.MarkAsDeleted();
+ 
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
+-            }
+-            entries
+-                .Select(kv => kv.Value)
+-                .Where(v => v.IsFinalized() == true &&
+-                    v.JobRootId == leaseRoot.JobRootId &&
+-                    v.IsRoot == false).ToList().ForEach(e =>
+-                    {
+-                        e.MarkAsDeleted();
+-                    });
++            var entriesSnapshot = _entryStore.SnapshotAll();
++            entriesSnapshot
++                .Where(v => v.IsFinalized() && v.JobRootId == leaseRoot.JobRootId && !v.IsRoot)
++                .ToList()
++                .ForEach(e => e.MarkAsDeleted());
+         }
+ 
+         public override bool TryLeaseNextRoot(out IPayloadJobRoot payloadCarrierRoot, out ICacheLeaseEntry lease)
+@@ -106,20 +117,28 @@ namespace Fmacias.TplQueue.Cache
+             payloadCarrierRoot = null!;
+             lease = null!;
+ 
+-            if (!TryCreatePayloadCarrierRoot(out payloadCarrierRoot))
++            var entriesSnapshot = _entryStore.SnapshotAll();
++            if (entriesSnapshot.Length == 0)
++            {
+                 return false;
++            }
+ 
+-            lease = GetByIdOrDefault(payloadCarrierRoot.Id);
+-
+-            if (lease == null) return false;
++            var oldestRootCachedEntry = _leaseSelector.SelectOldestPendingRoot(entriesSnapshot);
++            if (oldestRootCachedEntry == null)
++            {
++                return false;
++            }
+ 
+-            return true;
++            payloadCarrierRoot = _payloadGraphHydrator.Hydrate(
++                entriesSnapshot,
++                oldestRootCachedEntry,
++                Serializer,
++                _payloadJobFactory);
++            lease = oldestRootCachedEntry;
++            return payloadCarrierRoot != null;
+         }
+ 
+-        private void AddDtoNodeToCache(
+-            IJobNodeDto edgedNode,
+-            Guid leaseId,
+-            Guid jobRootId)
++        private void AddDtoNodeToCache(IJobNodeDto edgedNode, Guid leaseId, Guid jobRootId)
+         {
+             var entry = _cacheFacade.CreateLeaseEntry(
+                 leaseId: leaseId,
+@@ -130,53 +149,28 @@ namespace Fmacias.TplQueue.Cache
+             PersistEntryUpdate(entry);
+         }
+ 
+-        protected override void PersistEntryUpdate(ICacheLeaseEntry entry) 
++        protected override void PersistEntryUpdate(ICacheLeaseEntry entry)
+         {
+-            if (entry is null)
+-                throw new ArgumentNullException(nameof(entry));
+-            
+-            lock (SyncDataOperations)
+-            {
+-                _indexedEntries.AddOrUpdate(
+-                    entry.JobId,
+-                    (id) => entry,
+-                    (id, currentEntry) => entry);
+-            }
++            if (entry is null) throw new ArgumentNullException(nameof(entry));
++            _entryStore.Upsert(entry);
+         }
+ 
+         private ICacheLeaseEntry GetByIdOrDefault(Guid jobId)
+         {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations){
+-                entries = [.. _indexedEntries];
+-            }
+-            return entries
+-                .Where(kv => kv.Key == jobId)
+-                .Select(kv => kv.Value)
+-                .FirstOrDefault();
++            _entryStore.TryGet(jobId, out var entry);
++            return entry;
+         }
+ 
+-
+         private bool AreRootChildsNotFinalized(Guid rootId)
+         {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
+-            }
+-
+-            return entries
+-                    .Select(kv => kv.Value)
+-                    .Where(v => v.IsFinalized() == false && 
+-                        v.JobRootId == rootId && 
+-                        v.IsRoot == false).Any();
++            var entriesSnapshot = _entryStore.SnapshotAll();
++            return entriesSnapshot
++                .Any(v => !v.IsFinalized() && v.JobRootId == rootId && !v.IsRoot);
+         }
++
+         private void SuccessedRootFinalized(Guid rootId)
+         {
+             var rootEntry = GetByIdOrDefault(rootId);
+-
+             if (rootEntry == null || !rootEntry.IsRoot)
+                 return;
+ 
+@@ -185,195 +179,107 @@ namespace Fmacias.TplQueue.Cache
+ 
+         private void SuccessRootChildEntries(ICacheLeaseEntry rootEntry)
+         {
+-            var rootId = rootEntry.JobRootId;
+-
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+             lock (SyncDataOperations)
+             {
+-                entries = [.. _indexedEntries];
+-            }
++                var rootId = rootEntry.JobRootId;
++                var entriesSnapshot = _entryStore.SnapshotAll();
+ 
+-            var nonSuccessedFound = entries.Select(kv => kv.Value)
+-                .Where(v => v.Status != EntryStatus.Acknownledged &&
+-                v.JobRootId == rootId).Any();
++                var nonSuccessedFound = entriesSnapshot
++                    .Any(v => v.Status != EntryStatus.Acknownledged && v.JobRootId == rootId);
+ 
+-            if (nonSuccessedFound)
+-                return;
+-
+-            entries
+-                .Select(kv => kv.Value)
+-                .Where(v => v.Status == EntryStatus.Acknownledged &&
+-                    v.JobRootId == rootId).ToList().ForEach((entry) => { 
+-                        entry.MarkAsRootSuccessed(); 
+-                    });
+-        }
++                if (nonSuccessedFound)
++                    return;
+ 
+-        private bool TryCreatePayloadCarrierRoot(
+-            out IPayloadJobRoot payloadRootElement)
+-        {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
++                entriesSnapshot
++                    .Where(v => v.Status == EntryStatus.Acknownledged && v.JobRootId == rootId)
++                    .ToList()
++                    .ForEach(entry => entry.MarkAsRootSuccessed());
+             }
+-
+-            var entriesSnapshot = entries.Select(kv => kv.Value).ToArray();
+-
+-            payloadRootElement = default!;
+-            
+-            if (entriesSnapshot.Length == 0) return false;
+-            
+-            ICacheLeaseEntry oldestRootCachedEntry;
+-            oldestRootCachedEntry = OldestRootCachedEntry(entriesSnapshot);
+-
+-            if (oldestRootCachedEntry == null) return false;
+-            
+-            var childs = RelatedChildsByParentNode(oldestRootCachedEntry.JobId, entriesSnapshot);
+-
+-            List<IPayloadCarrierJob> dependentElements = new();
+-
+-            foreach (var cacheLeaseEntry in childs)
+-            {
+-                if (TryCreatePayloadCarrier(cacheLeaseEntry, 
+-                    entriesSnapshot, 
+-                    out var payloadCarrier))
+-                    dependentElements.Add(payloadCarrier);
+-            }
+-            var dto = oldestRootCachedEntry.JobNodeDto;
+-            payloadRootElement = _payloadJobFactory.CreatePayloadJobRoot(dto, dto.Deserialize<IPayload>(Serializer));
+-            payloadRootElement.After([.. dependentElements]);
+-            return payloadRootElement != null;
+-        }
+-        private bool TryCreatePayloadCarrier(
+-            ICacheLeaseEntry leaseEntry,
+-            ICacheLeaseEntry[] entriesSnapshot,
+-            out IPayloadCarrierJob payloadElement,
+-            HashSet<Guid>? visited = null)
+-        {
+-            payloadElement = null!;
+-
+-            if (leaseEntry == null) return false;           
+-            visited ??= new HashSet<Guid>();
+-
+-            if (!visited.Add(leaseEntry.LeaseId))
+-                return false;
+-        
+-            if (entriesSnapshot.Length == 0) return false;
+-
+-            var childs = RelatedChildsByParentNode(leaseEntry.JobId, entriesSnapshot);
+-
+-            List<IPayloadCarrierJob> dependentElements = new();
+-
+-            foreach (var cacheLeaseEntry in childs)
+-            {
+-                if (TryCreatePayloadCarrier(
+-                    cacheLeaseEntry,
+-                    entriesSnapshot, 
+-                    out var currentPayloadCarrier, 
+-                    visited))
+-                    dependentElements.Add(currentPayloadCarrier);
+-                else
+-                    throw new InvalidOperationException($"Cannot create PayloadCarrier from cache [{cacheLeaseEntry.LeaseId}] of runner ({cacheLeaseEntry.JobId}) ");
+-            }
+-            var dto = leaseEntry.JobNodeDto;
+-            payloadElement = _payloadJobFactory.CreatePayloadJob(dto, dto.Deserialize<IPayload>(Serializer));
+-            payloadElement.After([.. dependentElements]);
+-            return payloadElement != null;
+-        }
+-        private static IOrderedEnumerable<ICacheLeaseEntry> RelatedChildsByParentNode(
+-            Guid parentJobId,
+-            ICacheLeaseEntry[] entriesSnapshot)
+-        {
+-            return entriesSnapshot
+-                .Where(l =>
+-                    l.ParentJobId == parentJobId &&
+-                    l.Status == EntryStatus.Pending)
+-                .OrderBy(l => l.JobNodeDto.NodeCreationUtc);
+-        }
+-        private static ICacheLeaseEntry OldestRootCachedEntry(ICacheLeaseEntry[] entriesSnapshot)
+-        {
+-            return entriesSnapshot
+-                .Where(lease => lease.IsRoot == true && lease.Status == EntryStatus.Pending)
+-                .OrderBy(lease => lease.JobNodeDto.NodeCreationUtc)
+-                .FirstOrDefault();
+         }
+ 
+         public override ICacheLeaseEntry GetByJobId(Guid id)
+         {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
+-            }
+-
+-            return entries
+-                .Where(kv => kv.Key == id)
+-                .Select(kv => kv.Value)
+-                .FirstOrDefault();
++            return GetByIdOrDefault(id);
+         }
++
+         public override IPayloadLeaseCache CleanDeleted()
+         {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
+-
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
+-            }
+-            var markedAsDeleted = entries
+-                    .Select(kv => kv.Value)
+-                    .Where(v => v.Deleted == true);
++            var markedAsDeleted = _entryStore
++                .SnapshotAll()
++                .Where(v => v.Deleted);
+ 
+             Delete(markedAsDeleted);
+             return this;
+         }
++
+         public override IPayloadLeaseCache CleanFinalized()
+         {
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
++            var markedAsFinalized = _entryStore
++                .SnapshotAll()
++                .Where(v => v.IsFinalized());
+ 
+-            lock (SyncDataOperations)
+-            {
+-                entries = [.. _indexedEntries];
+-            }
+-            var markedAsFailed = entries
+-                    .Select(kv => kv.Value)
+-                    .Where(v => v.IsFinalized() == true);
+-
+-            Delete(markedAsFailed);
++            Delete(markedAsFinalized);
+             return this;
+         }
++
+         private void Delete(IEnumerable<ICacheLeaseEntry> itemsToRemove)
+         {
+             foreach (var item in itemsToRemove)
+             {
+-                _indexedEntries.TryRemove(item.JobId, out var removed);
++                _entryStore.TryRemove(item.JobId);
+             }
+         }
+ 
+         public override void LeaseRootNode(ICacheLeaseEntry leaseEntry)
+         {
+             if (leaseEntry == null) throw new ArgumentNullException(nameof(leaseEntry));
++            if (!leaseEntry.IsRoot) return;
+ 
+-            if (!leaseEntry.IsRoot)
+-                return;
+             LeaseRootGraph(leaseEntry);
+         }
+ 
+         private void LeaseRootGraph(ICacheLeaseEntry rootEntry)
+         {
+-            var rootId = rootEntry.JobRootId;
++            lock (SyncDataOperations)
++            {
++                var rootId = rootEntry.JobRootId;
++                var entriesSnapshot = _entryStore.SnapshotAll();
++                entriesSnapshot
++                    .Where(entry => entry.JobRootId == rootId)
++                    .ToList()
++                    .ForEach(entry => entry.MarkLeased());
++            }
++        }
++
++        private sealed class InMemoryCacheLeaseEntryStore : ICacheLeaseEntryStore
++        {
++            private readonly ConcurrentDictionary<Guid, ICacheLeaseEntry> _entries;
+ 
+-            KeyValuePair<Guid, ICacheLeaseEntry>[] entries;
++            public InMemoryCacheLeaseEntryStore(ConcurrentDictionary<Guid, ICacheLeaseEntry> entries)
++            {
++                _entries = entries ?? throw new ArgumentNullException(nameof(entries));
++            }
+ 
+-            lock (SyncDataOperations)
++            public void Upsert(ICacheLeaseEntry entry)
++            {
++                if (entry is null) throw new ArgumentNullException(nameof(entry));
++                _entries.AddOrUpdate(entry.JobId, entry, (_, _) => entry);
++            }
++
++            public bool TryGet(Guid jobId, out ICacheLeaseEntry entry)
++            {
++                return _entries.TryGetValue(jobId, out entry);
++            }
++
++            public ICacheLeaseEntry[] SnapshotAll()
++            {
++                return _entries.Values.ToArray();
++            }
++
++            public void TryRemove(Guid jobId)
+             {
+-                entries = [.. _indexedEntries];
++                _entries.TryRemove(jobId, out _);
+             }
+-            entries.Select(kv => kv.Value)
+-                .Where(entry => entry.JobRootId == rootId)
+-                .ToList().ForEach((entry) => entry.MarkLeased());
+         }
+     }
+ }
+diff --git a/src/Fmacias.TplQueue/Factories/PayloadJobFactory.cs b/src/Fmacias.TplQueue/Factories/PayloadJobFactory.cs
+index 81699af..faf9757 100644
+--- a/src/Fmacias.TplQueue/Factories/PayloadJobFactory.cs
++++ b/src/Fmacias.TplQueue/Factories/PayloadJobFactory.cs
+@@ -68,7 +68,7 @@ namespace Fmacias.TplQueue.Factories
+         public IPayloadJobRoot<T> CreatePayloadJobRoot<T>(T payload, string name = "") 
+             where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler, policy) 
+                     => BuildJobRoot(policy, Guid.Empty, name, payload, handler), 
+                 payload
+@@ -79,7 +79,7 @@ namespace Fmacias.TplQueue.Factories
+             T payload,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler, policy) 
+                     => BuildJobRoot(policy, id, name, payload, handler), 
+                 payload
+@@ -91,7 +91,7 @@ namespace Fmacias.TplQueue.Factories
+             IRetryPolicyDescriptor retryPolicyDescriptor,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler, policy)
+                     => BuildJobRoot(policy, Guid.Empty, name, payload, handler),
+                 payload, 
+@@ -105,7 +105,7 @@ namespace Fmacias.TplQueue.Factories
+             IRetryPolicyDescriptor retryPolicyDescriptor,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler, policy)
+                     => BuildJobRoot(policy, id, name, payload, handler),
+                 payload, 
+@@ -117,7 +117,7 @@ namespace Fmacias.TplQueue.Factories
+             Func<IRetryPolicy> policy,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler)
+                     => BuildJobRoot(policy, Guid.Empty, name, payload, handler),
+                 payload
+@@ -129,7 +129,7 @@ namespace Fmacias.TplQueue.Factories
+             Func<IRetryPolicy> policy,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJobRoot<T>) JobRoot(
++            return JobRoot(
+                 (handler)
+                     => BuildJobRoot(policy, jobId, name, payload, handler),
+                 payload
+@@ -147,7 +147,7 @@ namespace Fmacias.TplQueue.Factories
+             T payload,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJob<T>)Job((handler) 
++            return Job((handler) 
+                     => BuildJob(Guid.Empty,name, payload, handler),
+                 payload);
+         }
+@@ -156,7 +156,7 @@ namespace Fmacias.TplQueue.Factories
+             T payload,
+             string name = "") where T : IPayload
+         {
+-            return (IPayloadJob<T>)Job((handler)
++            return Job((handler)
+                     => BuildJob(id, name, payload, handler),
+                 payload);
+         }
+@@ -179,15 +179,20 @@ namespace Fmacias.TplQueue.Factories
+             }
+             return handler;
+         }
+-        private IPayloadJobRoot JobRoot(Func<IUniversaDtoHandler2, IPayloadJobRoot> factory, 
+-            IPayload payload)
++        private IPayloadJobRoot<T> JobRoot<T>(
++            Func<IUniversaDtoHandler2, IPayloadJobRoot<T>> factory, 
++            T payload)
++            where T : IPayload
+         {
+             if (payload == null) throw new ArgumentNullException(nameof(payload));
+             return factory(ResolveHandler(payload, _handlerResolver));
+         }
+ 
+-        private IPayloadJobRoot JobRoot(Func<IUniversaDtoHandler2, Func<IRetryPolicy>, IPayloadJobRoot> factory,
+-            IPayload payload, IRetryPolicyDescriptor? retryPolicyDescriptor = null)
++        private IPayloadJobRoot<T> JobRoot<T>(
++            Func<IUniversaDtoHandler2, Func<IRetryPolicy>, IPayloadJobRoot<T>> factory,
++            T payload, 
++            IRetryPolicyDescriptor? retryPolicyDescriptor = null)
++            where T : IPayload
+         {
+             if (payload == null) throw new ArgumentNullException(nameof(payload));
+ 
+@@ -200,16 +205,24 @@ namespace Fmacias.TplQueue.Factories
+             return factory(ResolveHandler(payload, _handlerResolver), policy);
+         }
+ 
+-        private PayloadJobRoot<IPayload> BuildJobRoot(Func<IRetryPolicy> policy, 
+-            Guid jobId, string name, IPayload payload, IUniversaDtoHandler2 handler)
++        private PayloadJobRoot<T> BuildJobRoot<T>(
++            Func<IRetryPolicy> policy, 
++            Guid jobId, string name, T payload, IUniversaDtoHandler2 handler)
++            where T : IPayload
+         {
+             var innerJob = CreateJobRoot(policy, name, handler, jobId, payload);
+-            return PayloadJobRoot<IPayload>.CreateRoot(
++            return PayloadJobRoot<T>.CreateRoot(
+                 job: innerJob, 
+                 payload);
+         }
+ 
+-        private IJobRoot CreateJobRoot(Func<IRetryPolicy> policy, string name, IUniversaDtoHandler2 handler, Guid jobId, IPayload payload)
++        private IJobRoot CreateJobRoot<T>(
++            Func<IRetryPolicy> policy, 
++            string name, 
++            IUniversaDtoHandler2 handler, 
++            Guid jobId, 
++            T payload)
++            where T : IPayload
+         {
+             if (jobId == Guid.Empty)
+                 return RootWithoutId(policy, name, handler, payload);
+@@ -217,10 +230,15 @@ namespace Fmacias.TplQueue.Factories
+             return RootWithId(policy, name, handler, jobId, payload);
+         }
+ 
+-        private IJobRoot RootWithId(Func<IRetryPolicy> policy, string name, IUniversaDtoHandler2 handler,
+-            Guid jobId, IPayload payload)
++        private IJobRoot RootWithId<T>(
++            Func<IRetryPolicy> policy, 
++            string name, 
++            IUniversaDtoHandler2 handler,
++            Guid jobId, 
++            T payload)
++            where T : IPayload
+         {
+-            return _jobRootFactory.CreateJob<IUniversaDtoHandler2, IPayload>(
++            return _jobRootFactory.CreateJob<IUniversaDtoHandler2, T>(
+                 id: jobId,
+                 body: async (cancelationToken, handlerObject, payloadObject) =>
+                 {
+@@ -231,10 +249,14 @@ namespace Fmacias.TplQueue.Factories
+                 retryPolicyFactory: policy,
+                 name: name);
+         }
+-        private IJobRoot RootWithoutId(Func<IRetryPolicy> policy, string name, 
+-            IUniversaDtoHandler2 handler, IPayload payload)
++        private IJobRoot RootWithoutId<T>(
++            Func<IRetryPolicy> policy, 
++            string name, 
++            IUniversaDtoHandler2 handler, 
++            T payload)
++            where T : IPayload
+         {
+-            return _jobRootFactory.CreateJob<IUniversaDtoHandler2, IPayload>(
++            return _jobRootFactory.CreateJob<IUniversaDtoHandler2, T>(
+                 body: async (cancelationToken, handlerObject, payloadObject) =>
+                 {
+                     await handlerObject.ResolveAction(payloadObject, cancelationToken).ConfigureAwait(false);
+@@ -245,14 +267,20 @@ namespace Fmacias.TplQueue.Factories
+                 name: name);
+         }
+         
+-        private PayloadJob<IPayload> BuildJob( 
+-            Guid jobId, string name, IPayload payload, IUniversaDtoHandler2 handler)
++        private PayloadJob<T> BuildJob<T>( 
++            Guid jobId, string name, T payload, IUniversaDtoHandler2 handler)
++            where T : IPayload
+         {
+-            return PayloadJob<IPayload>.Create(
++            return PayloadJob<T>.Create(
+                 job: CreateJob(name, handler, jobId, payload), 
+                 payload);
+         }
+-        private IJob CreateJob(string name, IUniversaDtoHandler2 handler, Guid jobId, IPayload payload)
++        private IJob CreateJob<T>(
++            string name, 
++            IUniversaDtoHandler2 handler, 
++            Guid jobId, 
++            T payload)
++            where T : IPayload
+         {
+             if (jobId == Guid.Empty)
+                 return CreateNonIdJob(name, handler, payload);
+@@ -260,16 +288,23 @@ namespace Fmacias.TplQueue.Factories
+             return CreateIdJob(name, handler, jobId, payload);
+         }
+ 
+-        private IPayloadCarrierJob Job(Func<IUniversaDtoHandler2, IPayloadCarrierJob> factory, 
+-            IPayload payload)
++        private IPayloadJob<T> Job<T>(
++            Func<IUniversaDtoHandler2, IPayloadJob<T>> factory, 
++            T payload)
++            where T : IPayload
+         {
+             if (payload == null) throw new ArgumentNullException(nameof(payload));
+             return factory(ResolveHandler(payload, _handlerResolver));
+         }
+ 
+-        private IJob CreateIdJob(string name, IUniversaDtoHandler2 handler, Guid jobId, IPayload payload)
++        private IJob CreateIdJob<T>(
++            string name, 
++            IUniversaDtoHandler2 handler, 
++            Guid jobId, 
++            T payload)
++            where T : IPayload
+         {
+-            return _jobFactory.CreateJob<IUniversaDtoHandler2,IPayload>(
++            return _jobFactory.CreateJob<IUniversaDtoHandler2,T>(
+                 id: jobId,
+                 body: async (cancelationToken, handlerObject, payloadObject) =>
+                 {
+@@ -279,9 +314,13 @@ namespace Fmacias.TplQueue.Factories
+                 arg2: payload,
+                 name: name);
+         }
+-        private IJob CreateNonIdJob(string name, IUniversaDtoHandler2 handler, IPayload payload)
++        private IJob CreateNonIdJob<T>(
++            string name, 
++            IUniversaDtoHandler2 handler, 
++            T payload)
++            where T : IPayload
+         {
+-            return _jobFactory.CreateJob<IUniversaDtoHandler2, IPayload>(
++            return _jobFactory.CreateJob<IUniversaDtoHandler2, T>(
+                 body: async (cancelationToken, handlerObject, payloadObject) =>
+                 {
+                     await handlerObject.ResolveAction(payloadObject,cancelationToken).ConfigureAwait(false);
+diff --git a/src/Fmacias.TplQueue/Jobs/PayloadJob.cs b/src/Fmacias.TplQueue/Jobs/PayloadJob.cs
+index c85bee5..64a40ec 100644
+--- a/src/Fmacias.TplQueue/Jobs/PayloadJob.cs
++++ b/src/Fmacias.TplQueue/Jobs/PayloadJob.cs
+@@ -43,7 +43,13 @@ namespace Fmacias.TplQueue.Jobs
+ 
+         public TPayload Payload => PayloadDto;
+ 
+-        public Type PayloadType => typeof(TPayload);
++        /// <summary>
++        /// Returns the runtime payload CLR type.
++        /// Runtime type must be preserved so cached nodes can be rehydrated with the
++        /// concrete payload type instead of an interface/base contract.
++        /// </summary>
++        public Type PayloadType => PayloadDto?.GetType()
++                                   ?? throw new InvalidOperationException("Payload is null.");
+ 
+         public IJob After(params IJob[] previousTasks)
+         {
+diff --git a/test/Fmacias.TplQueue.Cache.Abstract.Test/CacheAbstractTests.cs b/test/Fmacias.TplQueue.Cache.Abstract.Test/CacheAbstractTests.cs
+index 797b915..cd52c91 100644
+--- a/test/Fmacias.TplQueue.Cache.Abstract.Test/CacheAbstractTests.cs
++++ b/test/Fmacias.TplQueue.Cache.Abstract.Test/CacheAbstractTests.cs
+@@ -52,6 +52,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
+             rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
+             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
++            root.As<ISerializable>()
++                .Setup(s => s.Serialize(It.IsAny<IJsonUniversalPayloadSerializer>()))
++                .Returns("{}");
+             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+             rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+ 
+@@ -89,6 +92,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
+             rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
+             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload-root");
++            root.As<ISerializable>()
++                .Setup(s => s.Serialize(It.IsAny<IJsonUniversalPayloadSerializer>()))
++                .Returns("{}");
+             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+             rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+             // Act & Assert
+diff --git a/test/Fmacias.TplQueue.Cache.Abstract.Test/TaskGraphDtoTests.cs b/test/Fmacias.TplQueue.Cache.Abstract.Test/TaskGraphDtoTests.cs
+index b78e342..f6da343 100644
+--- a/test/Fmacias.TplQueue.Cache.Abstract.Test/TaskGraphDtoTests.cs
++++ b/test/Fmacias.TplQueue.Cache.Abstract.Test/TaskGraphDtoTests.cs
+@@ -28,6 +28,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
+             rootAsCarrier.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+             rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
+             rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload");
++            root.As<ISerializable>()
++                .Setup(s => s.Serialize(It.IsAny<IJsonUniversalPayloadSerializer>()))
++                .Returns("{}");
+             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+             rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+ 
+@@ -82,6 +85,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
+             child.Setup(c => c.GetPayloadDependencies()).Returns(Array.Empty<IPayloadCarrierJob>());
+             child.SetupGet(c => c.PayloadType).Returns(typeof(string));
+             child.Setup(c => c.GetPayload()).Returns("payload-child");
++            child.As<ISerializable>()
++                .Setup(s => s.Serialize(It.IsAny<IJsonUniversalPayloadSerializer>()))
++                .Returns("{}");
+             Func<IRetryPolicy> childRetryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+             child.Setup(c => c.GetRetryPolicyFactory()).Returns(childRetryPolicyFactory);
+ 
+@@ -90,6 +96,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
+             root.Setup(c => c.GetPayloadDependencies()).Returns(new[] { child.Object });
+             root.SetupGet(c => c.PayloadType).Returns(typeof(string));
+             root.Setup(c => c.GetPayload()).Returns("payload-root");
++            root.As<ISerializable>()
++                .Setup(s => s.Serialize(It.IsAny<IJsonUniversalPayloadSerializer>()))
++                .Returns("{}");
+             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+             root.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+             var dto = (TaskGraphDto)TaskGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
+diff --git a/test/Fmacias.TplQueue.Unit.Test/Cache/MemCacheTests.cs b/test/Fmacias.TplQueue.Unit.Test/Cache/MemCacheTests.cs
+index cde8c38..2593e34 100644
+--- a/test/Fmacias.TplQueue.Unit.Test/Cache/MemCacheTests.cs
++++ b/test/Fmacias.TplQueue.Unit.Test/Cache/MemCacheTests.cs
+@@ -32,7 +32,7 @@ namespace Fmacias.TplQueue.Test.Cache
+                 .Setup(s => s.Serialize(It.IsAny<object?>(), It.IsAny<Type>()))
+                 .Returns("{}");
+             payloadSerializer
+-                .Setup(s => s.Deserialize<IPayload>(It.IsAny<string>()))
++                .Setup(s => s.Deserialize(It.IsAny<string>(), It.IsAny<Type>()))
+                 .Returns(new DummyPayload());
+ 
+             var retrySerializer = new Mock<IRetryPolicySerializable>(MockBehavior.Strict);
+@@ -110,6 +110,7 @@ namespace Fmacias.TplQueue.Test.Cache
+                 Assert.That(lease, Is.SameAs(rootLease));
+                 Assert.That(rootLease.Status, Is.EqualTo(EntryStatus.Pending));
+                 Assert.That(childLease.Status, Is.EqualTo(EntryStatus.Pending));
++                Assert.That(rootLease.JobNodeDto.PayloadTypeName, Does.Contain(nameof(DummyPayload)));
+                 Assert.That(capturedDependencies.Single(), Is.SameAs(payloadJobChild.Object));
+             });
+         }

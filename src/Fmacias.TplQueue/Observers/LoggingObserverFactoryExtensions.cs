@@ -11,16 +11,16 @@ namespace Fmacias.TplQueue.Observers
     public static class LoggingObserverFactoryExtensions
     {
         public static IDisposable SubscribeFileLogger(
-            this IJobQ jobsChain,
+            this IQ queue,
             ILoggerFactory loggerFactory,
             string queueName)
         {
-            if (jobsChain == null) throw new ArgumentNullException(nameof(jobsChain));
+            if (queue == null) throw new ArgumentNullException(nameof(queue));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
             var logger = loggerFactory.CreateLogger($"TplQueue.{queueName}");
             var obs = FileLoggingObserver.Create(logger, queueName);
-            return jobsChain.Subscribe(obs);
+            return queue.Subscribe(obs);
         }
     }
 }

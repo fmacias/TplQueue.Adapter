@@ -23,7 +23,7 @@ namespace Fmacias.TplQueue.Test.Jobs
                     return Task.CompletedTask;
                 });
 
-            var payloadJob = PayloadJob<TestPayload>.Create(Mock.Of<IJob>(), payload);
+            var payloadJob = DataJob<TestPayload>.Create(Mock.Of<IJob>(), payload);
 
             Assert.That(payloadJob, Is.Not.Null);
 

@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -12,16 +13,16 @@ namespace Fmacias.TplQueue.Test.Queues
         public void TryLeaseWorkOnce_WhenNoSlots_DoesNotLease()
         {
             //Arrange
-            var leaseCache = new Mock<IPayloadJobCache>(MockBehavior.Strict);
+            var leaseCache = new Mock<IDataJobCache>(MockBehavior.Strict);
             var dispatcherMock = CreateDispatcherMock(slots: 0);
-            using var queue = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, dispatcherMock.Object);
+            using var queue = CacheQ.Create(Mock.Of<ILogger<ICacheQ>>(), leaseCache.Object, dispatcherMock.Object);
 
             //Act
-            var leased = ((CacheableQ)queue).TryLeaseWorkOnce();
+            var leased = ((CacheQ)queue).TryLeaseWorkOnce();
             
             //Assert
             Assert.That(leased, Is.False);
-            leaseCache.Verify(c => c.TryHydrateNextJob(out It.Ref<IPayloadJobRoot>.IsAny!, 
+            leaseCache.Verify(c => c.TryHydrateNextJob(out It.Ref<IDataJobRoot>.IsAny!, 
                 out It.Ref<ICacheEntry>.IsAny!), Times.Never);
         }
 
@@ -29,12 +30,12 @@ namespace Fmacias.TplQueue.Test.Queues
         public void TryLeaseWorkOnce_WhenLeaseAvailable()
         {
             // Arrange
-            var leaseCache = new Mock<IPayloadJobCache>();
+            var leaseCache = new Mock<IDataJobCache>();
             var lease = new TestLeaseEntry { IsFifo = true, CancellationToken = new CancellationTokenSource().Token };
             var runnerRoot = new TestPayloadCarrierRoot();
 
             // IMPORTANT: provide actual out vars
-            IPayloadJobRoot outRoot = runnerRoot;
+            IDataJobRoot outRoot = runnerRoot;
             ICacheEntry outLease = lease;
 
             leaseCache
@@ -57,13 +58,13 @@ namespace Fmacias.TplQueue.Test.Queues
                 })
                 .Returns(jobQueueMock.Object);
 
-            var CacheQ = CacheableQ.Create(
-                Mock.Of<ILogger<ICacheablePayloadQ>>(),
+            var CacheQ = global::CacheQ.Create(
+                Mock.Of<ILogger<ICacheQ>>(),
                 leaseCache.Object,
                 jobQueueMock.Object);
 
             // Act
-            var leased = ((CacheableQ)CacheQ).TryLeaseWorkOnce();
+            var leased = ((CacheQ)CacheQ).TryLeaseWorkOnce();
 
             // Assert
             Assert.That(leased, Is.True);
@@ -76,14 +77,14 @@ namespace Fmacias.TplQueue.Test.Queues
         [Test]
         public async Task OnJobEventChanged_CallBack_AcknowledgesLifecycle()
         {
-            var leaseCache = new Mock<IPayloadJobCache>();
+            var leaseCache = new Mock<IDataJobCache>();
             var jobQueueMock = CreateDispatcherMock(slots: 1);
-            var jobInfo = new Mock<IPayloadJobInfo>();
+            var jobInfo = new Mock<IDataJobInfo>();
             var jobId = Guid.NewGuid();
 
             jobInfo.SetupGet(r => r.Id).Returns(jobId);
 
-            var CacheQ = CacheableQ.Create(Mock.Of<ILogger<ICacheablePayloadQ>>(), leaseCache.Object, jobQueueMock.Object);
+            var CacheQ = global::CacheQ.Create(Mock.Of<ILogger<ICacheQ>>(), leaseCache.Object, jobQueueMock.Object);
             var callback = CacheQ.OnJobEventChanged;
 
             await callback(CreateEvent(JobEventStatus.Successed, jobInfo.Object));
@@ -103,11 +104,11 @@ namespace Fmacias.TplQueue.Test.Queues
         public void LeasingPulseMs_NonPositiveValue_ResetsToDefault()
         {
             // Arrange
-            var logger = Mock.Of<ILogger<ICacheablePayloadQ>>();
-            var cache = Mock.Of<IPayloadJobCache>();
-            var innerDispatcher = Mock.Of<IJobQ>();
+            var logger = Mock.Of<ILogger<ICacheQ>>();
+            var cache = Mock.Of<IDataJobCache>();
+            var innerDispatcher = Mock.Of<IQ>();
 
-            var dispatcher = CacheableQ.Create(
+            var dispatcher = CacheQ.Create(
                 logger,
                 cache,
                 innerDispatcher);
@@ -136,9 +137,9 @@ namespace Fmacias.TplQueue.Test.Queues
             return evt.Object;
         }
 
-        private static Mock<IJobQ> CreateDispatcherMock(int slots)
+        private static Mock<IQ> CreateDispatcherMock(int slots)
         {
-            var jobQMock = new Mock<IJobQ>();
+            var jobQMock = new Mock<IQ>();
             jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             jobQMock.Setup(d => d.Dispose());
@@ -155,7 +156,7 @@ namespace Fmacias.TplQueue.Test.Queues
             return jobQMock;
         }
 
-        private class TestPayloadCarrierRoot : IPayloadJobRoot
+        private class TestPayloadCarrierRoot : IDataJobRoot
         {
             public Guid Id { get; } = Guid.NewGuid();
             public string Name { get; } = "payload-root";
@@ -168,7 +169,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public ISerializable PayloadSerializedData { get; } = Mock.Of<ISerializable>();
             public object GetPayload() => new object();
             public Type PayloadType => typeof(object);
-            public IReadOnlyList<IPayloadCarrierJob> GetPayloadDependencies() => Array.Empty<IPayloadCarrierJob>();
+            public IReadOnlyList<IDataJob> GetDependentDataJobs() => Array.Empty<IDataJob>();
             public IJob After(params IJob[] previousTasks) => this;
             public IJob[] GetJobsBatch() => Array.Empty<IJob>();
             public IJobInfo[] GetJobInfoDependencies() => Array.Empty<IJobInfo>();
@@ -176,9 +177,9 @@ namespace Fmacias.TplQueue.Test.Queues
             public IJobInfo CopyInfo() => this;
             public Func<IRetryPolicy> GetRetryPolicyFactory() => () => Mock.Of<IRetryPolicy>();
             public Task WaitUntilFinishedAsync() => Task.CompletedTask;
-            public IJobQ Enqueue(IJobQ queue, CancellationToken ct) => queue;
+            public IQ Enqueue(IQ queue, CancellationToken ct) => queue;
 
-            public string Serialize(IUniversalPayloadSerializer serializer)
+            public string Serialize(IUniversalDataSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -203,7 +204,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public bool RootSuccessed => throw new NotImplementedException();
 
             public void MarkLeased() { }
-            public void MarkAck(ISerializable payloadData, IUniversalPayloadSerializer jsonUniversalPayloadSerializer) { }
+            public void MarkAck(ISerializable payloadData, IUniversalDataSerializer jsonUniversalPayloadSerializer) { }
             public void MarkFailed() { }
             public void MarkCanceled() { }
             public void MarkAsDeleted() { }

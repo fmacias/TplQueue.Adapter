@@ -4,7 +4,7 @@ using System;
 namespace Fmacias.TplQueue.Cache.DomainModels
 {
     /// <summary>
-    /// Concrete DTO(Data Transfer Object) for a payload job(<see cref="IPayloadJob{IPayload}"/>) node.
+    /// Concrete DTO(Data Transfer Object) for a payload job(<see cref="IDataJob{IPayload}"/>) node.
     /// Enforces non-null <see cref="PayloadTypeName"/> and <see cref="PayloadJson"/>.
     /// </summary>
     internal sealed class JobNodeDto : IJobNodeDto, IJobNodeRecord
@@ -50,14 +50,14 @@ namespace Fmacias.TplQueue.Cache.DomainModels
             RetryDescriptor = retryPolicyDescriptor;
         }
 
-        public static JobNodeDto Create(IUniversalPayloadSerializer jsonSerializer, 
-            IPayloadCarrierJob payloadJob, bool isFifo, IPayloadCarrierJob? parentJob) 
+        public static JobNodeDto Create(IUniversalDataSerializer jsonSerializer, 
+            IDataJob payloadJob, bool isFifo, IDataJob? parentJob) 
         {
             if (jsonSerializer is null) throw new ArgumentNullException(nameof(jsonSerializer));
             if (payloadJob is null) throw new ArgumentNullException(nameof(payloadJob));
 
             var parentId = parentJob?.Id ?? Guid.Empty;
-            var isRoot = payloadJob is IPayloadJobRoot;
+            var isRoot = payloadJob is IDataJobRoot;
             var payload = payloadJob.GetPayload()
                           ?? throw new InvalidOperationException($"Payload cannot be null for job '{payloadJob.Id}'.");
             var runtimeType = payload.GetType();
@@ -70,7 +70,7 @@ namespace Fmacias.TplQueue.Cache.DomainModels
             if (policy is null)
                 throw new InvalidOperationException($"Retry policy cannot be null for job '{payloadJob.Id}'.");
 
-            var retryDescriptor = policy.ToDescriptor();
+            var retryDescriptor = policy.ToDescriptor(policy.GetType());
             return new JobNodeDto(
                     jobId: payloadJob.Id,
                     parentJobId: parentId,
@@ -90,7 +90,7 @@ namespace Fmacias.TplQueue.Cache.DomainModels
             PayloadJson = payloadJson;
         }
 
-        private static string SerializePayload(IPayloadCarrierJob payloadJob, IUniversalPayloadSerializer serializer)
+        private static string SerializePayload(IDataJob payloadJob, IUniversalDataSerializer serializer)
         {
             if (payloadJob is null) throw new ArgumentNullException(nameof(payloadJob));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
@@ -103,13 +103,13 @@ namespace Fmacias.TplQueue.Cache.DomainModels
             return payloadJob.Serialize(serializer);
         }
 
-        public object Deserialize(IUniversalPayloadSerializer serializer)
+        public object Deserialize(IUniversalDataSerializer serializer)
         {
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             return serializer.Deserialize(PayloadJson, PayloadType);
         }
 
-        public T Deserialize<T>(IUniversalPayloadSerializer serializer)
+        public T Deserialize<T>(IUniversalDataSerializer serializer)
         {
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             return serializer.Deserialize<T>(PayloadJson);

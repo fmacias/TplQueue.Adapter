@@ -14,25 +14,25 @@ namespace Fmacias.TplQueue.Test.Jobs
         [Test]
         public void JobDto_Create_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Create(null!, _payload));
-            Assert.Throws<ArgumentNullException>(() => PayloadJob<TestPayload>.Create(Mock.Of<IJob>(), null!));
+            Assert.Throws<ArgumentNullException>(() => DataJob<TestPayload>.Create(null!, _payload));
+            Assert.Throws<ArgumentNullException>(() => DataJob<TestPayload>.Create(Mock.Of<IJob>(), null!));
         }
 
         [Test]
         public void JobRootDto_Create_ShouldValidateInputs()
         {
-            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.CreateRoot(
+            Assert.Throws<ArgumentNullException>(() => DataJobRoot<TestPayload>.CreateRoot(
                 null!,
                 _payload)
             );
 
-            Assert.Throws<ArgumentNullException>(() => PayloadJobRoot<TestPayload>.CreateRoot(
+            Assert.Throws<ArgumentNullException>(() => DataJobRoot<TestPayload>.CreateRoot(
                 Mock.Of<IJobRoot>(),
                 null!)
             );
 
-            Assert.IsInstanceOf<IPayloadJobRoot<TestPayload>>(
-                PayloadJobRoot<TestPayload>.CreateRoot(
+            Assert.IsInstanceOf<IDataJobRoot<TestPayload>>(
+                DataJobRoot<TestPayload>.CreateRoot(
                     Mock.Of<IJobRoot>(), _payload)
             );
         }
@@ -42,21 +42,21 @@ namespace Fmacias.TplQueue.Test.Jobs
         {
             var jobFactory = new Mock<IJobFactory>(MockBehavior.Strict);
             jobFactory
-                .Setup(o => o.CreateJob<IUniversaDtoHandler2, TestPayload>(
-                    It.IsAny<Func<CancellationToken, IUniversaDtoHandler2, TestPayload, Task>>(),
-                    It.IsAny<IUniversaDtoHandler2>(),
+                .Setup(o => o.Job<IUniversaPayloadHandler, TestPayload>(
+                    It.IsAny<Func<CancellationToken, IUniversaPayloadHandler, TestPayload, Task>>(),
+                    It.IsAny<IUniversaPayloadHandler>(),
                     It.IsAny<TestPayload>(),
                     It.IsAny<string>()))
                 .Returns(Mock.Of<IJob>());
 
-            var factory = PayloadJobFactory.Create(
+            var factory = DataJobFactory.Create(
                 jobFactory.Object,
                 Mock.Of<IJobRootFactory>(),
-                Mock.Of<IRetryPolicyFactory>(),
+                Mock.Of<IRetryPolicyGenericFactory>(),
                 CreateHandlerResolver()
             );
 
-            Assert.That(factory.CreateJob(_payload, null!), Is.InstanceOf<IPayloadJob<TestPayload>>());
+            Assert.That(factory.DataJobRoot(_payload, null!), Is.InstanceOf<IDataJob<TestPayload>>());
         }
 
         [Test]
@@ -64,23 +64,23 @@ namespace Fmacias.TplQueue.Test.Jobs
         {
             var jobRootFactory = new Mock<IJobRootFactory>(MockBehavior.Strict);
             jobRootFactory
-                .Setup(o => o.CreateJob<IUniversaDtoHandler2, TestPayload>(
-                    It.IsAny<Func<CancellationToken, IUniversaDtoHandler2, TestPayload, Task>>(),
-                    It.IsAny<IUniversaDtoHandler2>(),
+                .Setup(o => o.JobRoot<IUniversaPayloadHandler, TestPayload>(
+                    It.IsAny<Func<CancellationToken, IUniversaPayloadHandler, TestPayload, Task>>(),
+                    It.IsAny<IUniversaPayloadHandler>(),
                     It.IsAny<TestPayload>(),
                     It.IsAny<Func<IRetryPolicy>>(),
                     It.IsAny<string>()))
                 .Returns(Mock.Of<IJobRoot>());
 
-            var factory = PayloadJobFactory.Create(
-                Helper.GetApi().GetJobFactoryCore(),
+            var factory = DataJobFactory.Create(
+                Helper.GetApi().JobFactory.Value,
                 jobRootFactory.Object,
-                Helper.GetApi().RetryPolicyFactory(new Dictionary<string, RetryPolicyOptions>()),
+                Helper.GetApi().RetryPolicyGenericFactory,
                 CreateHandlerResolver());
 
-            var payloadJobRoot = factory.CreateJobRoot(_payload);
+            var payloadJobRoot = factory.DataJobRoot(_payload);
 
-            Assert.That(payloadJobRoot, Is.InstanceOf<IPayloadJobRoot<TestPayload>>());
+            Assert.That(payloadJobRoot, Is.InstanceOf<IDataJobRoot<TestPayload>>());
         }
 
         [Test]
@@ -88,28 +88,28 @@ namespace Fmacias.TplQueue.Test.Jobs
         {
             var jobRootFactory = new Mock<IJobRootFactory>(MockBehavior.Strict);
             jobRootFactory
-                .Setup(o => o.CreateJob<IUniversaDtoHandler2, IPayload>(
-                    It.IsAny<Func<CancellationToken, IUniversaDtoHandler2, IPayload, Task>>(),
-                    It.IsAny<IUniversaDtoHandler2>(),
+                .Setup(o => o.JobRoot<IUniversaPayloadHandler, IPayload>(
+                    It.IsAny<Func<CancellationToken, IUniversaPayloadHandler, IPayload, Task>>(),
+                    It.IsAny<IUniversaPayloadHandler>(),
                     It.IsAny<IPayload>(),
                     It.IsAny<Func<IRetryPolicy>>(),
                     It.IsAny<string>()))
                 .Returns(Mock.Of<IJobRoot>());
 
-            var factory = PayloadJobFactory.Create(
+            var factory = DataJobFactory.Create(
                 Mock.Of<IJobFactory>(),
                 jobRootFactory.Object,
-                Mock.Of<IRetryPolicyFactory>(),
+                Mock.Of<IRetryPolicyGenericFactory>(),
                 CreateHandlerResolver());
 
-            Assert.Throws<ArgumentNullException>(() => factory.CreateJobRoot<IPayload>(null!));
+            Assert.Throws<ArgumentNullException>(() => factory.DataJobRoot<IPayload>(null!));
 
             var payload = new Mock<IPayload>();
             payload.SetupGet(p => p.PayloadId).Returns("handler");
             payload.SetupGet(p => p.HandlerId).Returns(Guid.NewGuid());
             payload.SetupGet(p => p.CollectionTime).Returns(DateTime.UtcNow);
 
-            Assert.DoesNotThrow(() => factory.CreateJobRoot(payload.Object));
+            Assert.DoesNotThrow(() => factory.DataJobRoot(payload.Object));
         }
 
         private class TestPayload : IPayload
@@ -121,9 +121,9 @@ namespace Fmacias.TplQueue.Test.Jobs
             public Guid HandlerId => Guid.NewGuid();
         }
 
-        private static IJobHandlerResolver2 CreateHandlerResolver()
+        private static IPayloadHandlerResolver CreateHandlerResolver()
         {
-            var resolver = new Mock<IJobHandlerResolver2>(MockBehavior.Strict);
+            var resolver = new Mock<IPayloadHandlerResolver>(MockBehavior.Strict);
             resolver
                 .Setup(r => r.Resolve(It.IsAny<Guid>()))
                 .Throws<KeyNotFoundException>();

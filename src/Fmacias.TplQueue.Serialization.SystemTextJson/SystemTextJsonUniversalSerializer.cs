@@ -75,7 +75,7 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
             return result;
         }
 
-        public string Serialize(IPayloadCarrierJob carrier)
+        public string Serialize(IDataJob carrier)
         {
             if (carrier is null) throw new ArgumentNullException(nameof(carrier));
             var payload = carrier.GetPayload() ?? throw new InvalidOperationException("Carrier payload is null.");

@@ -1,5 +1,6 @@
 ﻿using System;
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults;
 
 namespace Fmacias.TplQueue.Cache.DomainModels
 {
@@ -78,7 +79,7 @@ namespace Fmacias.TplQueue.Cache.DomainModels
         /// <summary>
         /// Marks the entry as acknowledged, updating the payload JSON if the execution produced an output.
         /// </summary>
-        public void MarkAck(ISerializable payloadData, IUniversalPayloadSerializer jsonUniversalPayloadSerializer)
+        public void MarkAck(ISerializable payloadData, IUniversalDataSerializer jsonUniversalPayloadSerializer)
         {
             if (payloadData is null) throw new ArgumentNullException(nameof(payloadData));
             if (jsonUniversalPayloadSerializer == null) throw new ArgumentNullException(nameof(jsonUniversalPayloadSerializer));

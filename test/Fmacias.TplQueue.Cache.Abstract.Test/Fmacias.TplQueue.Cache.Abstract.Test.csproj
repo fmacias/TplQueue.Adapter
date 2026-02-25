@@ -13,4 +13,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Factories\" />
+	</ItemGroup>
 </Project>

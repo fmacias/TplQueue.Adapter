@@ -2,7 +2,7 @@
 
 ## Sumary
 
-First, work always in Thinking mode. Not instante
+First, work always in Thinking mode. Not instante mode.
 
 You are working on the TplQueue.Adapter repository, which folder is accessible in this session.
 The subfolders of the .Net projects are:
@@ -10,17 +10,8 @@ The subfolders of the .Net projects are:
 - test:  
 Unit test and integration test of the projects.
 
-Now you have to concentrate yourself at the project Fmacias.TplQueue.CacheAbstract.
-
-This project is the abstraction class responsible to create concrete implementations.
-To check the usage of this class and how a concrete implementation is done, you can check, just for understanding,
-the cache class Fmacias.TplQueue.Cache.Memcache, wich resides at Fmacias.Tplqueue project module.
-This Memcache is thought to be used in testing projects.
-
-The Fmacias.TplQueue.CacheAbstract module and its definition should work also for planned cache concrete implementation, intended to be 
-used in production environments, based on FileSyste or Sqlite, between other posivilities. I take a mention of this, because any
-implementation or refactor in the abstract cache should always cover the posivility to build a Sqlite based cache, also if it does not 
-exists yet 
+Now you have to concentrate yourself at the projects Fmacias.TplQueue.Cache.Abstract, Fmacias.TplQueue.Cache.MemCache,
+Fmacias.TplQueue and Fmacias.TplQueue.Microsoft.DependencyInjection.
 
 ## Roles
 - to refactor and reviewing act as a Software Enginer.
@@ -40,17 +31,11 @@ exists yet
 - “no new fuera del composition root”
 
 ### Code Style:
-Notice that the Fmacias.TplQueue.CacheAbstract project exposes only the factories and some DomaninModel objects are defined internally  and 
-the instanciation of those Domain objects are performed due to a static create method.
-
-The public exposed services are accesible due to a public Factory, no facade required, because this module is intended to be used as a subcomponent.
-This component is DI agnostic.
-
-Let me know also if the syntax rules are the correct ones for a .NetStandard20 module.
-
 # Instructions
 
-1. Analyze all public and internal services in Fmacias.TplQueue.Abstract
+0. I have changed the class Fmacias.TplQueue.API and now the tests, test's Helpers, dependecy injection project and any related dependent service should corrected correspondingly.
+
+1. Analyze all public and internal services of all services mentioned at least in the context section.
    - Identify duplication, long methods, missing null checks, unexpected side effects.Defensive programing.
 
 2. Apply refactors safelly:
@@ -60,20 +45,25 @@ Let me know also if the syntax rules are the correct ones for a .NetStandard20 m
    - Remove dead private fields or methods that are never used.
    - Improve XML documentation comments where missing or misleading in profesional English.
 
-3. Update or add unit tests in Fmacias.TplQueue.Cache.Abstract.Test
+3. Very important: Correct the test so that they resolve the current version of  Fmacias.TplQueue.API:
    - Cover edge cases: zero/negative values, null arguments, invalid states.
    - Cover error paths: exceptions thrown when preconditions are violated.
    - Ensure that each key service has at least one focused test class.
    - Use NUnit and Moq following AAA (Arrange, Act, Assert).
    - Refactor the test project, and take care that you do not remove any existing one, for better readability
 5. Documenation:
-	- Enhance the readme file of the folder Fmacias.TplQueue.Cache.Abstract.
+	- Enhance the readme file of changed modules.
 	- Shold have a a sumary, table of context with a link to each created section.
-	- The readme file requires at least a seccion with the sumary, how to implement a personlaized cache using a simple file system cache, 
-	with one step by step implementation example about the "how to" create your own concrete cache with code snippets.
-	- Justification about the desing about the implementation, for example the factory pattern and static create method of the internal DomainObject, 
+	- The readme file requires at least a seccion with the sumary, how to implementation of each involved module, 
+	with one step by step implementation example about the "how to" use. Usage mainly.
+	- Justification's design about decition of the implementation, for example the factory pattern and static create method of the internal DomainObject, 
 	name the adavantages of this desing decision. Identify other desing patterns used naturally at the module and explain them also in the same way.
 	
+4. Check the packaging powershell files. Notice that the project `WorkspaceTplQueue` converts at implementation local packages dependencies to project dependencies for ergonmic experience. 
+The project Fmacias.TplQueue.Cache.MemCache and Fmacias.TplQueue.Cache.MemCache.Test should also be added to this bussiness logic.
+
+5. Before running the tests or let me know to make a human check to the changes  and to try to run the tests with project dependencies. Before building the packanges.
+ 
 4. Run the tests, anlyse the output and correct them accordingly:
    - dotnet test TplQueue.Cache.Abstract.Text, if the command is not right, correct it and use the right one.
 

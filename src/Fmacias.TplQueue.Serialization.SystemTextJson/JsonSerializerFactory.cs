@@ -16,7 +16,7 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
             return SystemTextJsonUniversalSerializer.Create(options);
         }
 
-        public IUniversalPayloadSerializer CreateSerializer()
+        public IUniversalDataSerializer CreateSerializer()
         {
             return SystemTextJsonUniversalSerializer.Create();
         }

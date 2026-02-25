@@ -1,4 +1,5 @@
 using System;
+using Fmacias.TplQueue.Cache.Contracts;
 using Fmacias.TplQueue.Cache.DomainModels;
 using Fmacias.TplQueue.Contracts;
 
@@ -14,17 +15,8 @@ namespace Fmacias.TplQueue.Cache.Factories
         {
             return new CacheEntryFactory();
         }
-        /// <summary>
-        /// Creates a cache lease entry for a given task runner node.
-        /// </summary>
-        /// <param name="leaseId">The unique lease identifier.</param>
-        /// <param name="jobRootId">The identifier of the root task runner.</param>
-        /// <param name="jobNodeDto">The task runner node DTO.</param>
-        /// <param name="cacheUtc">The UTC timestamp when the node was cached.</param>
-        ///
-        /// 
-        /// <returns>A new <see cref="ICacheEntry"/> instance.</returns>
-        public ICacheEntry CreateCacheEntry(
+
+        public ICacheEntry CreateEntry(
             Guid leaseId,
             Guid jobRootId,
             IJobNodeDto jobNodeDto,

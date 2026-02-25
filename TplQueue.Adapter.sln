@@ -36,6 +36,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.RetryPolic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Test", "test\Fmacias.TplQueue.Unit.Test\Fmacias.TplQueue.Test.csproj", "{AA3E78D8-A2CD-DE4D-A06C-DD9E79D862FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.MemCache", "src\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj", "{4AE26AB9-313C-5254-4DB7-8FE40819058D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.MemCache.Test", "test\Fmacias.TplQueue.Cache.MemCache.Test\Fmacias.TplQueue.Cache.MemCache.Test.csproj", "{D2EE4856-4F04-154E-70B7-14DD6A9E3992}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +90,14 @@ Global
 		{AA3E78D8-A2CD-DE4D-A06C-DD9E79D862FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA3E78D8-A2CD-DE4D-A06C-DD9E79D862FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA3E78D8-A2CD-DE4D-A06C-DD9E79D862FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AE26AB9-313C-5254-4DB7-8FE40819058D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AE26AB9-313C-5254-4DB7-8FE40819058D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AE26AB9-313C-5254-4DB7-8FE40819058D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AE26AB9-313C-5254-4DB7-8FE40819058D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

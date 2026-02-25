@@ -35,9 +35,9 @@ namespace Fmacias.TplQueue.Test.Queues
             Assert.That(creationCount, Is.EqualTo(1));
         }
 
-        private static Mock<IJobQ> CreateDispatcherMock()
+        private static Mock<IQ> CreateDispatcherMock()
         {
-            var jobQMock = new Mock<IJobQ>();
+            var jobQMock = new Mock<IQ>();
             jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
             jobQMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());

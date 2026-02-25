@@ -20,13 +20,13 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
             if (configurationSection == null) throw new ArgumentNullException(nameof(configurationSection));
             if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
 
-            var retryPolicies = new Dictionary<string, RetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
+            var retryPolicies = new Dictionary<string, IRetryPolicyDescriptor>(StringComparer.OrdinalIgnoreCase);
             var dispatchers = new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
 
             configurationSection.GetSection(RETRY_POLICIES).Bind(retryPolicies);
             configurationSection.GetSection(DISPATCHERS).Bind(dispatchers);
             services
-                .AddSingleton<IReadOnlyDictionary<string, RetryPolicyOptions>>(retryPolicies)
+                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyDescriptor>>(retryPolicies)
                 .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(dispatchers);
 
             return AddApi(services, apiImplementation);
@@ -45,7 +45,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
             configure(builder);
 
             services
-                .AddSingleton<IReadOnlyDictionary<string, RetryPolicyOptions>>(builder.RetryPolicies)
+                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyDescriptor>>(builder.RetryPolicies)
                 .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(builder.Dispatchers);
 
             return AddApi(services, apiImplementation);
@@ -54,19 +54,20 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
         public static IServiceCollection AddTplQueue(
             this IServiceCollection services,
             IApi apiImplementation,
-            IDictionary<string, RetryPolicyOptions> retryPolicies,
+            IDictionary<string, IRetryPolicyDescriptor> retryPolicies,
             IDictionary<string, IQOptions> dispatcherOptions)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
+            if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
             if (retryPolicies == null) throw new ArgumentNullException(nameof(retryPolicies));
             if (dispatcherOptions == null) throw new ArgumentNullException(nameof(dispatcherOptions));
 
             services
-                .AddSingleton(
-                    retryPolicies is IReadOnlyDictionary<string, RetryPolicyOptions> rPolicies
+                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyDescriptor>>(
+                    retryPolicies is IReadOnlyDictionary<string, IRetryPolicyDescriptor> rPolicies
                         ? rPolicies
-                        : new Dictionary<string, RetryPolicyOptions>(retryPolicies, StringComparer.OrdinalIgnoreCase))
-                .AddSingleton(
+                        : new Dictionary<string, IRetryPolicyDescriptor>(retryPolicies, StringComparer.OrdinalIgnoreCase))
+                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(
                     dispatcherOptions is IReadOnlyDictionary<string, IQOptions> dOptions
                         ? dOptions
                         : new Dictionary<string, IQOptions>(dispatcherOptions, StringComparer.OrdinalIgnoreCase));
@@ -75,46 +76,20 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
         }
         private static IServiceCollection AddApi(IServiceCollection services, IApi facade)
         {
-            return services
-                .AddSingleton(sp => facade)
-                .AddSingleton(sp =>
-                    sp.GetRequiredService<IApi>().GetCoreApi())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().ObserverFactory())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().CacheFactory())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>()
-                        .RetryPolicyFactory(
-                            sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
-                        ))
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetJobFactoryCore())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().GetJobRootFactoryCore())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>()
-                        .PayloadJobFactory(
-                            sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()
-                        ))
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().CacheableQFactory())
-                .AddTransient(sp =>
-                    sp.GetRequiredService<IApi>().QFactory(
-                        sp.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>(), sp.GetRequiredService<IReadOnlyDictionary<string, RetryPolicyOptions>>()));
+            throw new NotImplementedException("Implement this method");
         }
         /// <summary>
         /// Fluent builder for code-based configuration of retry policies and dispatcher options.
         /// </summary>
         public sealed class TplQueueOptionsBuilder
         {
-            internal Dictionary<string, RetryPolicyOptions> RetryPolicies { get; } =
-                new Dictionary<string, RetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
+            internal Dictionary<string, IRetryPolicyDescriptor> RetryPolicies { get; } =
+                new Dictionary<string, IRetryPolicyDescriptor>(StringComparer.OrdinalIgnoreCase);
 
             internal Dictionary<string, IQOptions> Dispatchers { get; } =
                 new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
 
-            public TplQueueOptionsBuilder AddRetryPolicy(string name, RetryPolicyOptions options)
+            public TplQueueOptionsBuilder AddRetryPolicy(string name, IRetryPolicyDescriptor options)
             {
                 if (string.IsNullOrWhiteSpace(name))
                     throw new ArgumentException("Name cannot be null or empty.", nameof(name));

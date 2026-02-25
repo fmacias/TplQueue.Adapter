@@ -8,21 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Cache\**" />
     <Compile Remove="Observers\**" />
-    <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="Observers\**" />
-    <None Remove="Cache\**" />
     <None Remove="Observers\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Factories\PayloadJobFactory1.cs" />
     <Compile Remove="Factories\SerializedPayloadFactory.cs" />
     <Compile Remove="Jobs\SerializedPayloadSnapshot.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Cache\MemCache.cs" />
     <Compile Include="Observers\DirectObserverDispatcher.cs" />
     <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />
     <Compile Include="Observers\LoggingObserver.cs" />
@@ -43,11 +40,13 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+	  <Folder Include="Contracts\" />
 	  <Folder Include="Documentation\" />
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="Fmacias.TplQueue.Cache.Abstract" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Cache.MemCache" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Log" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
