@@ -3,7 +3,7 @@ using System;
 
 namespace Fmacias.TplQueue.RetryPolicies
 {
-    public class LinearBackoffFactory : RetryPolicyFactoryAbstract<ILinearBackoff>, ILinearBackoffFactory
+    public class LinearBackoffFactory : FactoryAbstract<ILinearBackoff>, ILinearBackoffFactory
     {
         private LinearBackoffFactory()
         {
@@ -12,7 +12,7 @@ namespace Fmacias.TplQueue.RetryPolicies
         {
             return new LinearBackoffFactory();
         }
-        protected override ILinearBackoff CreatePolicy(IRetryPolicyDescriptor descriptor)
+        public override ILinearBackoff CreatePolicy(IRetryPolicyDescriptor descriptor)
         {
             if (descriptor is null) throw new ArgumentNullException(nameof(descriptor));
             return (ILinearBackoff)new LinearBackoff().SetFromDescriptor(descriptor);

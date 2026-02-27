@@ -16,8 +16,7 @@ namespace Fmacias.TplQueue.Test.Factories
             var retryPolicyOptions = new Dictionary<string, IRetryPolicyDescriptor>();
             var retryFactory = Mock.Of<IRetryPolicyGenericFactory>();
             var coreFactory = Helper.GetQFactoryCoreMock();
-            var first = CoreQFactoryAdapter.Create(coreFactory.Object, 
-                retryFactory, options, retryPolicyOptions);
+            var first = CoreQFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
             var second = CoreQFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
             Assert.That(second, Is.Not.SameAs(first));
         }
@@ -162,8 +161,10 @@ namespace Fmacias.TplQueue.Test.Factories
             Assert.Throws<ArgumentException>(() =>
                 f.GetCoreQ<IParallelQ>("", Helper.GetLogger<IParallelQ>()));
 
-            Assert.Throws<KeyNotFoundException>(() =>
-                f.GetCoreQ<IParallelQ>("x", Helper.GetLogger<IParallelQ>()));
+            //x not exists in configuration
+            var defaultParallel = f.GetCoreQ<IParallelQ>("x", Helper.GetLogger<IParallelQ>());
+
+            Assert.That(defaultParallel.MaxParallelism, Is.EqualTo(Environment.ProcessorCount));
         }
 
         [Test]
@@ -201,7 +202,7 @@ namespace Fmacias.TplQueue.Test.Factories
         }
 
         [Test]
-        public void CreateParallel_UnknownName_ThrowsKeyNotFound()
+        public void CreateParallel_UnknownName_LoadsDefaultParallel()
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
@@ -213,8 +214,9 @@ namespace Fmacias.TplQueue.Test.Factories
                 new Dictionary<string, IQOptions>(), 
                 retryOptions);
 
-            Assert.Throws<KeyNotFoundException>(() =>
-                f.Parallel("unknown", Mock.Of<ILogger<IParallelQ>>()));
+            var queue = f.Parallel("unknown", Mock.Of<ILogger<IParallelQ>>());
+
+            Assert.That(queue.MaxParallelism, Is.EqualTo(Environment.ProcessorCount));
         }
 
         [Test]

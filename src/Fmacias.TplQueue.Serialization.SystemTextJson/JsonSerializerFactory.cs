@@ -11,12 +11,12 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
             return new JsonSerializerFactory();
         }
 
-        public ISystemTextJsonUniversalSerializer CreateSerializer(JsonSerializerOptions options)
+        public ISystemTextJsonUniversalSerializer Serializer(JsonSerializerOptions options)
         {
             return SystemTextJsonUniversalSerializer.Create(options);
         }
 
-        public IUniversalDataSerializer CreateSerializer()
+        public IUniversalDataSerializer Serializer()
         {
             return SystemTextJsonUniversalSerializer.Create();
         }

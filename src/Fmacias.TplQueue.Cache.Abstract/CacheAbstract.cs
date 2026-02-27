@@ -183,7 +183,7 @@ namespace Fmacias.TplQueue.Cache
 
             foreach (var childEntry in _cacheRepository.SelectPendingChildren(oldestRootCachedEntry.JobId))
             {
-                var childJob = CreatePayloadCarrier(
+                var childJob = CreatePayloadJobChild(
                     childEntry,
                     rootJobId: oldestRootCachedEntry.JobId,
                     visited: visited
@@ -222,7 +222,7 @@ namespace Fmacias.TplQueue.Cache
                 $"Invalid hydrated payload type for JobId '{dto.JobId}', PayloadTypeName '{dto.PayloadTypeName}', RootJobId '{rootJobId}'{parentPart}, LeaseId '{leaseEntry.LeaseId}'. ActualType '{actualType}'.");
         }
 
-        protected virtual IDataJob CreatePayloadCarrier(
+        protected virtual IDataJob CreatePayloadJobChild(
             ICacheEntry leaseEntry,
             Guid rootJobId,
             HashSet<Guid> visited)
@@ -241,7 +241,7 @@ namespace Fmacias.TplQueue.Cache
             {
                 try
                 {
-                    childDependencies.Add(CreatePayloadCarrier(
+                    childDependencies.Add(CreatePayloadJobChild(
                         childEntry,
                         rootJobId,
                         visited));

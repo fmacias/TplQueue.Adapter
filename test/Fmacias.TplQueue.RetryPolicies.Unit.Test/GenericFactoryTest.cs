@@ -5,9 +5,9 @@ using NUnit.Framework;
 namespace Fmacias.TplQueue.RetryPolicies.Test
 {
     [TestFixture]
-    public class RetryPolicyGenericFactoryTest
+    public class GenericFactoryTest
     {
-        private readonly RetryPolicyGenericFactory _factory = RetryPolicyGenericFactory.Create();
+        private readonly GenericFactory _factory = GenericFactory.Create();
 
         [Test]
         public void Factory_Create_FromOptions_UsesCorrectPolicyKind()

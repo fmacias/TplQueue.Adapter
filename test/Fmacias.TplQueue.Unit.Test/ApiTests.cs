@@ -45,9 +45,9 @@ namespace Fmacias.TplQueue.Test
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 _queueOptions);
 
-            Assert.That(api.JobFactory, Is.SameAs(_jobFactoryMock.Object));
-            Assert.That(api.JobRootFactory, Is.SameAs(_jobRootFactoryMock.Object));
-            Assert.That(api.CoreQFactories.Value, Is.SameAs(_queueFactoryCoreMock.Object));
+            Assert.That(api.JobFactory.Value, Is.SameAs(_jobFactoryMock.Object));
+            Assert.That(api.JobRootFactory.Value, Is.SameAs(_jobRootFactoryMock.Object));
+            Assert.IsInstanceOf<ICoreQFactoryAdapter>(api.CoreQFactories.Value);
 
             _coreApi.Verify(a => a.JobFactory, Times.AtLeastOnce);
             _coreApi.Verify(a => a.JobRootFactory, Times.AtLeastOnce);

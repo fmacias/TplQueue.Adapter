@@ -59,8 +59,9 @@ namespace Fmacias.TplQueue.Factories
         public IDataJobRoot DataJobRoot(IJobNodeDto dto, IPayload payload)
         {
             return JobRoot(
-                (handler, policy) 
-                    => BuildJobRoot(policy, dto.JobId, dto.Name, payload, handler),
+                (handler, retryPolicy) 
+                    => BuildJobRoot(policy: retryPolicy,jobId: dto.JobId, 
+                    name: dto.Name, payload: payload, handler: handler),
                 payload, 
                 dto.RetryDescriptor
             );

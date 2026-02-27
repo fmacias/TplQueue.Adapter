@@ -24,16 +24,16 @@ namespace Fmacias.TplQueue.RetryPolicies
     ///    can instantiate it.
     /// ]]>
     /// </summary>
-    public sealed class RetryPolicyGenericFactory: IRetryPolicyGenericFactory
+    public sealed class GenericFactory: IRetryPolicyGenericFactory
     {
-        private RetryPolicyGenericFactory(){}
+        private GenericFactory(){}
         
         /// <summary>
         /// Factory method hiding the concrete type.
         /// </summary>
-        public static RetryPolicyGenericFactory Create()
+        public static GenericFactory Create()
         {
-            return new RetryPolicyGenericFactory();
+            return new GenericFactory();
         }
         
         /// <inheritdoc />

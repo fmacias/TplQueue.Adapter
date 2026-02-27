@@ -60,13 +60,19 @@ namespace Fmacias.TplQueue.Test
                     It.IsAny<Func<IRetryPolicy>>()))
                 .Returns(() => Mock.Of<IFifoQ>());
 
+            var parallelQDefault = new Mock<IParallelQ>();
+            parallelQDefault
+                .Setup(o => o.MaxParallelism)
+                .Returns(()=> Environment.ProcessorCount);
+
             coreQFactory
                 .Setup(p => p.Parallel(
                     It.IsAny<string>(),
                     It.IsAny<int>(),
                     It.IsAny<ILogger>(),
                     It.IsAny<Func<IRetryPolicy>>()))
-                .Returns(() => Mock.Of<IParallelQ>());
+                .Returns(() => parallelQDefault.Object);
+
             return coreQFactory;
         }
 

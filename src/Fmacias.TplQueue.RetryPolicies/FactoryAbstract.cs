@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Fmacias.TplQueue.RetryPolicies
 {
-    public abstract class RetryPolicyFactoryAbstract<TPolicy>: IRetryPolicyFactory<TPolicy>
+    public abstract class FactoryAbstract<TPolicy>: IRetryPolicyFactory<TPolicy>
         where TPolicy : IRetryPolicy
     {
         public abstract TPolicy CreatePolicy();
@@ -27,7 +27,7 @@ namespace Fmacias.TplQueue.RetryPolicies
             return GetDefault();
         }
         /// <inheritdoc />
-        protected abstract TPolicy CreatePolicy(IRetryPolicyDescriptor descriptor);
+        public abstract TPolicy CreatePolicy(IRetryPolicyDescriptor descriptor);
         protected abstract TPolicy GetDefault();
     }
 }

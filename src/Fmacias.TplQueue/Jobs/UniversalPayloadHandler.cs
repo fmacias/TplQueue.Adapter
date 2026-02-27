@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Fmacias.TplQueue.Jobs
 {
-    internal class UniversalPayloadHandler : IUniversaPayloadHandler
+    public class UniversalPayloadHandler : IUniversaPayloadHandler
     {
         public Func<object, CancellationToken, Task> ResolveAction { get; }
 

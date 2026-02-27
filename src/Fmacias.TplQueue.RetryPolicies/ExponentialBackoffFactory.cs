@@ -3,7 +3,7 @@ using System;
 
 namespace Fmacias.TplQueue.RetryPolicies
 {
-    public class ExponentialBackoffFactory : RetryPolicyFactoryAbstract<IExponentialBackoff>, IExponentialBackofFactory
+    public class ExponentialBackoffFactory : FactoryAbstract<IExponentialBackoff>, IExponentialBackofFactory
     {
         private ExponentialBackoffFactory()
         {
@@ -12,7 +12,7 @@ namespace Fmacias.TplQueue.RetryPolicies
         {
             return new ExponentialBackoffFactory();
         }
-        protected override IExponentialBackoff CreatePolicy(IRetryPolicyDescriptor descriptor)
+        public override IExponentialBackoff CreatePolicy(IRetryPolicyDescriptor descriptor)
         {
             if (descriptor is null) throw new ArgumentNullException(nameof(descriptor));
             return (IExponentialBackoff) new ExponentialBackoff().SetFromDescriptor(descriptor);

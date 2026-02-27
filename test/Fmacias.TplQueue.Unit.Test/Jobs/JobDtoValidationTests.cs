@@ -41,6 +41,8 @@ namespace Fmacias.TplQueue.Test.Jobs
         public void PayloadJobFactory_CreateRoot_AlsoWithoutRelatedHandler()
         {
             var jobFactory = new Mock<IJobFactory>(MockBehavior.Strict);
+            var jobRootFactory = new Mock<IJobRootFactory>(MockBehavior.Strict);
+
             jobFactory
                 .Setup(o => o.Job<IUniversaPayloadHandler, TestPayload>(
                     It.IsAny<Func<CancellationToken, IUniversaPayloadHandler, TestPayload, Task>>(),
@@ -49,14 +51,23 @@ namespace Fmacias.TplQueue.Test.Jobs
                     It.IsAny<string>()))
                 .Returns(Mock.Of<IJob>());
 
+            jobRootFactory
+                .Setup(o => o.JobRoot<IUniversaPayloadHandler, TestPayload>(
+                    It.IsAny<Func<CancellationToken, IUniversaPayloadHandler, TestPayload, Task>>(),
+                    It.IsAny<IUniversaPayloadHandler>(),
+                    It.IsAny<TestPayload>(),
+                    It.IsAny<Func<IRetryPolicy>>(),
+                    It.IsAny<string>()))
+                .Returns(Mock.Of<IJobRoot>());
+
             var factory = DataJobFactory.Create(
                 jobFactory.Object,
-                Mock.Of<IJobRootFactory>(),
+                jobRootFactory.Object,
                 Mock.Of<IRetryPolicyGenericFactory>(),
                 CreateHandlerResolver()
             );
 
-            Assert.That(factory.DataJobRoot(_payload, null!), Is.InstanceOf<IDataJob<TestPayload>>());
+            Assert.That(factory.DataJobRoot(_payload), Is.InstanceOf<IDataJob<TestPayload>>());
         }
 
         [Test]
