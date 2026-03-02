@@ -1,5 +1,6 @@
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
+using Fmacias.TplQueue.Queues;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -58,20 +59,20 @@ namespace Fmacias.TplQueue.Test.Queues
                 })
                 .Returns(jobQueueMock.Object);
 
-            var CacheQ = global::CacheQ.Create(
+            var queue = CacheQ.Create(
                 Mock.Of<ILogger<ICacheQ>>(),
                 leaseCache.Object,
                 jobQueueMock.Object);
 
             // Act
-            var leased = ((CacheQ)CacheQ).TryLeaseWorkOnce();
+            var leased = queue.TryLeaseWorkOnce();
 
             // Assert
             Assert.That(leased, Is.True);
             Assert.That(addedRoot, Is.SameAs(runnerRoot));
             Assert.That(addedFifo, Is.True);
 
-            CacheQ.Dispose();
+            queue.Dispose();
         }
 
         [Test]
@@ -84,8 +85,8 @@ namespace Fmacias.TplQueue.Test.Queues
 
             jobInfo.SetupGet(r => r.Id).Returns(jobId);
 
-            var CacheQ = global::CacheQ.Create(Mock.Of<ILogger<ICacheQ>>(), leaseCache.Object, jobQueueMock.Object);
-            var callback = CacheQ.OnJobEventChanged;
+            var queue = CacheQ.Create(Mock.Of<ILogger<ICacheQ>>(), leaseCache.Object, jobQueueMock.Object);
+            var callback = queue.OnJobEventChanged;
 
             await callback(CreateEvent(JobEventStatus.Successed, jobInfo.Object));
             await callback(CreateEvent(JobEventStatus.Failed, jobInfo.Object));
@@ -98,7 +99,7 @@ namespace Fmacias.TplQueue.Test.Queues
             leaseCache.Verify(c => c.SuccessRootNode(jobId), Times.Once);
             leaseCache.Verify(c => c.DeleteRootNode(jobId), Times.Exactly(4));
 
-            CacheQ.Dispose();
+            queue.Dispose();
         }
         [Test]
         public void LeasingPulseMs_NonPositiveValue_ResetsToDefault()
@@ -106,7 +107,7 @@ namespace Fmacias.TplQueue.Test.Queues
             // Arrange
             var logger = Mock.Of<ILogger<ICacheQ>>();
             var cache = Mock.Of<IDataJobCache>();
-            var innerDispatcher = Mock.Of<IQ>();
+            var innerDispatcher = Mock.Of<IParallelQ>();
 
             var dispatcher = CacheQ.Create(
                 logger,
@@ -137,9 +138,9 @@ namespace Fmacias.TplQueue.Test.Queues
             return evt.Object;
         }
 
-        private static Mock<IQ> CreateDispatcherMock(int slots)
+        private static Mock<IParallelQ> CreateDispatcherMock(int slots)
         {
-            var jobQMock = new Mock<IQ>();
+            var jobQMock = new Mock<IParallelQ>();
             jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(slots));
             jobQMock.Setup(d => d.Dispose());

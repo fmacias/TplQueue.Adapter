@@ -18,10 +18,10 @@ namespace Fmacias.TplQueue.Factories
         public ICacheQ CacheQ(
             ILogger<ICacheQ> logger,
             IDataJobCache payloadLeaseCache,
-            IQ queue)
+            IParallelQ queue)
         {
             if (payloadLeaseCache is null) throw new ArgumentNullException(nameof(payloadLeaseCache));
-            return global::CacheQ.Create(logger, payloadLeaseCache, queue);
+            return Queues.CacheQ.Create(logger, payloadLeaseCache, queue);
         }
     }
 }

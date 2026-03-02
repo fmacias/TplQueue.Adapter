@@ -11,7 +11,7 @@ namespace Fmacias.TplQueue.Test.Queues
         [Test]
         public void FactoryConstructor_ShouldThrowWhenFactoryReturnsNull()
         {
-            var adapter = new QAdapter(() => null!);
+            var adapter = new ParallelQAdapter(() => null!);
 
             Assert.Throws<InvalidOperationException>(() => _ = adapter.Name);
         }
@@ -22,7 +22,7 @@ namespace Fmacias.TplQueue.Test.Queues
             var creationCount = 0;
             var innerQ = CreateDispatcherMock().Object;
 
-            var adapter = new QAdapter(() =>
+            var adapter = new ParallelQAdapter(() =>
             {
                 creationCount++;
                 return innerQ;
@@ -35,9 +35,9 @@ namespace Fmacias.TplQueue.Test.Queues
             Assert.That(creationCount, Is.EqualTo(1));
         }
 
-        private static Mock<IQ> CreateDispatcherMock()
+        private static Mock<IParallelQ> CreateDispatcherMock()
         {
-            var jobQMock = new Mock<IQ>();
+            var jobQMock = new Mock<IParallelQ>();
             jobQMock.SetupProperty(d => d.OnJobEventChanged);
             jobQMock.SetupGet(d => d.Semaphore).Returns(new SemaphoreSlim(1));
             jobQMock.SetupGet(d => d.RetryPolicyFactory).Returns(() => Mock.Of<IRetryPolicy>());

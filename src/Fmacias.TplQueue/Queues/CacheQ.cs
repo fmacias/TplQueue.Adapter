@@ -1,13 +1,12 @@
 ﻿using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Log;
-using Fmacias.TplQueue.Queues;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-
+namespace Fmacias.TplQueue.Queues;
 /// <summary>
 /// <![CDATA[
 /// Dispatcher that persists payload graphs into an IPayloadLeaseCache and
@@ -28,7 +27,7 @@ using System.Threading.Tasks;
 /// the durable lease cache and the in-memory task dispatcher.
 /// ]]>
 ///</summary>
-internal sealed class CacheQ : QAdapter, ICacheQ
+internal sealed class CacheQ : ParallelQAdapter, ICacheQ
 {
     /// <summary>
     /// <![CDATA[
@@ -93,7 +92,7 @@ internal sealed class CacheQ : QAdapter, ICacheQ
     private CacheQ(
         ILogger<ICacheQ> logger,
         IDataJobCache leaseCache,
-        IQ queue)
+        IParallelQ queue)
         : base(queue)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -113,10 +112,10 @@ internal sealed class CacheQ : QAdapter, ICacheQ
     /// <param name="cache">Lease cache used to persist and lease payload graphs.</param>
     /// <param name="queue">Inner task dispatcher that will execute leased graphs.</param>
     /// <returns>A configured ISerializablePayloadDispatcher instance.</returns>
-    public static ICacheQ Create(
+    public static CacheQ Create(
         ILogger<ICacheQ> logger,
         IDataJobCache cache,
-        IQ queue)
+        IParallelQ queue)
     {
         return new CacheQ(logger, cache, queue);
     }
@@ -140,7 +139,7 @@ internal sealed class CacheQ : QAdapter, ICacheQ
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public IQ Enqueue<TPayload>(
+    public ICacheQ Enqueue<TPayload>(
         IDataJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayload
@@ -170,7 +169,7 @@ internal sealed class CacheQ : QAdapter, ICacheQ
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="payloadJobRoot"/> is <c>null</c>.
     /// </exception>
-    public IQ EnqueueFifo<TPayload>(
+    public ICacheQ EnqueueFifo<TPayload>(
         IDataJobRoot<TPayload> payloadJobRoot,
         CancellationToken ct)
         where TPayload : IPayload
