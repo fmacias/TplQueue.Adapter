@@ -1,5 +1,6 @@
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Factories;
+using Fmacias.TplQueue.RetryPolicies;
 using Fmacias.TplQueue.Serialization.SystemTextJson;
 using System;
 using System.Collections.Generic;
@@ -16,18 +17,17 @@ namespace Fmacias.TplQueue
         /// 
         /// </summary>
         /// <param name="api"></param>
-        /// <param name="retryPolicyGenericFactory"></param>
         /// <param name="queueOptions"></param>
         /// <param name="retryPolicyOptions"></param>
+        /// 
         /// <exception cref="ArgumentNullException"></exception>
         private API(
             ICoreApi api,
-            IRetryPolicyGenericFactory retryPolicyGenericFactory,
             IReadOnlyDictionary<string, IQOptions> queueOptions,
             IReadOnlyDictionary<string, IRetryPolicyDescriptor> retryPolicyOptions)
         {
             _coreApi = api ?? throw new ArgumentNullException(nameof(api));
-            _retryPolicyGenericFactory = retryPolicyGenericFactory ?? throw new ArgumentNullException(nameof(retryPolicyGenericFactory));
+            _retryPolicyGenericFactory = GenericFactory.Create();
             _queueOptions = queueOptions ?? throw new ArgumentNullException(nameof(queueOptions));
             _retryPolicyOptions = retryPolicyOptions ?? throw new ArgumentNullException(nameof(retryPolicyOptions));
         }
@@ -36,17 +36,16 @@ namespace Fmacias.TplQueue
         /// 
         /// </summary>
         /// <param name="api"></param>
-        /// <param name="retryPolicygenericFactory"></param>
         /// <param name="retryPolicyOptions"></param>
-        /// <returns></returns>
         /// <param name="queueOptions"></param>
+        /// <returns></returns>
+        /// 
         public static IApi Create(
             ICoreApi api,
-            IRetryPolicyGenericFactory retryPolicygenericFactory,
             IReadOnlyDictionary<string, IRetryPolicyDescriptor> retryPolicyOptions,
             IReadOnlyDictionary<string, IQOptions> queueOptions)
         {
-            return new API(api, retryPolicygenericFactory, queueOptions, retryPolicyOptions);
+            return new API(api, queueOptions, retryPolicyOptions);
         }
         public IRetryPolicyGenericFactory RetryPolicyGenericFactory => _retryPolicyGenericFactory;
         public IDataJobFactory DataJobFactory(IPayloadHandlerResolver payloadHandlerResolver) 

@@ -45,7 +45,6 @@ namespace Fmacias.TplQueue.Test
         {
             return API.Create(
                 GetCoreApiMock().Object,
-                Mock.Of<IRetryPolicyGenericFactory>(),
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 new Dictionary<string, IQOptions>());
         }

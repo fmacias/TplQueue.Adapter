@@ -41,7 +41,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _retryPolicyFactory.Object,
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 _queueOptions);
 
@@ -59,7 +58,6 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 null!,
-                _retryPolicyFactory.Object,
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 _queueOptions));
         }
@@ -69,7 +67,6 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 _coreApi.Object,
-                _retryPolicyFactory.Object,
                 null!,
                 _queueOptions));
         }
@@ -79,7 +76,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _retryPolicyFactory.Object,
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 _queueOptions);
 
@@ -91,7 +87,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _retryPolicyFactory.Object,
                 new Dictionary<string, IRetryPolicyDescriptor>(),
                 _queueOptions);
 
