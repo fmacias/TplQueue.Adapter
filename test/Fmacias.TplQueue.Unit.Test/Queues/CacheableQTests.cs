@@ -170,6 +170,7 @@ namespace Fmacias.TplQueue.Test.Queues
             public ISerializable PayloadSerializedData { get; } = Mock.Of<ISerializable>();
             public object GetPayload() => new object();
             public Type PayloadType => typeof(object);
+            public Guid CrossQueueId { get; }
             public IReadOnlyList<IDataJob> GetDependentDataJobs() => Array.Empty<IDataJob>();
             public IJob After(params IJob[] previousTasks) => this;
             public IJob[] GetJobsBatch() => Array.Empty<IJob>();

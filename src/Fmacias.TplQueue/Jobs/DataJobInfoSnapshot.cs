@@ -41,5 +41,7 @@ namespace Fmacias.TplQueue.Jobs
         public IReadOnlyCollection<IJobInfo> Dependencies => _jobInfo.Dependencies;
 
         public IPayload Payload => _payload;
+
+        public Guid CrossQueueId => _jobInfo.CrossQueueId;
     }
 }

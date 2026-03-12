@@ -47,7 +47,7 @@ namespace Fmacias.TplQueue.RetryPolicies
             ThrowIfDisposed();
 
             var bytes = new byte[8];
-            _randomNumberGenerator.GetBytes(bytes);
+           _randomNumberGenerator.GetBytes(bytes);
 
             ulong ul = BitConverter.ToUInt64(bytes, 0) >> 11; // keep top 53 bits
             return ul / (double)(1UL << 53);

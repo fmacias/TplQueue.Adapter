@@ -54,6 +54,8 @@ namespace Fmacias.TplQueue.Queues
 
         public SemaphoreSlim Semaphore => Q.Semaphore;
 
+        public Guid QueueId => Q.QueueId;
+
         // IDisposable
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "<Pending>")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "<Pending>")]

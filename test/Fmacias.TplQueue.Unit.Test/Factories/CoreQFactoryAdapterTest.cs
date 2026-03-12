@@ -84,22 +84,20 @@ namespace Fmacias.TplQueue.Test.Factories
             {
                 { "fifo", new TestParallelOptions() }
             };
+
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
             var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
 
             var qfactoryAdapter = CoreQFactoryAdapter.Create(
                 coreQFactory.Object,
-                retryFactory.Object,
-                options, retryOptions);
+                retryFactory.Object, options, retryOptions);
 
-            using var queue = qfactoryAdapter
-                .GetCoreQ<IFifoQ>("fifo", Helper.GetLogger<IFifoQ>());
+            using var queue = qfactoryAdapter.GetCoreQ<IFifoQ>("fifo", Helper.GetLogger<IFifoQ>());
 
             Assert.That(queue, Is.Not.Null);
             Assert.That(queue, Is.InstanceOf<IFifoQ>());
         }
-
 
         [Test]
         public void GetQ_ReturnsParallelQ()
@@ -251,12 +249,16 @@ namespace Fmacias.TplQueue.Test.Factories
         public string RetryPolicy { get; set; } = "rp";
         public IDataJobCache PayloadLeaseCache { get; set; } = Mock.Of<IDataJobCache>();
         public IDataJobFactory PayloadRunnerFactory { get; set; } = Mock.Of<IDataJobFactory>();
+
+        public Guid Id { get; set; } = Guid.NewGuid();
     }
 
     internal class TestParallelOptions : IQOptions
     {
         public int MaxParallelism { get; set; } = 2;
         public string RetryPolicy { get; set; } = "rp";
+
+        public Guid Id => Guid.NewGuid();
     }
 
     public class XQ : IQ
@@ -272,6 +274,8 @@ namespace Fmacias.TplQueue.Test.Factories
         public Func<IRetryPolicy> RetryPolicyFactory => throw new NotImplementedException();
 
         public SemaphoreSlim Semaphore => throw new NotImplementedException();
+
+        public Guid QueueId => throw new NotImplementedException();
 
         public void Dispose()
         {

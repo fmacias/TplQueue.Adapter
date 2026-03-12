@@ -51,6 +51,12 @@ namespace Fmacias.TplQueue.Jobs
         public Type PayloadType => PayloadDto?.GetType()
                                    ?? throw new InvalidOperationException("Payload is null.");
 
+        /// <summary>
+        /// Gets the dispatcher that first claimed the wrapped inner job for execution.
+        /// Ownership is assigned by the core dispatcher at first enqueue and is not publicly mutable.
+        /// </summary>
+        public Guid CrossQueueId => InnerJob.CrossQueueId;
+
         public IJob After(params IJob[] previousTasks)
         {
             return InnerJob.After(previousTasks);
@@ -83,7 +89,7 @@ namespace Fmacias.TplQueue.Jobs
 
         public IReadOnlyList<IDataJob> GetDependentDataJobs()
         {
-            return [..InnerJob.Dependencies.OfType<IDataJob>()] ;
+            return InnerJob.Dependencies.OfType<IDataJob>().ToArray();
         }
 
         public Func<IRetryPolicy> GetRetryPolicyFactory()

@@ -37,12 +37,12 @@ namespace Fmacias.TplQueue.Factories
             return new CoreQFactoryAdapter(factory, retryPolicyFactory, queueOptions, retryPolicyOptions);
         }
 
-        public IParallelQ Parallel(string name, 
-            int maxParallelism, 
-            ILogger logger, 
-            Func<IRetryPolicy>? retryPolicyCreator = null)
+        public IParallelQ Parallel(Guid id,
+            string name,
+            int maxParallelism,
+            ILogger logger, Func<IRetryPolicy>? retryPolicyCreator = null)
         {
-            return _innerFactory.Parallel(name, maxParallelism, logger, retryPolicyCreator);
+            return _innerFactory.Parallel(id, name, maxParallelism, logger, retryPolicyCreator);
         }
         /// <inheritdoc />
         public IParallelQ Parallel(
@@ -58,7 +58,7 @@ namespace Fmacias.TplQueue.Factories
             var retryPolicyCreator = () 
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
 
-            return Parallel(name, queueOptions.MaxParallelism, logger, retryPolicyCreator);
+            return Parallel(queueOptions.Id, name, queueOptions.MaxParallelism, logger, retryPolicyCreator);
         }
         /// <inheritdoc />
         public IParallelQ Parallel(
@@ -70,11 +70,11 @@ namespace Fmacias.TplQueue.Factories
                 return Parallel(queueOptions, name, logger);
             }
 
-            return _innerFactory.Parallel(name, Environment.ProcessorCount, logger);
+            return _innerFactory.Parallel(Guid.NewGuid(), name, Environment.ProcessorCount, logger);
         }
-        public IFifoQ Fifo(string name, ILogger logger, Func<IRetryPolicy>? retryPolicy = null)
+        public IFifoQ Fifo(Guid id, string name, ILogger logger, Func<IRetryPolicy>? retryPolicy = null)
         {
-            return _innerFactory.Fifo(name, logger, retryPolicy);
+            return _innerFactory.Fifo(id, name, logger, retryPolicy);
         }
 
         /// <inheritdoc />
@@ -91,7 +91,7 @@ namespace Fmacias.TplQueue.Factories
             var retryPolicyCreator = () 
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
             
-            return Fifo(name, logger, retryPolicyCreator);
+            return Fifo(queueOptions.Id, name, logger, retryPolicyCreator);
         }
         public IFifoQ Fifo(
             string name,
@@ -104,10 +104,10 @@ namespace Fmacias.TplQueue.Factories
             var retryPolicyCreator = ()
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
 
-            return _innerFactory.Fifo(name, logger, retryPolicyCreator);
+            return _innerFactory.Fifo(queueOptions.Id, name, logger, retryPolicyCreator);
         }
         /// <inheritdoc />
-        public T GetCoreQ<T>(string name, ILogger<T> logger) where T : class, IQ
+        public T GetCoreQ<T>(string name, ILogger<T> logger) where T : IQ
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Queue name cannot be null or whitespace.", nameof(name));
@@ -143,7 +143,7 @@ namespace Fmacias.TplQueue.Factories
                 throw new ArgumentException("RetryPolicy name is required.");
         }
         private IQ CreateCoreQueue<T>(string name, ILogger<T> logger)
-            where T : class, IQ
+            where T : IQ
         {
             var queueType = typeof(T);
             if (queueType == typeof(IFifoQ))
@@ -153,7 +153,7 @@ namespace Fmacias.TplQueue.Factories
             return Parallel(name, logger);
         }
         private static T CastQ<T>(IQ queue, string name)
-            where T : class, IQ
+            where T : IQ
         {
             if (queue is T typed)
                 return typed;

@@ -54,6 +54,7 @@ namespace Fmacias.TplQueue.Test
             var coreQFactory = new Mock<ICoreQFactory>();
             coreQFactory
                 .Setup(p => p.Fifo(
+                    It.IsAny<Guid>(), 
                     It.IsAny<string>(),
                     It.IsAny<ILogger>(),
                     It.IsAny<Func<IRetryPolicy>>()))
@@ -66,6 +67,7 @@ namespace Fmacias.TplQueue.Test
 
             coreQFactory
                 .Setup(p => p.Parallel(
+                    It.IsAny<Guid>(), 
                     It.IsAny<string>(),
                     It.IsAny<int>(),
                     It.IsAny<ILogger>(),
