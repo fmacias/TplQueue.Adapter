@@ -13,11 +13,11 @@ namespace Fmacias.TplQueue.Test.Factories
         public void Create_SameInput_IsNeverSingletone()
         {
             var options = new Dictionary<string, IQOptions>();
-            var retryPolicyOptions = new Dictionary<string, IRetryPolicyDescriptor>();
-            var retryFactory = Mock.Of<IRetryPolicyGenericFactory>();
+            var retryPolicyOptions = new Dictionary<string, IRetryPolicyOptions>();
+            var retryFactory = Mock.Of<IRetryPolicyAbstractFactory>();
             var coreFactory = Helper.GetQFactoryCoreMock();
-            var first = CoreQFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
-            var second = CoreQFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
+            var first = QFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
+            var second = QFactoryAdapter.Create(coreFactory.Object, retryFactory, options, retryPolicyOptions);
             Assert.That(second, Is.Not.SameAs(first));
         }
 
@@ -26,19 +26,19 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var coreFactory1 = Helper.GetQFactoryCoreMock();
             var coreFactory2 = Helper.GetQFactoryCoreMock();
-            var retryPolicygenericFactory = Mock.Of<IRetryPolicyGenericFactory>();
+            var retryPolicygenericFactory = Mock.Of<IRetryPolicyAbstractFactory>();
 
-            var first = CoreQFactoryAdapter.Create(
+            var first = QFactoryAdapter.Create(
                 coreFactory1.Object, 
                 retryPolicygenericFactory, 
                 new Dictionary<string, IQOptions>(), 
-                new Dictionary<string, IRetryPolicyDescriptor>());
+                new Dictionary<string, IRetryPolicyOptions>());
 
-            var second = CoreQFactoryAdapter.Create(
+            var second = QFactoryAdapter.Create(
                 coreFactory2.Object,
                 retryPolicygenericFactory, 
                 new Dictionary<string, IQOptions>(),
-                new Dictionary<string, IRetryPolicyDescriptor>());
+                new Dictionary<string, IRetryPolicyOptions>());
 
             Assert.That(second, Is.Not.SameAs(first));
         }
@@ -46,14 +46,14 @@ namespace Fmacias.TplQueue.Test.Factories
         [Test]
         public void Create_ValidatesArguments()
         {
-            var coreFactory = Mock.Of<ICoreQFactory>();
-            var retryFactory = Mock.Of<IRetryPolicyGenericFactory>();
+            var coreFactory = Mock.Of<IQFactory>();
+            var retryFactory = Mock.Of<IRetryPolicyAbstractFactory>();
             var options = new Dictionary<string, IQOptions>();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(null!, retryFactory, options, retryOptions));
-            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(coreFactory, retryFactory, null!, retryOptions));
-            Assert.Throws<ArgumentNullException>(() => CoreQFactoryAdapter.Create(coreFactory, null!, options, retryOptions));
+            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(null!, retryFactory, options, retryOptions));
+            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(coreFactory, retryFactory, null!, retryOptions));
+            Assert.Throws<ArgumentNullException>(() => QFactoryAdapter.Create(coreFactory, null!, options, retryOptions));
         }
 
         [Test]
@@ -65,9 +65,9 @@ namespace Fmacias.TplQueue.Test.Factories
             };
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var queueFatoryAdapter = CoreQFactoryAdapter.Create(
+            var queueFatoryAdapter = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 options,
@@ -87,9 +87,9 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var qfactoryAdapter = CoreQFactoryAdapter.Create(
+            var qfactoryAdapter = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object, options, retryOptions);
 
@@ -109,9 +109,9 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var qfactoryAdapter = CoreQFactoryAdapter.Create(
+            var qfactoryAdapter = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object, options, retryOptions);
 
@@ -131,9 +131,9 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var qfactoryAdapter = CoreQFactoryAdapter.Create(
+            var qfactoryAdapter = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 options, retryOptions);
@@ -149,9 +149,9 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var f = CoreQFactoryAdapter.Create(
+            var f = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 new Dictionary<string, IQOptions>(), retryOptions);
@@ -170,9 +170,9 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var f = CoreQFactoryAdapter.Create(
+            var f = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 new Dictionary<string, IQOptions>(), 
@@ -187,9 +187,9 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var f = CoreQFactoryAdapter.Create(
+            var f = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 new Dictionary<string, IQOptions>(), 
@@ -204,9 +204,9 @@ namespace Fmacias.TplQueue.Test.Factories
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var f = CoreQFactoryAdapter.Create(
+            var f = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 new Dictionary<string, IQOptions>(), 
@@ -230,9 +230,9 @@ namespace Fmacias.TplQueue.Test.Factories
 
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
             var coreQFactory = Helper.GetQFactoryCoreMock();
-            var retryOptions = new Dictionary<string, IRetryPolicyDescriptor>();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
 
-            var f = CoreQFactoryAdapter.Create(
+            var f = QFactoryAdapter.Create(
                 coreQFactory.Object,
                 retryFactory.Object,
                 badMap, retryOptions);

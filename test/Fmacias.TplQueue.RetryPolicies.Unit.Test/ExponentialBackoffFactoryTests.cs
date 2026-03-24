@@ -10,7 +10,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         public void CreatePolicy_WithUnknownName_ReturnsDefaultPolicy()
         {
             IRetryPolicyFactory<IExponentialBackoff> factory = ExponentialBackoffFactory.Create();
-            var options = new Dictionary<string, IRetryPolicyDescriptor>();
+            var options = new Dictionary<string, IRetryPolicyOptions>();
 
             var policy = factory.CreatePolicy("missing", options);
 
@@ -22,7 +22,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         public void CreatePolicy_WithNullDescriptorInDictionary_ThrowsArgumentException()
         {
             IRetryPolicyFactory<IExponentialBackoff> factory = ExponentialBackoffFactory.Create();
-            var options = new Dictionary<string, IRetryPolicyDescriptor>
+            var options = new Dictionary<string, IRetryPolicyOptions>
             {
                 { "broken", null! }
             };

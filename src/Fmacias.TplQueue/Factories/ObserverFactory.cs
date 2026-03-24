@@ -1,5 +1,5 @@
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Observers;
+using Fmacias.TplQueue.Log;
 using Fmacias.TplQueue.Observers.ViewModel;
 using Microsoft.Extensions.Logging;
 

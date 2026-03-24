@@ -1,6 +1,6 @@
-using Fmacias.TplQueue.Cache.Contracts;
-using Fmacias.TplQueue.Cache.Factories;
-using Fmacias.TplQueue.Cache.MemCache.DomainModels;
+using Fmacias.TplQueue.Cache.Abstract;
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+using Fmacias.TplQueue.Cache.MemCache.Models;
 using Fmacias.TplQueue.Contracts;
 using System;
 using System.Collections.Generic;
@@ -13,26 +13,32 @@ namespace Fmacias.TplQueue.Cache.MemCache
         private MemCache(
             IUniversalDataSerializer serializer,
             ICacheRepository cacheRepository,
-            INodeTypeResolver typeResolver,
+            ITypeResolver typeResolver,
             IDataJobFactory payloadJobFactory,
-            ICacheEntryFactory cacheEntryFactory)
-            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver)
+            ICacheEntryFactory cacheEntryFactory,
+            IPayloadHandlerResolver payloadHandlerResolver,
+            IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
+            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver, payloadHandlerResolver, retryPolicyAbstractFactory)
         {
         }
 
         public static MemCache Create(
             IUniversalDataSerializer serializer,
             IDataJobFactory payloadJobFactory,
-            INodeTypeResolver jobNodeTypeResolver)
+            ITypeResolver jobNodeTypeResolver, 
+            IPayloadHandlerResolver payloadHandlerResolver, 
+            IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             return new MemCache(serializer, 
                 MemoryCacheRepository.Create(), 
                 jobNodeTypeResolver, 
                 payloadJobFactory, 
-                CacheEntryFactory.Create());
+                CacheEntryFactory.Create(),
+                payloadHandlerResolver,
+                retryPolicyAbstractFactory);
         }
 
-        protected override Action<IJobNodeDto, Guid> OnDehydration => (nodeDto, rootId) =>
+        protected override Action<IJobNodeRecord, Guid> OnDehydration => (nodeDto, rootId) =>
         {
             CacheRepository.Upsert(
                 EntryFactory.CreateEntry(

@@ -8,24 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Observers\**" />
-    <EmbeddedResource Remove="Observers\**" />
-    <None Remove="Observers\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Remove="Factories\PayloadJobFactory1.cs" />
     <Compile Remove="Factories\SerializedPayloadFactory.cs" />
     <Compile Remove="Jobs\SerializedPayloadSnapshot.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Observers\DirectObserverDispatcher.cs" />
-    <Compile Include="Observers\LoggingObserverFactoryExtensions.cs" />
-    <Compile Include="Observers\LoggingObserver.cs" />
-    <Compile Include="Observers\ConsoleObserver.cs" />
-    <Compile Include="Observers\FileLoggingObserver.cs" />
-    <Compile Include="Observers\ProfilingObserver.cs" />
   </ItemGroup>
 	<ItemGroup>
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

@@ -22,7 +22,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
                 return action(cancellationToken);
             }
 
-            public IRetryPolicy SetFromDescriptor(IRetryPolicyDescriptor descriptor)
+            public IRetryPolicy SetFromDescriptor(IRetryPolicyOptions descriptor)
             {
                 MaxRetries = descriptor.MaxRetries;
                 Factor = descriptor.Factor;
@@ -30,11 +30,10 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
                 return this;
             }
 
-            public IRetryPolicyDescriptor ToDescriptor(Type retryPolicyType)
+            public IRetryPolicyOptions ToDescriptor()
             {
                 return RetryPolicyOptions
-                    .Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds))
-                    .SetRetryPolicyType(retryPolicyType);
+                    .Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds));
             }
         }
         private class TestRetryPolicyFactory : FactoryAbstract<TestRetryPolicy>
@@ -50,7 +49,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
                 return GetDefault();
             }
 
-            public override TestRetryPolicy CreatePolicy(IRetryPolicyDescriptor descriptor)
+            public override TestRetryPolicy CreatePolicy(IRetryPolicyOptions descriptor)
             {
                 return (TestRetryPolicy) new TestRetryPolicy().SetFromDescriptor(descriptor);
             }
@@ -63,7 +62,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         [Test]
         public void Create_ByName_ReturnsConfiguredPolicy()
         {
-            var opts = new Dictionary<string, IRetryPolicyDescriptor>
+            var opts = new Dictionary<string, IRetryPolicyOptions>
             {
                 { "exp", RetryPolicyOptions.Create(baseDelayMs:100, maxRetries:5, factor:2.0) }
             };
@@ -79,7 +78,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         [Test]
         public void Create_ByName_Unknown_GetDefault()
         {
-            var opts = new Dictionary<string, IRetryPolicyDescriptor>
+            var opts = new Dictionary<string, IRetryPolicyOptions>
             {
                 { "exp", RetryPolicyOptions.Create(baseDelayMs:100, maxRetries:5, factor:2.0) }
             };
@@ -122,11 +121,11 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         [Test]
         public void GetRetryPolicy_CastsOrThrows()
         {
-            var opts = new Dictionary<string, IRetryPolicyDescriptor>
+            var opts = new Dictionary<string, IRetryPolicyOptions>
             {
                 { "lin", RetryPolicyOptions.Create(baseDelayMs:10, maxRetries:3) }
             };
-            var f = GenericFactory.Create();
+            var f = RetryPolicyAbstractFactory.Create();
             var policy = f.GetPolicy<TestRetryPolicy>();
             Assert.That(policy, Is.TypeOf<TestRetryPolicy>());
         }

@@ -1,5 +1,4 @@
-using Fmacias.TplQueue.Cache;
-using Fmacias.TplQueue.Cache.Factories;
+using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Moq;
@@ -15,10 +14,9 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
         {
             var payloadSerializer = MockFactory.CreatePayloadSerializerMock(MockBehavior.Strict);
 
-            var cache = MemCache.Create(
+            var cache = CreateCache(
                 payloadSerializer.Object,
-                Mock.Of<IDataJobFactory>(),
-                Mock.Of<INodeTypeResolver>());
+                Mock.Of<IDataJobFactory>());
 
             var leased = cache.TryHydrateNextJob(out var payloadCarrierRoot, out var lease);
 
@@ -31,8 +29,15 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
         public void TryLeaseNextRoot_WhenEntriesExist_LeasesRootAndDependencies()
         {
             var payloadSerializer = MockFactory.CreatePayloadSerializerMock(MockBehavior.Strict);
-            payloadSerializer.Setup(s => s.Deserialize(It.IsAny<string>(), It.IsAny<Type>()))
+            payloadSerializer
+                .Setup(s => s.Deserialize(It.IsAny<string>(), It.IsAny<Type>()))
                 .Returns(new DummyPayload());
+
+            var payloadHandler = Mock.Of<IUniversalPayloadHandler>();
+            var payloadHandlerResolver = new Mock<IPayloadHandlerResolver>(MockBehavior.Strict);
+            payloadHandlerResolver
+                .Setup(r => r.Resolve(It.IsAny<Guid>()))
+                .Returns(payloadHandler);
 
             var payloadJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
 
@@ -43,55 +48,40 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             var capturedDependencies = new List<IJob>();
 
             payloadJobRoot.SetupGet(r => r.Id).Returns(rootId);
+            payloadJobRoot.SetupGet(r => r.Payload).Returns(new DummyPayload());
             payloadJobRoot
                 .Setup(r => r.After(It.IsAny<IJob[]>()))
                 .Callback<IJob[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<IJob>()))
                 .Returns(payloadJobRoot.Object);
 
-            var payloadJobChild = new Mock<IDataJob<IPayload>>(MockBehavior.Strict);
+            var payloadJobChild = new Mock<IDataJob>(MockBehavior.Strict);
             payloadJobChild.SetupGet(c => c.Id).Returns(childId);
             payloadJobChild
                 .Setup(c => c.After(It.IsAny<IJob[]>()))
                 .Returns(payloadJobChild.Object);
+
             payloadJobFactory
-                .Setup(f => f.DataJobRoot(
+                .Setup(f => f.DataJobRoot<IPayload>(
+                    It.Is<Guid>(id => id == rootId),
                     It.IsAny<IPayload>(),
-                    It.IsAny<string>()))
+                    It.IsAny<IUniversalPayloadHandler>(),
+                    It.Is<string>(name => name == "root"),
+                    It.IsAny<Func<IRetryPolicy>>()))
                 .Returns(payloadJobRoot.Object);
+
             payloadJobFactory
                 .Setup(f => f.DataJob(
-                    It.IsAny<Guid>(),
+                    It.Is<IJobNodeRecord>(r => r.JobId == childId),
                     It.IsAny<IPayload>(),
-                    It.IsAny<string>()))
-                .Returns(payloadJobRoot.Object);
-            payloadJobFactory
-                .Setup(f => f.DataJobRoot(
-                    It.IsAny<IPayload>(),
-                    It.IsAny<string>()))
-                .Returns(payloadJobRoot.Object);
-            payloadJobFactory
-                .Setup(f => f.DataJob(
-                    It.IsAny<Guid>(),
-                    It.IsAny<IPayload>(),
-                    It.IsAny<string>()))
+                    payloadHandler))
                 .Returns(payloadJobChild.Object);
-            payloadJobFactory
-                .Setup(f => f.DataJob(
-                    It.IsAny<IJobNodeDto>(),
-                    It.IsAny<IPayload>()))
-                .Returns(payloadJobChild.Object);
-            payloadJobFactory
-                .Setup(f => f.DataJobRoot(
-                    It.IsAny<IJobNodeDto>(),
-                    It.IsAny<IPayload>()))
-                .Returns(payloadJobRoot.Object);
 
             var (rootRunner, _) = CreateTaskGraph(rootId, childId);
 
-            var cache = MemCache.Create(
+            var cache = CreateCache(
                 payloadSerializer.Object,
                 payloadJobFactory.Object,
-                Mock.Of<INodeTypeResolver>());
+                payloadHandlerResolver.Object);
 
             cache.Dehydrate(rootRunner.Object, isFifo: true);
 
@@ -107,7 +97,7 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
                 Assert.That(lease, Is.SameAs(rootLease));
                 Assert.That(rootLease.Status, Is.EqualTo(EntryStatus.Pending));
                 Assert.That(childLease.Status, Is.EqualTo(EntryStatus.Pending));
-                Assert.That(rootLease.JobNodeDto.PayloadTypeName, Does.Contain(nameof(DummyPayload)));
+                Assert.That(rootLease.JobNodeRecordDto.PayloadTypeName, Does.Contain(nameof(DummyPayload)));
                 Assert.That(capturedDependencies.Single(), Is.SameAs(payloadJobChild.Object));
             });
         }
@@ -119,10 +109,9 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             var childId = Guid.NewGuid();
             var (payloadJobRoot, _) = CreateTaskGraph(rootId, childId);
 
-            var cache = MemCache.Create(
+            var cache = CreateCache(
                 Mock.Of<IUniversalDataSerializer>(),
-                Mock.Of<IDataJobFactory>(),
-                Mock.Of<INodeTypeResolver>());
+                Mock.Of<IDataJobFactory>());
 
             cache.Dehydrate(payloadJobRoot.Object, isFifo: false);
 
@@ -140,7 +129,28 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             });
         }
 
-        private static (Mock<IDataJobRoot<IPayload>> root, Mock<IDataJob> child) CreateTaskGraph(
+        private static IMemCache CreateCache(
+            IUniversalDataSerializer serializer,
+            IDataJobFactory payloadJobFactory,
+            IPayloadHandlerResolver? payloadHandlerResolver = null,
+            ITypeResolver? typeResolver = null,
+            IRetryPolicyAbstractFactory? retryPolicyAbstractFactory = null)
+        {
+            payloadHandlerResolver ??= Mock.Of<IPayloadHandlerResolver>(
+                r => r.Resolve(It.IsAny<Guid>()) == Mock.Of<IUniversalPayloadHandler>());
+            typeResolver ??= Mock.Of<ITypeResolver>(r => r.Resolve(It.IsAny<string>()) == typeof(DummyPayload));
+            retryPolicyAbstractFactory ??= Mock.Of<IRetryPolicyAbstractFactory>(
+                f => f.PolicyByOptions(It.IsAny<IRetryPolicyOptions>()) == Mock.Of<IRetryPolicy>());
+
+            return MemCache.Create(
+                serializer,
+                payloadJobFactory,
+                typeResolver,
+                payloadHandlerResolver,
+                retryPolicyAbstractFactory);
+        }
+
+        private static (Mock<IDataJobRoot<DummyPayload>> root, Mock<IDataJob> child) CreateTaskGraph(
             Guid rootId,
             Guid childId)
         {
@@ -150,6 +160,7 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerId).Returns(childPayload.HandlerId);
             child.Setup(c => c.GetPayload()).Returns(childPayload);
             child.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             child.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
@@ -157,10 +168,12 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
                 .Returns("{}");
 
             var rootPayload = new DummyPayload();
-            var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Strict);
+            var root = new Mock<IDataJobRoot<DummyPayload>>(MockBehavior.Strict);
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
+            root.SetupGet(r => r.Payload).Returns(rootPayload);
             root.As<IDataJob>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerId).Returns(rootPayload.HandlerId);
             root.As<IDataJob>().Setup(c => c.GetPayload()).Returns(rootPayload);
             root.As<IDataJob>().Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
             root.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
@@ -169,7 +182,7 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             return (root, child);
         }
 
-        private sealed class DummyPayload : IPayload
+        public sealed class DummyPayload : IPayload
         {
             public string PayloadId => nameof(DummyPayload);
 

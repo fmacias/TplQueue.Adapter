@@ -1,11 +1,6 @@
-using Fmacias.TplQueue.Cache.Contracts;
-using Fmacias.TplQueue.Cache.Factories;
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.RetryPolicies;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
 
 namespace Fmacias.TplQueue.Test
 {
@@ -21,23 +16,20 @@ namespace Fmacias.TplQueue.Test
         public static Mock<ICoreApi> GetCoreApiMock()
         {
             var jobFactoryMock = new Mock<IJobFactory>();
-            var jobRootFactoryMock = new Mock<IJobRootFactory>();
             var queueFactoryCoreMock = GetQFactoryCoreMock();
             return GetCoreApiMock(
                 jobFactoryMock.Object,
-                jobRootFactoryMock.Object,
                 queueFactoryCoreMock.Object);
         }
 
         public static Mock<ICoreApi> GetCoreApiMock(
             IJobFactory jobFactory,
-            IJobRootFactory jobRootFactory,
-            ICoreQFactory queueFactoryCore)
+            IQFactory queueFactoryCore)
         {
             var coreApiMock = new Mock<ICoreApi>();
             coreApiMock.Setup(a => a.QFactory).Returns(queueFactoryCore);
             coreApiMock.Setup(a => a.JobFactory).Returns(jobFactory);
-            coreApiMock.Setup(a => a.JobRootFactory).Returns(jobRootFactory);
+            coreApiMock.Setup(a => a.DataJobFactory).Returns(Mock.Of<IDataJobFactory>());
             return coreApiMock;
         }
 
@@ -45,13 +37,14 @@ namespace Fmacias.TplQueue.Test
         {
             return API.Create(
                 GetCoreApiMock().Object,
-                new Dictionary<string, IRetryPolicyDescriptor>(),
+                GetJobHandlerResolverMock().Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
                 new Dictionary<string, IQOptions>());
         }
 
-        public static Mock<ICoreQFactory> GetQFactoryCoreMock()
+        public static Mock<IQFactory> GetQFactoryCoreMock()
         {
-            var coreQFactory = new Mock<ICoreQFactory>();
+            var coreQFactory = new Mock<IQFactory>();
             coreQFactory
                 .Setup(p => p.Fifo(
                     It.IsAny<Guid>(), 
@@ -77,14 +70,14 @@ namespace Fmacias.TplQueue.Test
             return coreQFactory;
         }
 
-        public static Mock<IRetryPolicyGenericFactory> GetRetryPolicyFactoryMock()
+        public static Mock<IRetryPolicyAbstractFactory> GetRetryPolicyFactoryMock()
         {
-            var retryPolicyMock = new Mock<IRetryPolicyGenericFactory>();
+            var retryPolicyMock = new Mock<IRetryPolicyAbstractFactory>();
             retryPolicyMock
-                .Setup(r => r.PolicyByName(It.IsAny<string>(), It.IsAny<Dictionary<string, IRetryPolicyDescriptor>>()))
+                .Setup(r => r.PolicyByName(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<string, IRetryPolicyOptions>>()))
                 .Returns(Mock.Of<IRetryPolicy>());
             retryPolicyMock
-                .Setup(r => r.PolicyByDescriptor(It.IsAny<IRetryPolicyDescriptor>()))
+                .Setup(r => r.PolicyByOptions(It.IsAny<IRetryPolicyOptions>()))
                 .Returns(Mock.Of<IRetryPolicy>());
             return retryPolicyMock;
         }
@@ -94,22 +87,22 @@ namespace Fmacias.TplQueue.Test
             var resolver = new Mock<IPayloadHandlerResolver>();
             resolver
                 .Setup(r => r.Resolve(It.IsAny<Guid>()))
-                .Returns(Mock.Of<IUniversaPayloadHandler>());
+                .Returns(Mock.Of<IUniversalPayloadHandler>());
             return resolver;
         }
 
-        public static Mock<INodeTypeResolver> GetNodeTypeResolverMock()
+        public static Mock<ITypeResolver> GetNodeTypeResolverMock()
         {
-            var resolver = new Mock<INodeTypeResolver>();
+            var resolver = new Mock<ITypeResolver>();
             resolver
                 .Setup(r => r.Resolve(It.IsAny<string>()))
                 .Returns(typeof(object));
             return resolver;
         }
 
-        public static Mock<IRetryPolicyGenericFactory> GetRetryPolicyFactoryAbstractMock()
+        public static Mock<IRetryPolicyAbstractFactory> GetRetryPolicyFactoryAbstractMock()
         {
-            return new Mock<IRetryPolicyGenericFactory>();
+            return new Mock<IRetryPolicyAbstractFactory>();
         }
     }
 }

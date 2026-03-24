@@ -1,5 +1,4 @@
-﻿using Fmacias.TplQueue.Cache.Contracts;
-using Fmacias.TplQueue.Cache.DomainModels;
+﻿using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 
 namespace Fmacias.TplQueue.Cache.Abstract.Factories
@@ -7,12 +6,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Factories
     public class RuntimeNodeTypeResolverFactory : IRuntimeNodeTypeResolverFactory
     {
         private RuntimeNodeTypeResolverFactory() { }
-        public static INodeTypeResolverFactory<INodeTypeResolver> Create()
+        public static INodeTypeResolverFactory<ITypeResolver> Create()
         {
             return new RuntimeNodeTypeResolverFactory();
         }
 
-        public INodeTypeResolver CreateResolver()
+        public ITypeResolver Resolver()
         {
             return RuntimeNodeTypeResolver.Create();
         }

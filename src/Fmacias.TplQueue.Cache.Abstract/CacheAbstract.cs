@@ -1,5 +1,4 @@
-﻿using Fmacias.TplQueue.Cache.Contracts;
-using Fmacias.TplQueue.Cache.Helpers;
+﻿using Fmacias.TplQueue.Cache.Abstract.Helpers;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Fmacias.TplQueue.Exceptions;
@@ -7,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fmacias.TplQueue.Cache
+namespace Fmacias.TplQueue.Cache.Abstract
 {
     /// <summary>
     /// Base class for implementations of <see cref="IDataJobCache"/>.
@@ -19,30 +18,37 @@ namespace Fmacias.TplQueue.Cache
         private readonly object _syncDataOperations = new object();
         private readonly IUniversalDataSerializer _serializer;
         private readonly ICacheRepository _cacheRepository;
-        private readonly INodeTypeResolver _typeResolver;
+        private readonly ITypeResolver _typeResolver;
         private readonly IDataJobFactory _payloadJobFactory;
         private readonly ICacheEntryFactory _entryFactory;
+        private readonly IPayloadHandlerResolver _payloadHandlerResolver;
+        private readonly IRetryPolicyAbstractFactory _retryPolicyGenericFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CacheAbstract"/> class.
         /// </summary>
         protected CacheAbstract(IUniversalDataSerializer serializer,
             ICacheRepository cacheRepository,
-            IDataJobFactory payloadJobFactory,
+            IDataJobFactory dataJobFactory,
             ICacheEntryFactory cacheEntryFactory,
-            INodeTypeResolver jobNodeTypeResolver)
+            ITypeResolver typeResolver,
+            IPayloadHandlerResolver payloadHandlerResolver, 
+            IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             _serializer = serializer
                 ?? throw new ArgumentNullException(nameof(serializer));
             _cacheRepository = cacheRepository
                 ?? throw new ArgumentNullException(nameof(cacheRepository));
-            _payloadJobFactory = payloadJobFactory
-                ?? throw new ArgumentNullException(nameof(payloadJobFactory));
+            _payloadJobFactory = dataJobFactory
+                ?? throw new ArgumentNullException(nameof(dataJobFactory));
             _entryFactory = cacheEntryFactory
                 ?? throw new ArgumentNullException(nameof(cacheEntryFactory));
-            _typeResolver = jobNodeTypeResolver 
-                ?? throw new ArgumentNullException(nameof(jobNodeTypeResolver));
-
+            _typeResolver = typeResolver 
+                ?? throw new ArgumentNullException(nameof(typeResolver));
+            _payloadHandlerResolver = payloadHandlerResolver
+                ?? throw new ArgumentNullException(nameof(payloadHandlerResolver));
+            _retryPolicyGenericFactory = retryPolicyAbstractFactory
+                ?? throw new ArgumentNullException(nameof(retryPolicyAbstractFactory));
         }
 
         /// <summary>
@@ -56,7 +62,7 @@ namespace Fmacias.TplQueue.Cache
         /// </summary>
         protected IUniversalDataSerializer Serializer => _serializer;
         protected ICacheRepository CacheRepository => _cacheRepository;
-        protected INodeTypeResolver TypeResolver => _typeResolver;
+        protected ITypeResolver TypeResolver => _typeResolver;
         protected IDataJobFactory PayloadJobFactory => _payloadJobFactory;
         protected ICacheEntryFactory EntryFactory => _entryFactory;
 
@@ -64,7 +70,7 @@ namespace Fmacias.TplQueue.Cache
         /// Callback invoked for every node of the extracted job graph. Implementations use this to
         /// persist the node in their underlying storage (e.g. in-memory structures, EF, etc.).
         /// </summary>
-        protected abstract Action<IJobNodeDto, Guid> OnDehydration { get; }
+        protected abstract Action<IJobNodeRecord, Guid> OnDehydration { get; }
 
         public virtual void AckNode(Guid jobId, ISerializable payloadData)
         {
@@ -171,13 +177,23 @@ namespace Fmacias.TplQueue.Cache
                 parentJobId: null,
                 rootJobId: oldestRootCachedEntry.JobId
             );
-            var rootJob = _payloadJobFactory.DataJobRoot(oldestRootCachedEntry.JobNodeDto, rootPayload);
+            var jobNodeDto = oldestRootCachedEntry.JobNodeRecordDto;
+            Func<IRetryPolicy> retryPolicy = () => _retryPolicyGenericFactory.PolicyByOptions(jobNodeDto.RetryPolicyOptions);
+            IUniversalPayloadHandler payloadHandler = _payloadHandlerResolver.Resolve(rootPayload.HandlerId);
+
+            var rootJob = _payloadJobFactory.DataJobRoot(
+                jobNodeDto.JobId,
+                payload: rootPayload,
+                payloadHandler,
+                name: jobNodeDto.Name,
+                retryPolicy
+            );
+
             if (rootJob == null)
             {
                 throw new InvalidOperationException(
                     $"Payload job factory returned null root for JobId '{oldestRootCachedEntry.JobId}'.");
             }
-
             var dependencies = new List<IDataJob>();
             var visited = new HashSet<Guid> { oldestRootCachedEntry.JobId };
 
@@ -197,14 +213,14 @@ namespace Fmacias.TplQueue.Cache
         }
         #endregion
 
-        protected virtual IPayload DeserializePayload(
+        protected IPayload DeserializePayload(
             ICacheEntry leaseEntry,
             Guid? parentJobId,
             Guid rootJobId)
         {
             if (leaseEntry == null) throw new ArgumentNullException(nameof(leaseEntry));
 
-            var dto = leaseEntry.JobNodeDto;
+            var dto = leaseEntry.JobNodeRecordDto;
             var payloadType = _typeResolver.Resolve(dto.PayloadTypeName);
             var obj = _serializer.Deserialize(dto.PayloadJson, payloadType);
 
@@ -249,7 +265,7 @@ namespace Fmacias.TplQueue.Cache
                 catch (Exception ex) when (!(ex is InvalidOperationException))
                 {
                     throw new InvalidOperationException(
-                        $"Failed to create child payload node. ChildJobId '{childEntry.JobId}', ParentJobId '{leaseEntry.JobId}', PayloadTypeName '{childEntry.JobNodeDto.PayloadTypeName}', LeaseId '{childEntry.LeaseId}'.",
+                        $"Failed to create child payload node. ChildJobId '{childEntry.JobId}', ParentJobId '{leaseEntry.JobId}', PayloadTypeName '{childEntry.JobNodeRecordDto.PayloadTypeName}', LeaseId '{childEntry.LeaseId}'.",
                         ex);
                 }
             }
@@ -258,7 +274,10 @@ namespace Fmacias.TplQueue.Cache
                 parentJobId: leaseEntry.ParentJobId,
                 rootJobId: rootJobId
             );
-            var node = _payloadJobFactory.DataJob(leaseEntry.JobNodeDto, payload);
+            IUniversalPayloadHandler payloadHandler = _payloadHandlerResolver.Resolve(payload.HandlerId);
+
+            var node = _payloadJobFactory.DataJob(leaseEntry.JobNodeRecordDto, payload, payloadHandler);
+
             if (node == null)
             {
                 throw new InvalidOperationException(

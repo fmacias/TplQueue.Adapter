@@ -10,15 +10,17 @@ namespace Fmacias.TplQueue.Cache.MemCache
             return new MemCacheFactory();
         }
 
-        public IMemCache CreateCache(IUniversalDataSerializer serializer, 
-            IDataJobFactory payloadJobFactory, 
-            INodeTypeResolver typeResolver)
+        public IMemCache CreateCache(IUniversalDataSerializer serializer,
+            IDataJobFactory payloadJobFactory,
+            ITypeResolver typeResolver, 
+            IPayloadHandlerResolver payloadHandlerResolver, 
+            IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (payloadJobFactory == null) throw new ArgumentNullException(nameof(payloadJobFactory));
             if (typeResolver == null) throw new ArgumentNullException(nameof(typeResolver));
 
-            return MemCache.Create(serializer,payloadJobFactory, typeResolver);
+            return MemCache.Create(serializer, payloadJobFactory, typeResolver, payloadHandlerResolver,retryPolicyAbstractFactory);
         } 
     }
 }

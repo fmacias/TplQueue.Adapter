@@ -1,5 +1,4 @@
 using System;
-using Fmacias.TplQueue.Cache.Contracts;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -112,9 +111,11 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             return new FakeCache(
                 Mock.Of<IUniversalDataSerializer>(),
                 Mock.Of<ICacheRepository>(),
-                Mock.Of<INodeTypeResolver>(),
+                Mock.Of<ITypeResolver>(),
                 Mock.Of<IDataJobFactory>(),
-                Mock.Of<ICacheEntryFactory>());
+                Mock.Of<ICacheEntryFactory>(),
+                Mock.Of<IPayloadHandlerResolver>(),
+                Mock.Of<IRetryPolicyAbstractFactory>());
         }
 
         private static Mock<IDataJobRoot<IPayload>> CreateRoot()

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmacias.TplQueue.Cache.Helpers;
+using Fmacias.TplQueue.Cache.Abstract.Helpers;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -63,7 +63,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             var dto = (JobGraphDto)JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
 
   
-            var callbackNodes = new List<(IJobNodeDto Node, Guid RootId)>();
+            var callbackNodes = new List<(IJobNodeRecord Node, Guid RootId)>();
 
             // Act
             var nodes = dto.ExtractNodes(edgedNodeCallBack: (node, rid) => callbackNodes.Add((node, rid)));

@@ -92,16 +92,12 @@ namespace Fmacias.TplQueue.RetryPolicies
         }
 
         /// <inheritdoc />
-        public IRetryPolicyDescriptor ToDescriptor(Type retryPolicyType)
+        public IRetryPolicyOptions ToDescriptor()
         {
-            if (retryPolicyType == null) throw new ArgumentNullException(nameof(retryPolicyType));
-
-            return RetryPolicyOptions
-                .Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds))
-                .SetRetryPolicyType(retryPolicyType);
+            return RetryPolicyOptions.Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds));
         }
 
-        public IRetryPolicy SetFromDescriptor(IRetryPolicyDescriptor descriptor)
+        public IRetryPolicy SetFromDescriptor(IRetryPolicyOptions descriptor)
         {
             if (descriptor is null)
                 throw new ArgumentNullException(nameof(descriptor));

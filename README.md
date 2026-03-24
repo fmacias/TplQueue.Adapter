@@ -1,12 +1,12 @@
 # TplQueue.Adapter
 
-TplQueue.Adapter contains the MIT-licensed extension modules that complement `TplQueue.Core`. It adds practical building blocks for payload-aware jobs, retry-policy implementations, cache-oriented orchestration, serialization, observers, and dependency-injection integration.
+TplQueue.Adapter contains the MIT-licensed extension modules that complement `TplQueue.Core`. The repository now centers on modular integrations and a thin adapter facade rather than owning the queue/job runtime itself.
 
 ## Table of contents
 
 - [Relationship to TplQueue.Core](#relationship-to-tplqueuecore)
 - [Current modules](#current-modules)
-- [Payload-aware jobs](#payload-aware-jobs)
+- [Thin facade](#thin-facade)
 - [Queues and cache-oriented orchestration](#queues-and-cache-oriented-orchestration)
 - [Retry policies](#retry-policies)
 - [Observers](#observers)
@@ -20,9 +20,8 @@ TplQueue.Adapter contains the MIT-licensed extension modules that complement `Tp
 
 [`TplQueue.Core`](../TplQueue.Core/README.md) is the orchestration engine. It owns the execution model for `Job` graphs, queue dispatchers, retry hooks, and lifecycle events.
 
-`TplQueue.Adapter` builds on top of that engine with concrete integrations:
+`TplQueue.Adapter` builds on top of that engine with concrete integrations and composition:
 
-- payload-aware jobs
 - named and descriptor-based retry policy creation
 - cache abstractions and cache-backed orchestration helpers
 - serialization support
@@ -44,15 +43,17 @@ The repository currently contains these main modules:
 
 At repository level, this README is the entry point. Module-level READMEs provide more focused details where they already exist.
 
-## Payload-aware jobs
+## Thin facade
 
-Adapter extends Core with payload-aware job abstractions:
+`Fmacias.TplQueue` is now the thin facade package. It composes:
 
-- `IDataJob`
-- `IDataJobRoot`
-- `IDataJobFactory`
+- `TplQueue.Core`
+- retry-policy factories
+- serializer factories
+- cache providers
+- observer packages
 
-These types let you orchestrate payload-carrying work while keeping the underlying Core execution model unchanged.
+Payload-aware runtime types and cache-backed queue runtime behavior now live with the Core execution model instead of being re-owned by the top-level adapter.
 
 `API` is the main adapter facade:
 
@@ -87,13 +88,13 @@ It supports patterns such as:
 - create a queue from explicit queue options
 - reuse the Core queue contracts while resolving retry policies from Adapter descriptors
 
-`CacheQ` adds a higher-level queue for persistence-oriented or cache-backed payload workflows. It combines:
+`CacheQ` now belongs to the Core-side runtime model, but it still composes Adapter-side abstractions such as `IDataJobCache`. It combines:
 
 - an `IParallelQ`
 - an `IDataJobCache`
 - adapter-side queueing semantics for payload-aware job graphs
 
-This keeps Core focused on orchestration while Adapter provides the persistence-oriented workflow pieces.
+This split keeps execution semantics in Core while preserving cache implementations and serializer integrations as modular adapter concerns.
 
 ## Retry policies
 
@@ -140,7 +141,7 @@ Relevant observer components include:
 - `ViewModelObserver`
 - `IObserverDispatcher`
 - `DirectObserverDispatcher`
-- logging-oriented observers from `Fmacias.TplQueue`
+- logging-oriented observers from `Fmacias.TplQueue.Log`
 
 Observer use cases include:
 

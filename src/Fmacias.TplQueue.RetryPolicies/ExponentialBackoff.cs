@@ -1,4 +1,4 @@
-using Fmacias.TplQueue.Contracts;
+ï»¿using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using System;
 using System.Threading;
@@ -14,7 +14,7 @@ namespace Fmacias.TplQueue.RetryPolicies
     ///   - Retries up to _maxRetries times after the initial attempt.
     ///   - Delay starts at _initialDelay and is multiplied by _factor on each retry,
     ///     capped to _maxDelay.
-    ///   - A small jitter (±10%) is applied to avoid thundering herds.
+    ///   - A small jitter (ï¿½10%) is applied to avoid thundering herds.
     ///
     /// This type is internal to the RetryPolicies assembly but exposed via
     /// the IExponentialBackoff abstraction.
@@ -149,16 +149,12 @@ namespace Fmacias.TplQueue.RetryPolicies
         }
 
         /// <inheritdoc />
-        public IRetryPolicyDescriptor ToDescriptor(Type retryPolicyType)
+        public IRetryPolicyOptions ToDescriptor()
         {
-            if (retryPolicyType == null) throw new ArgumentNullException(nameof(retryPolicyType));
-
-            return RetryPolicyOptions
-                .Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds), Factor)
-                .SetRetryPolicyType(retryPolicyType);
+            return RetryPolicyOptions.Create(MaxRetries, (int)Math.Round(Delay.TotalMilliseconds), Factor);
         }
 
-        public IRetryPolicy SetFromDescriptor(IRetryPolicyDescriptor descriptor)
+        public IRetryPolicy SetFromDescriptor(IRetryPolicyOptions descriptor)
         {
             if (descriptor is null)
                 throw new ArgumentNullException(nameof(descriptor));

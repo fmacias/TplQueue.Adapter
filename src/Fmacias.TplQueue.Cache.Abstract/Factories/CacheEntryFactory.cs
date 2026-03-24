@@ -1,9 +1,8 @@
 using System;
-using Fmacias.TplQueue.Cache.Contracts;
-using Fmacias.TplQueue.Cache.DomainModels;
+using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 
-namespace Fmacias.TplQueue.Cache.Factories
+namespace Fmacias.TplQueue.Cache.Abstract.Factories
 {
     /// <summary>
     /// Provides factory helpers to create cache-related DTOs and lease entries.
@@ -19,7 +18,7 @@ namespace Fmacias.TplQueue.Cache.Factories
         public ICacheEntry CreateEntry(
             Guid leaseId,
             Guid jobRootId,
-            IJobNodeDto jobNodeDto,
+            IJobNodeRecord jobNodeDto,
             DateTime cacheUtc)
         {
             if (jobNodeDto is null) throw new ArgumentNullException(nameof(jobNodeDto));

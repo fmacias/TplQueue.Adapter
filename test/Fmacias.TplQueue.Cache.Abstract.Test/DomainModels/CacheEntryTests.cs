@@ -1,5 +1,5 @@
-﻿using Fmacias.TplQueue.Cache.DomainModels;
-using Fmacias.TplQueue.Cache.Factories;
+﻿using Fmacias.TplQueue.Cache.Abstract.Factories;
+using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Moq;
@@ -20,10 +20,10 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             var jobRootId = Guid.NewGuid();
             var jobId = Guid.NewGuid();
             var parentJobId = Guid.NewGuid();
-            var retryDescriptor = Mock.Of<IRetryPolicyDescriptor>();
+            var retryDescriptor = Mock.Of<IRetryPolicyOptions>();
 
             var nodeDto = new Mock<IJobNodeDto>();
-            nodeDto.SetupGet(n => n.RetryDescriptor).Returns(retryDescriptor);
+            nodeDto.SetupGet(n => n.RetryPolicyOptions).Returns(retryDescriptor);
             nodeDto.SetupGet(n => n.IsRoot).Returns(true);
             var cacheUtc = DateTime.UtcNow;
 
@@ -41,9 +41,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             Assert.That(entry.JobRootId, Is.EqualTo(jobRootId));
             Assert.That(entry.JobId, Is.EqualTo(jobId));
             Assert.That(entry.ParentJobId, Is.EqualTo(parentJobId));
-            Assert.That(entry.JobNodeDto, Is.SameAs(nodeDto.Object));
+            Assert.That(entry.JobNodeRecordDto, Is.SameAs(nodeDto.Object));
             Assert.That(entry.CacheUtc, Is.EqualTo(cacheUtc).Within(TimeSpan.FromSeconds(1)));
-            Assert.That(entry.RetryDescriptor, Is.SameAs(retryDescriptor));
+            Assert.That(entry.RetryPolicyOptions, Is.SameAs(retryDescriptor));
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Pending));
             Assert.That(entry.IsRoot, Is.True);
         }
@@ -97,8 +97,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             // Arrange
             var nodeDto = new Mock<IJobNodeDto>();
             nodeDto
-                .SetupGet(n => n.RetryDescriptor)
-                .Returns(Mock.Of<IRetryPolicyDescriptor>());
+                .SetupGet(n => n.RetryPolicyOptions)
+                .Returns(Mock.Of<IRetryPolicyOptions>());
 
             var entry = CacheEntry.Create(
                 Guid.NewGuid(),
@@ -168,7 +168,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
         private static CacheEntry CreateDefaultEntry()
         {
             var nodeDto = new Mock<IJobNodeDto>();
-            nodeDto.SetupGet(n => n.RetryDescriptor).Returns(Mock.Of<IRetryPolicyDescriptor>());
+            nodeDto.SetupGet(n => n.RetryPolicyOptions).Returns(Mock.Of<IRetryPolicyOptions>());
 
             return (CacheEntry)CacheEntry.Create(
                 Guid.NewGuid(),
@@ -185,7 +185,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             var rootId = Guid.NewGuid();
             var runnerId = Guid.NewGuid();
             var parentRunnerId = rootId;
-            var mockRetryDescriptor = new Mock<IRetryPolicyDescriptor>();
+            var mockRetryDescriptor = new Mock<IRetryPolicyOptions>();
             var nodeDto = Mock.Of<IJobNodeDto>(n =>
                 n.JobId == runnerId &&
                 n.ParentJobId == parentRunnerId &&
@@ -194,7 +194,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
                 n.PayloadTypeName == "type" &&
                 n.IsFifo == true &&
                 n.IsRoot == true &&
-                n.RetryDescriptor == mockRetryDescriptor.Object);
+                n.RetryPolicyOptions == mockRetryDescriptor.Object);
 
             var ct = new CancellationTokenSource().Token;
 
@@ -207,11 +207,11 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             Assert.That(entry.JobRootId, Is.EqualTo(rootId));
             Assert.That(entry.JobId, Is.EqualTo(runnerId));
             Assert.That(entry.ParentJobId, Is.EqualTo(parentRunnerId));
-            Assert.That(entry.JobNodeDto, Is.EqualTo(nodeDto));
+            Assert.That(entry.JobNodeRecordDto, Is.EqualTo(nodeDto));
             Assert.That(entry.IsFifo, Is.True);
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Pending));
             Assert.That(entry.IsRoot, Is.True);
-            Assert.That(entry.RetryDescriptor, Is.SameAs(mockRetryDescriptor.Object));
+            Assert.That(entry.RetryPolicyOptions, Is.SameAs(mockRetryDescriptor.Object));
         }
 
         [Test]
@@ -262,7 +262,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
                 n.PayloadTypeName == "type" &&
                 n.IsRoot == false);
 
-            var desc = Mock.Of<IRetryPolicyDescriptor>();
+            var desc = Mock.Of<IRetryPolicyOptions>();
             return CacheEntryFactory.Create().CreateEntry(
                 leaseId,
                 rootId,

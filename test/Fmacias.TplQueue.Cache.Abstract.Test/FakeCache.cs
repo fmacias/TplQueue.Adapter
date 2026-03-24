@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmacias.TplQueue.Cache.Contracts;
 using Fmacias.TplQueue.Contracts;
 
 namespace Fmacias.TplQueue.Cache.Abstract.Test
 {
     internal sealed class FakeCache : CacheAbstract
     {
-        private readonly List<(IJobNodeDto Node, Guid RootId)> _appendedNodes = new();
+        private readonly List<(IJobNodeRecord Node, Guid RootId)> _appendedNodes = new();
 
-        public IReadOnlyList<(IJobNodeDto Node, Guid RootId)> AppendedNodes => _appendedNodes;
+        public IReadOnlyList<(IJobNodeRecord Node, Guid RootId)> AppendedNodes => _appendedNodes;
 
         public FakeCache(
             IUniversalDataSerializer serializer,
             ICacheRepository cacheRepository,
-            INodeTypeResolver typeResolver,
+            ITypeResolver typeResolver,
             IDataJobFactory payloadJobFactory,
-            ICacheEntryFactory cacheEntryFactory)
-            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver)
+            ICacheEntryFactory cacheEntryFactory,
+            IPayloadHandlerResolver payloadHandlerResolver,
+            IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
+            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver, payloadHandlerResolver, retryPolicyAbstractFactory)
         {
         }
 
-        protected override Action<IJobNodeDto, Guid> OnDehydration =>
+        protected override Action<IJobNodeRecord, Guid> OnDehydration =>
             (nodeDto, rootId) =>
             {
                 if (nodeDto is null) throw new ArgumentNullException(nameof(nodeDto));

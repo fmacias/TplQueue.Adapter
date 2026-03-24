@@ -1,5 +1,5 @@
 using System;
-using Fmacias.TplQueue.Cache.DomainModels;
+using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 using Moq;
 using NUnit.Framework;
@@ -61,8 +61,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Loose);
             var carrier = BuildCarrierJob();
             var policy = new Mock<IRetryPolicy>(MockBehavior.Loose);
-            policy.Setup(p => p.ToDescriptor(It.IsAny<Type>()))
-                .Returns(Mock.Of<IRetryPolicyDescriptor>());
+            policy.Setup(p => p.ToDescriptor())
+                .Returns(Mock.Of<IRetryPolicyOptions>());
 
             carrier.Setup(c => c.GetRetryPolicyFactory())
                 .Returns(() => policy.Object);

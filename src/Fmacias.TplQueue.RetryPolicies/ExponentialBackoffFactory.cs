@@ -12,10 +12,10 @@ namespace Fmacias.TplQueue.RetryPolicies
         {
             return new ExponentialBackoffFactory();
         }
-        public override IExponentialBackoff CreatePolicy(IRetryPolicyDescriptor descriptor)
+        public override IExponentialBackoff CreatePolicy(IRetryPolicyOptions options)
         {
-            if (descriptor is null) throw new ArgumentNullException(nameof(descriptor));
-            return (IExponentialBackoff) new ExponentialBackoff().SetFromDescriptor(descriptor);
+            if (options is null) throw new ArgumentNullException(nameof(options));
+            return (IExponentialBackoff) new ExponentialBackoff().SetFromDescriptor(options);
         }
 
         public IExponentialBackoff CreateExponentialBackoff(int maxRetries, int delayMs, double factor)

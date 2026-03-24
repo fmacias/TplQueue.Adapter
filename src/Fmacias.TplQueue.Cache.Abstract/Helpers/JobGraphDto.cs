@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Fmacias.TplQueue.Cache.DomainModels;
+using System.Linq;
+using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 
-namespace Fmacias.TplQueue.Cache.Helpers
+namespace Fmacias.TplQueue.Cache.Abstract.Helpers
 {
     /// <summary>
     /// Default implementation of <see cref="IJobGraphDto"/> that transforms a payload runner graph
@@ -38,7 +39,7 @@ namespace Fmacias.TplQueue.Cache.Helpers
         }
 
         /// <inheritdoc />
-        public IReadOnlyList<IJobNodeDto> ExtractNodes(Action<IJobNodeDto, Guid> edgedNodeCallBack)
+        public IReadOnlyList<IJobNodeDto> ExtractNodes(Action<IJobNodeRecord, Guid> edgedNodeCallBack)
         {
             if (edgedNodeCallBack is null) throw new ArgumentNullException(nameof(edgedNodeCallBack));
             return ExtractDtoNodesAndEdges(edgedNodeCallBack);
@@ -48,63 +49,63 @@ namespace Fmacias.TplQueue.Cache.Helpers
         /// Performs a depth-first traversal of the payload runner graph, creating DTO nodes and invoking the callback.
         /// </summary>
         private IJobNodeDto[] ExtractDtoNodesAndEdges(
-            Action<IJobNodeDto, Guid> callBack)
+            Action<IJobNodeRecord, Guid> callBack)
         {
             var visited = new HashSet<Guid>();
             var nodes = new Dictionary<Guid, IJobNodeDto>();
 
             DfsBuild(
-                current: _rootGraph,
+                dataJob: _rootGraph,
                 visited: visited,
-                nodes: nodes,
+                jobNodes: nodes,
                 callBack: callBack,
                 rootId: _rootGraph.Id,
                 parent: null);
 
-            return [.. nodes.Values];
+            return nodes.Values.ToArray();
         }
 
         /// <summary>
         /// Depth-first traversal that builds <see cref="IJobNodeDto"/> instances lazily and calls the callback.
         /// </summary>
         private void DfsBuild(
-            IDataJob current,
+            IDataJob dataJob,
             ISet<Guid> visited,
-            IDictionary<Guid, IJobNodeDto> nodes,
-            Action<IJobNodeDto, Guid> callBack,
+            IDictionary<Guid, IJobNodeDto> jobNodes,
+            Action<IJobNodeRecord, Guid> callBack,
             Guid rootId,
             IDataJob? parent)
         {
-            if (current is null) throw new ArgumentNullException(nameof(current));
+            if (dataJob is null) throw new ArgumentNullException(nameof(dataJob));
             if (visited is null) throw new ArgumentNullException(nameof(visited));
-            if (nodes is null) throw new ArgumentNullException(nameof(nodes));
+            if (jobNodes is null) throw new ArgumentNullException(nameof(jobNodes));
 
-            bool flowControl = AvoidCyclesAndDuplicateNodes(current, visited, nodes);
+            bool flowControl = AvoidCyclesAndDuplicateNodes(dataJob, visited, jobNodes);
             
             if (!flowControl)
             {
                 return;
             }
 
-            TraverseDependentsFirst(current, visited, nodes, callBack, rootId);
+            TraverseDependentsFirst(dataJob, visited, jobNodes, callBack, rootId);
 
-            MaterializeDtoNode(current, nodes, callBack, rootId, parent);
+            MaterializeDtoNode(dataJob, jobNodes, callBack, rootId, parent);
         }
 
-        private void MaterializeDtoNode(IDataJob payloadJob, 
-            IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, 
+        private void MaterializeDtoNode(IDataJob dataJob, 
+            IDictionary<Guid, IJobNodeDto> jobNodes, Action<IJobNodeRecord, Guid> callBack, 
             Guid rootId, IDataJob? parent)
         {
-            if (!nodes.TryGetValue(payloadJob.Id, out var dto))
+            if (!jobNodes.TryGetValue(dataJob.Id, out var dto))
             {
-                var isFifo = payloadJob.Id == _rootGraph.Id && _isFifo;
-                dto = JobNodeDto.Create(_serializer,payloadJob,isFifo,parent);
-                nodes[payloadJob.Id] = dto;
+                var isFifo = dataJob.Id == _rootGraph.Id && _isFifo;
+                dto = JobNodeDto.Create(_serializer,dataJob,isFifo,parent);
+                jobNodes[dataJob.Id] = dto;
                 callBack(dto, rootId);
             }
         }
 
-        private void TraverseDependentsFirst(IDataJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeDto, Guid> callBack, Guid rootId)
+        private void TraverseDependentsFirst(IDataJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeRecord, Guid> callBack, Guid rootId)
         {
             foreach (var job in payloadJob.GetDependentDataJobs())
             {

@@ -9,25 +9,25 @@ namespace Fmacias.TplQueue.RetryPolicies
     {
         public abstract TPolicy CreatePolicy();
 
-        public TPolicy CreatePolicy(string name, IReadOnlyDictionary<string, IRetryPolicyDescriptor> options)
+        public TPolicy CreatePolicy(string name, IReadOnlyDictionary<string, IRetryPolicyOptions> retrypoliciesByName)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Retry policy name cannot be null or empty.", nameof(name));
 
-            if (options == null) 
-                throw new ArgumentNullException(nameof(options));
+            if (retrypoliciesByName == null) 
+                throw new ArgumentNullException(nameof(retrypoliciesByName));
 
-            if (options.TryGetValue(name, out var option))
+            if (retrypoliciesByName.TryGetValue(name, out var option))
             {
                 if (option == null)
-                    throw new ArgumentException($"Retry policy descriptor for '{name}' cannot be null.", nameof(options));
+                    throw new ArgumentException($"Retry policy descriptor for '{name}' cannot be null.", nameof(retrypoliciesByName));
 
                 return CreatePolicy(option);
             }
             return GetDefault();
         }
         /// <inheritdoc />
-        public abstract TPolicy CreatePolicy(IRetryPolicyDescriptor descriptor);
+        public abstract TPolicy CreatePolicy(IRetryPolicyOptions options);
         protected abstract TPolicy GetDefault();
     }
 }
