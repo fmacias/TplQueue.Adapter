@@ -6,7 +6,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Factories
     public class RuntimeNodeTypeResolverFactory : IRuntimeNodeTypeResolverFactory
     {
         private RuntimeNodeTypeResolverFactory() { }
-        public static INodeTypeResolverFactory<ITypeResolver> Create()
+        public static RuntimeNodeTypeResolverFactory Create()
         {
             return new RuntimeNodeTypeResolverFactory();
         }
