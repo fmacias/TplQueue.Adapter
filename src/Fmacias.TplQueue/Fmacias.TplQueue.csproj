@@ -20,51 +20,12 @@
 	<ItemGroup>
 	  <Folder Include="Documentation\" />
 	</ItemGroup>	
-  <ItemGroup Condition="Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
-    <ProjectReference Include="..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj')">
-    <ProjectReference Include="..\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj')">
-    <ProjectReference Include="..\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj')">
-    <ProjectReference Include="..\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj')">
-    <ProjectReference Include="..\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj')">
-    <ProjectReference Include="..\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj" />
-  </ItemGroup>
-
-	<ItemGroup Condition="!Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
+	<ItemGroup>
 	  <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Cache.MemCache" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Log" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Observers.ViewModel" Version="1.0.0" />
 	</ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj')">
-    <PackageReference Include="Fmacias.TplQueue.Cache.MemCache" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj')">
-    <PackageReference Include="Fmacias.TplQueue.Log" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj')">
-    <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj')">
-    <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj')">
-    <PackageReference Include="Fmacias.TplQueue.Observers.ViewModel" Version="1.0.0" />
-  </ItemGroup>
 </Project>

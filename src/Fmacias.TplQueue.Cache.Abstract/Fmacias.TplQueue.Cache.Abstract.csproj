@@ -34,11 +34,7 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
-    <ProjectReference Include="..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="!Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
+  <ItemGroup>
     <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
   </ItemGroup>
 </Project>
