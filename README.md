@@ -34,6 +34,8 @@
 Use Core when you want the execution primitives directly.
 Use Adapter when you want the integration layer that wires those primitives together with named configuration, serializer support, cache implementations, logging observers, or DI registration.
 
+For the current graph-composition rules, especially the requirement that `IJobRoot` and `IDataJobRoot` remain the enqueueable terminal nodes, see [TplQueue.Core README](../TplQueue.Core/README.md#job-roots).
+
 ## Repository modules
 
 The repository currently contains these main modules:
@@ -120,6 +122,8 @@ The execution-side payload model lives in Core, while Adapter provides the integ
 - queue creation helpers that combine retry and queue options
 
 This split is intentional: execution semantics stay in Core, while application-specific payload resolution and persistence remain modular.
+
+Payload-aware composition follows the same rule as plain Core graphs: create the payload jobs first, then terminate the graph with an `IDataJobRoot`. Use `payloadRoot.After(payloadJob)` or `payloadJob.Then(payloadRoot)`, not the reverse direction.
 
 ## Queues and queue factory adapters
 
@@ -380,10 +384,15 @@ IApi api = API.Create(
 ILogger<IParallelQ> queueLogger = loggerFactory.CreateLogger<IParallelQ>();
 IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
 
+IJob validate = api.JobFactory.Job(
+    async ct => await Task.CompletedTask,
+    name: "Validate");
+
 IJobRoot root = api.JobFactory.JobRoot(
     async ct => await Task.CompletedTask,
     name: "Root");
 
+root.After(validate);
 queue.Enqueue(root, CancellationToken.None);
 ```
 
