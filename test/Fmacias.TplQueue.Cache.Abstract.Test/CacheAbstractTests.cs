@@ -123,8 +123,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
             root.SetupGet(r => r.Name).Returns("root");
-            root.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            root.Setup(c => c.GetPayload()).Returns("payload-root");
+            root.As<IDataJobNode>().Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
+            root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns("payload-root");
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");

@@ -54,7 +54,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         }
 
         public static JobNodeDto Create(IUniversalDataSerializer jsonSerializer, 
-            IDataJob dataJob, bool isFifo, IDataJob? parentJob) 
+            IDataJobNode dataJob, bool isFifo, IDataJobNode? parentJob) 
         {
             if (jsonSerializer is null) throw new ArgumentNullException(nameof(jsonSerializer));
             if (dataJob is null) throw new ArgumentNullException(nameof(dataJob));
@@ -93,7 +93,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
             PayloadJson = payloadJson;
         }
 
-        private static string SerializePayload(IDataJob dataJob, IUniversalDataSerializer serializer)
+        private static string SerializePayload(IDataJobNode dataJob, IUniversalDataSerializer serializer)
         {
             if (dataJob is null) throw new ArgumentNullException(nameof(dataJob));
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));

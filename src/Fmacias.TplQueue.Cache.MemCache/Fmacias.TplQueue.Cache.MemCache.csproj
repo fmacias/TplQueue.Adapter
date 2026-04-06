@@ -8,7 +8,11 @@
       <_Parameter1>Fmacias.TplQueue.Cache.MemCache.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="Exists('..\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj')">
+    <ProjectReference Include="..\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('..\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj')">
     <PackageReference Include="Fmacias.TplQueue.Cache.Abstract" Version="1.0.0" />
   </ItemGroup>
 </Project>

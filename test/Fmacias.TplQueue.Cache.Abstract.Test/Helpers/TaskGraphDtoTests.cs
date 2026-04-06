@@ -47,15 +47,15 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             // Root mock (also an IPayloadCarrier)
             Mock<IDataJobRoot<IPayload>> root = GetRootGraphMock(rootId);
 
-            var rootAsCarrier = root.As<IDataJob>();
-            rootAsCarrier.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            rootAsCarrier.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            rootAsCarrier.Setup(c => c.GetPayload()).Returns("payload");
+            var dataJobNode = root.As<IDataJobNode>();
+            dataJobNode.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
+            dataJobNode.SetupGet(c => c.PayloadType).Returns(typeof(string));
+            dataJobNode.Setup(c => c.GetPayload()).Returns("payload");
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
             Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
-            rootAsCarrier.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
+            dataJobNode.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
 
             // GetRetryPolicyFactory is not configured; MockBehavior.Loose will return default,
             // and Mock<IRetryPolicySerializer> will accept it.
@@ -116,8 +116,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             root.Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
-            root.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            root.Setup(c => c.GetPayload()).Returns("payload-root");
+            root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(string));
+            root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns("payload-root");
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");

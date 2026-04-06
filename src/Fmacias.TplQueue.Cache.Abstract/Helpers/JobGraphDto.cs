@@ -69,12 +69,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Helpers
         /// Depth-first traversal that builds <see cref="IJobNodeDto"/> instances lazily and calls the callback.
         /// </summary>
         private void DfsBuild(
-            IDataJob dataJob,
+            IDataJobNode dataJob,
             ISet<Guid> visited,
             IDictionary<Guid, IJobNodeDto> jobNodes,
             Action<IJobNodeRecord, Guid> callBack,
             Guid rootId,
-            IDataJob? parent)
+            IDataJobNode? parent)
         {
             if (dataJob is null) throw new ArgumentNullException(nameof(dataJob));
             if (visited is null) throw new ArgumentNullException(nameof(visited));
@@ -92,9 +92,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Helpers
             MaterializeDtoNode(dataJob, jobNodes, callBack, rootId, parent);
         }
 
-        private void MaterializeDtoNode(IDataJob dataJob, 
+        private void MaterializeDtoNode(IDataJobNode dataJob, 
             IDictionary<Guid, IJobNodeDto> jobNodes, Action<IJobNodeRecord, Guid> callBack, 
-            Guid rootId, IDataJob? parent)
+            Guid rootId, IDataJobNode? parent)
         {
             if (!jobNodes.TryGetValue(dataJob.Id, out var dto))
             {
@@ -105,7 +105,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Helpers
             }
         }
 
-        private void TraverseDependentsFirst(IDataJob payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeRecord, Guid> callBack, Guid rootId)
+        private void TraverseDependentsFirst(IDataJobNode payloadJob, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes, Action<IJobNodeRecord, Guid> callBack, Guid rootId)
         {
             foreach (var job in payloadJob.GetDependentDataJobs())
             {
@@ -114,7 +114,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Helpers
             }
         }
 
-        private static bool AvoidCyclesAndDuplicateNodes(IDataJob current, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes)
+        private static bool AvoidCyclesAndDuplicateNodes(IDataJobNode current, ISet<Guid> visited, IDictionary<Guid, IJobNodeDto> nodes)
         {
             if (!visited.Add(current.Id) || nodes.ContainsKey(current.Id))
             {

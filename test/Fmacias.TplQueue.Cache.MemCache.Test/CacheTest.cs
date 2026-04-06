@@ -45,13 +45,13 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             var childId = Guid.NewGuid();
 
             var payloadJobRoot = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Strict);
-            var capturedDependencies = new List<IJob>();
+            var capturedDependencies = new List<IJobNode>();
 
             payloadJobRoot.SetupGet(r => r.Id).Returns(rootId);
             payloadJobRoot.SetupGet(r => r.Payload).Returns(new DummyPayload());
             payloadJobRoot
-                .Setup(r => r.After(It.IsAny<IJob[]>()))
-                .Callback<IJob[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<IJob>()))
+                .Setup(r => r.After(It.IsAny<IJobNode[]>()))
+                .Callback<IJobNode[]>(deps => capturedDependencies.AddRange(deps ?? Array.Empty<IJobNode>()))
                 .Returns(payloadJobRoot.Object);
 
             var payloadJobChild = new Mock<IDataJob>(MockBehavior.Strict);
@@ -172,11 +172,11 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             root.SetupGet(r => r.Payload).Returns(rootPayload);
-            root.As<IDataJob>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
             root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerId).Returns(rootPayload.HandlerId);
-            root.As<IDataJob>().Setup(c => c.GetPayload()).Returns(rootPayload);
-            root.As<IDataJob>().Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
-            root.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
+            root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns(rootPayload);
+            root.As<IDataJobNode>().Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
+            root.Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
             root.As<ISerializable>().Setup(r => r.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
             return (root, child);

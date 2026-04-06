@@ -6,8 +6,15 @@
     <PackageId>Fmaciasruano.TplQueue.Microsoft.DependencyInjection</PackageId>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
+    <ProjectReference Include="..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('..\..\..\TplQueue.Abstractions\src\Fmacias.TplQueue.Abstractions.csproj')">
     <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
   </ItemGroup>
 
