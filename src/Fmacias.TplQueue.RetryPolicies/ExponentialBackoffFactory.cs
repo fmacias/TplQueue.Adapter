@@ -8,20 +8,23 @@ namespace Fmacias.TplQueue.RetryPolicies
         private ExponentialBackoffFactory()
         {
         }
-        public static IRetryPolicyFactory<IExponentialBackoff> Create()
+
+        public static ExponentialBackoffFactory Create()
         {
             return new ExponentialBackoffFactory();
         }
+
         public override IExponentialBackoff CreatePolicy(IRetryPolicyOptions options)
         {
             if (options is null) throw new ArgumentNullException(nameof(options));
-            return (IExponentialBackoff) new ExponentialBackoff().SetFromDescriptor(options);
+            return (IExponentialBackoff)new ExponentialBackoff().SetFromDescriptor(options);
         }
 
-        public IExponentialBackoff CreateExponentialBackoff(int maxRetries, int delayMs, double factor)
+        public IExponentialBackoff ExponentialBackof(int maxRetries, int delayMs, double factor)
         {
             return new ExponentialBackoff(maxRetries, delayMs, factor);
         }
+
         public override IExponentialBackoff CreatePolicy()
         {
             return GetDefault();

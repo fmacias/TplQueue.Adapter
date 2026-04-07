@@ -8,7 +8,7 @@ namespace Fmacias.TplQueue.RetryPolicies
         private LinearBackoffFactory()
         {
         }
-        public static IRetryPolicyFactory<ILinearBackoff> Create()
+        public static LinearBackoffFactory Create()
         {
             return new LinearBackoffFactory();
         }
@@ -17,7 +17,8 @@ namespace Fmacias.TplQueue.RetryPolicies
             if (options is null) throw new ArgumentNullException(nameof(options));
             return (ILinearBackoff)new LinearBackoff().SetFromDescriptor(options);
         }
-        public ILinearBackoff CreateLienarBackoff(int maxRetries, int delayMs)
+
+        public ILinearBackoff LinearBackoff(int maxRetries, int delayMs)
         {
             return new LinearBackoff(maxRetries, delayMs);
         }

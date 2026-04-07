@@ -2,8 +2,6 @@ using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using NUnit.Framework;
-
 namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 {
     internal sealed class FakeApi : IApi
@@ -31,6 +29,26 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         public T Cache<T>(ICacheFactory<T> cacheFactory, IUniversalDataSerializer serializer, ITypeResolver typeResolver)
             where T : IDataJobCache
+        {
+            throw new NotImplementedException();
+        }
+
+        public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory) where T : IRetryPolicy
+        {
+            throw new NotImplementedException();
+        }
+
+        public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory, IRetryPolicyOptions retryPolicyOptions) where T : IRetryPolicy
+        {
+            throw new NotImplementedException();
+        }
+
+        public IExponentialBackoff RetryPolicy(IExponentialBackofFactory exponentialBackofFactory, int maxRetries, int delayMs, double factor)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ILinearBackoff RetryPolicy(ILinearBackoffFactory linearBackofFactory, int maxRetries, int delayMs)
         {
             throw new NotImplementedException();
         }

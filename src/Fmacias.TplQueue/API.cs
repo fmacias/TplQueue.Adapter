@@ -45,7 +45,7 @@ namespace Fmacias.TplQueue
         /// <returns></returns>
         /// 
         /// <param name="queueOptions"></param>
-        public static IApi Create(
+        public static API Create(
             ICoreApi api,
             IPayloadHandlerResolver payloadHandlerResolver,
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions, 
@@ -83,11 +83,38 @@ namespace Fmacias.TplQueue
             return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _payloadHandlerResolver, _retryPolicyAbstractFactory);
         }
 
+        public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory) where T : IRetryPolicy
+        {
+            if (retryPolicyFactory is null) throw new ArgumentNullException(nameof(retryPolicyFactory));
+
+            return retryPolicyFactory.CreatePolicy();
+        }
+
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory, string name) where T : IRetryPolicy
         {
             if (retryPolicyFactory is null) throw new ArgumentNullException(nameof(retryPolicyFactory));
 
             return retryPolicyFactory.CreatePolicy(name, _retryPolicyOptions);
+        }
+        public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory, IRetryPolicyOptions retryPolicyOptions) where T : IRetryPolicy
+        {
+            if (retryPolicyFactory is null) throw new ArgumentNullException(nameof(retryPolicyFactory));
+            if (retryPolicyOptions is null) throw new ArgumentNullException(nameof(retryPolicyOptions));
+
+            return retryPolicyFactory.CreatePolicy(retryPolicyOptions);
+        }
+        public IExponentialBackoff RetryPolicy(IExponentialBackofFactory exponentialBackofFactory, int maxRetries, int delayMs, double factor)
+        {
+            if (exponentialBackofFactory is null) throw new ArgumentNullException(nameof(exponentialBackofFactory));
+
+            return exponentialBackofFactory.ExponentialBackof(maxRetries, delayMs, factor);
+        }
+
+        public ILinearBackoff RetryPolicy(ILinearBackoffFactory linearBackofFactory, int maxRetries, int delayMs)
+        {
+            if (linearBackofFactory is null) throw new ArgumentNullException(nameof(linearBackofFactory));
+
+            return linearBackofFactory.LinearBackoff(maxRetries, delayMs);
         }
 
         /// <summary>

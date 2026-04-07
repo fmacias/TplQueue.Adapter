@@ -32,14 +32,22 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
-        public void CreateLinearBackoff_UsesProvidedValues()
+        public void LinearBackoff_UsesProvidedValues()
         {
-            var factory = (ILinearBackoffFactory)LinearBackoffFactory.Create();
+            var factory = LinearBackoffFactory.Create();
 
-            var policy = factory.CreateLienarBackoff(maxRetries: 5, delayMs: 300);
+            var policy = factory.LinearBackoff(maxRetries: 5, delayMs: 300);
 
             Assert.That(policy.MaxRetries, Is.EqualTo(5));
             Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(300).Within(0.1));
+        }
+
+        [Test]
+        public void Create_ReturnsLinearBackoffFactoryInstance()
+        {
+            var factory = LinearBackoffFactory.Create();
+
+            Assert.That(factory, Is.TypeOf<LinearBackoffFactory>());
         }
     }
 }

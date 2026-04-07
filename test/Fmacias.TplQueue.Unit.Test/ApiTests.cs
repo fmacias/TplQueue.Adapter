@@ -1,4 +1,6 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults;
+using Fmacias.TplQueue.RetryPolicies;
 using Moq;
 using NUnit.Framework;
 
@@ -91,6 +93,100 @@ namespace Fmacias.TplQueue.Test
                 _queueOptions);
 
             Assert.Throws<ArgumentNullException>(() => api.RetryPolicy<IExponentialBackoff>(null!, "someName"));
+        }
+
+        [Test]
+        public void RetryPolicyFactory_WithFactory_ReturnsCreatedPolicy()
+        {
+            var factory = new Mock<IRetryPolicyFactory<IExponentialBackoff>>();
+            var expectedPolicy = Mock.Of<IExponentialBackoff>();
+            factory.Setup(f => f.CreatePolicy()).Returns(expectedPolicy);
+
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var policy = api.RetryPolicy(factory.Object);
+
+            Assert.That(policy, Is.SameAs(expectedPolicy));
+        }
+
+        [Test]
+        public void RetryPolicyFactory_WithFactory_WhenFactoryIsNull_ThrowsArgumentNullException()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            Assert.Throws<ArgumentNullException>(() => api.RetryPolicy<IExponentialBackoff>(null!));
+        }
+
+        [Test]
+        public void RetryPolicyFactory_WithOptions_ReturnsCreatedPolicy()
+        {
+            var expectedPolicy = Mock.Of<IExponentialBackoff>();
+            var options = RetryPolicyOptions.Create(250, 4);
+            var factory = new Mock<IRetryPolicyFactory<IExponentialBackoff>>();
+            factory.Setup(f => f.CreatePolicy(options)).Returns(expectedPolicy);
+
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var policy = api.RetryPolicy(factory.Object, options);
+
+            Assert.That(policy, Is.SameAs(expectedPolicy));
+        }
+
+        [Test]
+        public void RetryPolicyFactory_WithOptions_WhenOptionsIsNull_ThrowsArgumentNullException()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            Assert.Throws<ArgumentNullException>(() => api.RetryPolicy(
+                Mock.Of<IRetryPolicyFactory<IExponentialBackoff>>(),
+                (IRetryPolicyOptions)null!));
+        }
+
+        [Test]
+        public void RetryPolicy_WithExponentialFactory_ReturnsConfiguredPolicy()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var policy = api.RetryPolicy((IExponentialBackofFactory)ExponentialBackoffFactory.Create(), 4, 150, 2.5);
+
+            Assert.That(policy.MaxRetries, Is.EqualTo(4));
+            Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(150).Within(0.1));
+            Assert.That(policy.Factor, Is.EqualTo(2.5));
+        }
+
+        [Test]
+        public void RetryPolicy_WithLinearFactory_ReturnsConfiguredPolicy()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                _jobHandlerResolver.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var policy = api.RetryPolicy((ILinearBackoffFactory)LinearBackoffFactory.Create(), 5, 300);
+
+            Assert.That(policy.MaxRetries, Is.EqualTo(5));
+            Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(300).Within(0.1));
         }
 
         [Test]
