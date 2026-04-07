@@ -6,32 +6,34 @@ Thin adapter facade over `TplQueue.Core` and the modular integration packages.
 
 - [Summary](#summary)
 - [Module purpose](#module-purpose)
-- [How to use](#how-to-use)
-- [Step-by-step example](#step-by-step-example)
+- [Creating the facade](#creating-the-facade)
+- [Creating retry policies](#creating-retry-policies)
+- [Creating queues and cache helpers](#creating-queues-and-cache-helpers)
 - [Design justification](#design-justification)
 
 ## Summary
 
-`Fmacias.TplQueue` is no longer the home of the queue or job runtime. It composes:
+`Fmacias.TplQueue` composes the Core orchestration engine with the concrete Adapter modules used by application code:
 
-- `TplQueue.Core` for execution/runtime behavior
-- `Fmacias.TplQueue.RetryPolicies` for concrete retry creation
+- `TplQueue.Core` for queue execution and job graph orchestration
+- `Fmacias.TplQueue.RetryPolicies` for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
 - `Fmacias.TplQueue.Log` and `Fmacias.TplQueue.Observers.ViewModel` for concrete observers
 
 ## Module purpose
 
-This package keeps the adapter-facing facade only:
+This package exposes the adapter-facing entry points:
 
 - `API`
-- thin factory adapters such as `CoreQFactoryAdapter`
-- dependency wiring across Core and the modular packages
+- `IQFactoryAdapter`
+- cache creation helpers through `Cache<T>(...)`
+- retry-policy creation helpers that wrap `IRetryPolicyFactory<TPolicy>` and the built-in backoff factories
 
-Concrete payload job execution, cache-backed queue runtime behavior, and queue adapters now live in `TplQueue.Core`.
+Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to `TplQueue.Core`.
 
-## How to use
+## Creating the facade
 
-Create `API` from an `ICoreApi` plus the named queue and retry-policy dictionaries.
+Create `API` from an `ICoreApi`, a payload handler resolver, and the named retry-policy and queue option dictionaries:
 
 ```csharp
 using Fmacias.TplQueue;
@@ -40,34 +42,73 @@ using Fmacias.TplQueue.Core;
 
 ICoreApi core = CoreApi.Create();
 
-IApi api = API.Create(
+API api = API.Create(
     core,
+    payloadHandlerResolver,
     retryPolicyOptions,
     queueOptions);
 ```
 
-From there you can obtain:
+`API.Create(...)` returns the concrete `API` instance. You can still reference it through `IApi` when you only want the abstraction.
 
+From the facade you obtain:
+
+- `IJobFactory`
 - `IDataJobFactory`
-- `ICoreQFactoryAdapter`
-- `ICacheQFactory`
+- `IQFactoryAdapter`
+- `IRetryPolicyAbstractFactory`
 - `IObserverFactory`
-- serializer and retry-policy factories
+- `ISystemTextJsonSerializerFactory`
 
-## Step-by-step example
+## Creating retry policies
 
-1. Create the Core facade.
-2. Define retry-policy descriptors and queue options.
-3. Create `API`.
-4. Resolve the queue factory adapter and payload-job factory from `API`.
+`API` wraps the `IRetryPolicyFactory<TPolicy>` contract so callers can create retry policies from the same facade used for queues, payload handlers, and cache helpers.
+
+The typed factories remain intentionally public in `Fmacias.TplQueue.RetryPolicies`, and their `Create()` methods return the concrete factory instance itself. That means you can either use the factory directly or pass it through the facade.
 
 ```csharp
-ICoreApi core = CoreApi.Create();
+using Fmacias.TplQueue.Defaults;
+using Fmacias.TplQueue.RetryPolicies;
 
-IApi api = API.Create(core, retryPolicyOptions, queueOptions);
+LinearBackoffFactory linearFactory = LinearBackoffFactory.Create();
+ExponentialBackoffFactory exponentialFactory = ExponentialBackoffFactory.Create();
 
-IDataJobFactory dataJobs = api.DataJobFactory(payloadHandlerResolver);
-IParallelQ queue = api.CoreQFactories.Value.Parallel("main", logger);
+ILinearBackoff defaultLinear = api.RetryPolicy(linearFactory);
+ILinearBackoff namedLinear = api.RetryPolicy(linearFactory, "linear-default");
+
+IExponentialBackoff exponentialByOptions = api.RetryPolicy(
+    exponentialFactory,
+    RetryPolicyOptions.Create(baseDelayMs: 250, maxRetries: 4, factor: 2d));
+
+IExponentialBackoff explicitExponential = api.RetryPolicy(
+    exponentialFactory,
+    maxRetries: 4,
+    delayMs: 250,
+    factor: 2d);
+```
+
+For queue-level named resolution through `IRetryPolicyAbstractFactory`, missing names fall back to `NoRetryPolicy`. The typed `IRetryPolicyFactory<TPolicy>` overloads keep the behavior of the provided factory.
+
+## Creating queues and cache helpers
+
+Use `IQFactoryAdapter` when you want named queue creation backed by the adapter dictionaries:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+ILogger<IParallelQ> logger = loggerFactory.CreateLogger<IParallelQ>();
+IParallelQ queue = api.QFactory.Parallel("main", logger);
+```
+
+Use the same facade for payload-aware cache creation:
+
+```csharp
+var serializer = api.SystemTexSerializerFactory().Create();
+
+var cache = api.Cache(
+    cacheFactory,
+    serializer,
+    typeResolver);
 ```
 
 ## Design justification
@@ -75,7 +116,7 @@ IParallelQ queue = api.CoreQFactories.Value.Parallel("main", logger);
 This package stays thin on purpose:
 
 - runtime orchestration belongs in `TplQueue.Core`
-- concrete integrations belong in focused packages
-- the top-level adapter should compose dependencies, not re-own them
+- concrete integration modules stay in focused Adapter packages
+- the top-level facade centralizes composition without hiding the public factories that advanced callers may still use directly
 
-That split keeps the public facade stable while reducing coupling between runtime behavior, logging, UI observers, cache providers, serializers, and retry-policy implementations.
+That split keeps application entry points compact while avoiding unnecessary coupling between queue execution, retry-policy creation, serialization, cache support, and observer integration.

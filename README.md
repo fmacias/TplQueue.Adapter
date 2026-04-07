@@ -72,7 +72,7 @@ using Fmacias.TplQueue.Core;
 
 ICoreApi core = CoreApi.Create();
 
-IApi api = API.Create(
+API api = API.Create(
     core,
     payloadHandlerResolver,
     retryPolicyOptions,
@@ -82,7 +82,7 @@ IApi api = API.Create(
 > It explains the adapter’s real role very well—it does not replace Core, it composes it.
 
 ```csharp
-public static IApi Create(
+public static API Create(
     ICoreApi api,
     IPayloadHandlerResolver payloadHandlerResolver,
     IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
@@ -98,7 +98,7 @@ public IDataJobFactory DataJobFactory => _coreApi.DataJobFactory;
 public IJobFactory JobFactory => _coreApi.JobFactory;
 ```
 
-From `IApi` you obtain:
+From the IAPI facade you obtain:
 
 - `IJobFactory`
 - `IDataJobFactory`
@@ -188,7 +188,7 @@ Supported creation styles include:
 - creation of concrete retry types through dedicated factories
 - plugin-style rehydration when a policy type can be instantiated dynamically
 
-> It documents the most important retry abstraction behavior: named lookup with safe fallback, and descriptor-driven construction. 
+For the abstract-factory path, missing names fall back to `NoRetryPolicy`. The typed factory overloads keep the behavior of the specific factory instance you provide.
 
 ```csharp
 public IRetryPolicy CreateByName(string name, IReadOnlyDictionary<string, IRetryPolicyDescriptor> options)
@@ -219,10 +219,27 @@ public IRetryPolicy Create(IRetryPolicyDescriptor descriptor)
 Typical usage through the adapter facade:
 
 ```csharp
-var linear = api.RetryPolicy(
-    LinearBackoffFactory.Create(),
-    "linear-default");
+using Fmacias.TplQueue.Defaults;
+using Fmacias.TplQueue.RetryPolicies;
+
+LinearBackoffFactory linearFactory = LinearBackoffFactory.Create();
+ExponentialBackoffFactory exponentialFactory = ExponentialBackoffFactory.Create();
+
+ILinearBackoff defaultLinear = api.RetryPolicy(linearFactory);
+ILinearBackoff namedLinear = api.RetryPolicy(linearFactory, "linear-default");
+
+IExponentialBackoff exponentialByOptions = api.RetryPolicy(
+    exponentialFactory,
+    RetryPolicyOptions.Create(baseDelayMs: 250, maxRetries: 4, factor: 2d));
+
+IExponentialBackoff explicitExponential = api.RetryPolicy(
+    exponentialFactory,
+    maxRetries: 4,
+    delayMs: 250,
+    factor: 2d);
 ```
+
+The concrete retry-policy factories are intentionally public in `Fmacias.TplQueue.RetryPolicies`, and `Create()` returns the concrete factory instance itself. Use them directly when you want low-level control, or pass them to `API.RetryPolicy(...)` when you want centralized adapter composition.
 
 Or queue creation driven by named options:
 
@@ -375,7 +392,7 @@ using Microsoft.Extensions.Logging;
 
 ICoreApi core = CoreApi.Create();
 
-IApi api = API.Create(
+API api = API.Create(
     core,
     payloadHandlerResolver,
     retryPolicyOptions,

@@ -28,4 +28,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
 ## Registration modes
 - `AddTplQueue(IServiceCollection, IConfiguration, IApi)`
 - `AddTplQueue(IServiceCollection, Action<TplQueueOptionsBuilder>, IApi)`
-- `AddTplQueue(IServiceCollection, IApi, IDictionary<string, IRetryPolicyDescriptor>, IDictionary<string, IQOptions>)`
+- `AddTplQueue(IServiceCollection, IApi, IDictionary<string, IRetryPolicyOptions>, IDictionary<string, IQOptions>)`
