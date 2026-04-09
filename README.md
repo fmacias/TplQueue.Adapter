@@ -165,6 +165,7 @@ Next step:
 
 - add optional higher-level plugin discovery helpers once the key-based contract is fully adopted
 - document recommended handler-key versioning conventions for long-lived cached payloads
+- decide whether payload handler registration should remain in the external `PayloadHandlersBuilder` or move into `API` in a later iteration
 
 ## Queues and queue factory adapters
 

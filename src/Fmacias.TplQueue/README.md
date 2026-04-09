@@ -168,3 +168,4 @@ Next step:
 
 - rely exclusively on plugin-style string keys during hydration
 - keep plugin loading and handler composition outside the facade, in the builder/application layer
+- decide whether payload handler registration should remain in the external `PayloadHandlersBuilder` or move into `API` in a later iteration
