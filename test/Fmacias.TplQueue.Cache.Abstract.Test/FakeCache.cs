@@ -16,7 +16,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             ITypeResolver typeResolver,
             IDataJobFactory payloadJobFactory,
             ICacheEntryFactory cacheEntryFactory,
-            IPayloadHandlerResolver payloadHandlerResolver,
+            IPayloadHandlers payloadHandlerResolver,
             IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
             : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver, payloadHandlerResolver, retryPolicyAbstractFactory)
         {

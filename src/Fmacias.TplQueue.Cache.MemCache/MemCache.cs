@@ -16,9 +16,9 @@ namespace Fmacias.TplQueue.Cache.MemCache
             ITypeResolver typeResolver,
             IDataJobFactory payloadJobFactory,
             ICacheEntryFactory cacheEntryFactory,
-            IPayloadHandlerResolver payloadHandlerResolver,
+            IPayloadHandlers payloadHandlers,
             IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
-            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver, payloadHandlerResolver, retryPolicyAbstractFactory)
+            : base(serializer, cacheRepository, payloadJobFactory, cacheEntryFactory, typeResolver, payloadHandlers, retryPolicyAbstractFactory)
         {
         }
 
@@ -26,7 +26,7 @@ namespace Fmacias.TplQueue.Cache.MemCache
             IUniversalDataSerializer serializer,
             IDataJobFactory payloadJobFactory,
             ITypeResolver jobNodeTypeResolver, 
-            IPayloadHandlerResolver payloadHandlerResolver, 
+            IPayloadHandlers payloadHandlers, 
             IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             return new MemCache(serializer, 
@@ -34,7 +34,7 @@ namespace Fmacias.TplQueue.Cache.MemCache
                 jobNodeTypeResolver, 
                 payloadJobFactory, 
                 CacheEntryFactory.Create(),
-                payloadHandlerResolver,
+                payloadHandlers,
                 retryPolicyAbstractFactory);
         }
 

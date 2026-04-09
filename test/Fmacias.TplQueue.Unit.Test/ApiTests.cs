@@ -12,8 +12,6 @@ namespace Fmacias.TplQueue.Test
         private Mock<ICoreApi> _coreApi = null!;
         private Mock<IJobFactory> _jobFactoryMock = null!;
         private Mock<IQFactory> _queueFactoryCoreMock = null!;
-        private Mock<IPayloadHandlerResolver> _jobHandlerResolver = null!;
-        private Mock<IRetryPolicyAbstractFactory> _retryPolicyFactory = null!;
         private Mock<ITypeResolver> _nodeTypeResolver = null!;
         private Dictionary<string, IQOptions> _queueOptions = null!;
 
@@ -22,8 +20,6 @@ namespace Fmacias.TplQueue.Test
         {
             _jobFactoryMock = new Mock<IJobFactory>();
             _queueFactoryCoreMock = Helper.GetQFactoryCoreMock();
-            _jobHandlerResolver = Helper.GetJobHandlerResolverMock();
-            _retryPolicyFactory = Helper.GetRetryPolicyFactoryMock();
             _nodeTypeResolver = Helper.GetNodeTypeResolverMock();
 
             _coreApi = Helper.GetCoreApiMock(
@@ -40,7 +36,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -58,17 +53,16 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 null!,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions));
         }
 
         [Test]
-        public void Create_WhenPayloadHandlerResolverIsNull_ThrowsArgumentNullException()
+        public void Create_WhenPayloadHandlersBuilderIsNull_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 _coreApi.Object,
-                null!,
+                (PayloadHandlersBuilder)null!,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions));
         }
@@ -78,7 +72,6 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 null!,
                 _queueOptions));
         }
@@ -88,7 +81,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -104,7 +96,6 @@ namespace Fmacias.TplQueue.Test
 
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -118,7 +109,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -135,7 +125,6 @@ namespace Fmacias.TplQueue.Test
 
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -149,7 +138,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -163,7 +151,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -179,7 +166,6 @@ namespace Fmacias.TplQueue.Test
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
@@ -190,16 +176,76 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
-        public void Cache_WithNullResolver_ThrowsArgumentNullException()
+        public void Cache_WithNullTypeResolver_ThrowsArgumentNullException()
         {
             var api = API.Create(
                 _coreApi.Object,
-                _jobHandlerResolver.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
             Assert.Throws<ArgumentNullException>(() =>
                 api.Cache(Mock.Of<ICacheFactory<IDataJobCache>>(), Mock.Of<IUniversalDataSerializer>(), null!));
         }
+
+        [Test]
+        public void Create_WithoutPayloadHandlers_UsesInternalResolverWhenCreatingCache()
+        {
+            IPayloadHandlers capturedResolver = null!;
+            var expectedCache = Mock.Of<IDataJobCache>();
+            var cacheFactory = new Mock<ICacheFactory<IDataJobCache>>();
+            cacheFactory
+                .Setup(f => f.CreateCache(
+                    It.IsAny<IUniversalDataSerializer>(),
+                    It.IsAny<IDataJobFactory>(),
+                    It.IsAny<ITypeResolver>(),
+                    It.IsAny<IPayloadHandlers>(),
+                    It.IsAny<IRetryPolicyAbstractFactory>()))
+                .Callback<IUniversalDataSerializer, IDataJobFactory, ITypeResolver, IPayloadHandlers, IRetryPolicyAbstractFactory>(
+                    (_, _, _, payloadHandlers, _) => capturedResolver = payloadHandlers)
+                .Returns(expectedCache);
+
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var cache = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>(), _nodeTypeResolver.Object);
+
+            Assert.That(cache, Is.SameAs(expectedCache));
+            Assert.That(capturedResolver, Is.Not.Null);
+            Assert.Throws<KeyNotFoundException>(() => capturedResolver.Handler("plugins/test/missing-v1"));
+        }
+
+        [Test]
+        public void Create_WithPayloadHandlersBuilder_UsesRegisteredHandlersWhenCreatingCache()
+        {
+            IPayloadHandlers capturedResolver = null!;
+            var registeredHandler = Mock.Of<IHandler>();
+            var cacheFactory = new Mock<ICacheFactory<IDataJobCache>>();
+            cacheFactory
+                .Setup(f => f.CreateCache(
+                    It.IsAny<IUniversalDataSerializer>(),
+                    It.IsAny<IDataJobFactory>(),
+                    It.IsAny<ITypeResolver>(),
+                    It.IsAny<IPayloadHandlers>(),
+                    It.IsAny<IRetryPolicyAbstractFactory>()))
+                .Callback<IUniversalDataSerializer, IDataJobFactory, ITypeResolver, IPayloadHandlers, IRetryPolicyAbstractFactory>(
+                    (_, _, _, payloadHandlers, _) => capturedResolver = payloadHandlers)
+                .Returns(Mock.Of<IDataJobCache>());
+
+            var payloadHandlersBuilder = PayloadHandlersBuilder.Create()
+                .Register("plugins/test/registered-v1", registeredHandler);
+
+            var api = API.Create(
+                _coreApi.Object,
+                payloadHandlersBuilder,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            _ = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>(), _nodeTypeResolver.Object);
+
+            Assert.That(capturedResolver.Handler("plugins/test/registered-v1"), Is.SameAs(registeredHandler));
+        }
+
     }
 }

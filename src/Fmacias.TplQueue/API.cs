@@ -10,49 +10,62 @@ namespace Fmacias.TplQueue
     {
         private readonly ICoreApi _coreApi;
         private readonly IRetryPolicyAbstractFactory _retryPolicyAbstractFactory;
-        private readonly IPayloadHandlerResolver _payloadHandlerResolver;
+        private readonly PayloadHandlers _payloadHandlers;
         private readonly IReadOnlyDictionary<string, IQOptions> _queueOptions;
         private readonly IReadOnlyDictionary<string, IRetryPolicyOptions> _retryPolicyOptions;
 
         /// <summary>
-        /// 
+        /// Initializes a new <see cref="API"/> instance using the provided internal payload handler registry.
         /// </summary>
-        /// <param name="api"></param>
-        /// <param name="payloadHandlerResolver"></param>
-        /// <param name="queueOptions"></param>
-        /// 
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <param name="retryPolicyOptions"></param>
+        /// <param name="api">The underlying core facade.</param>
+        /// <param name="payloadHandlers">The internal payload handlers used for cache hydration.</param>
+        /// <param name="queueOptions">The configured queue options.</param>
+        /// <param name="retryPolicyOptions">The configured retry policy options.</param>
         private API(
             ICoreApi api,
-            IPayloadHandlerResolver payloadHandlerResolver,
+            PayloadHandlers payloadHandlers,
             IReadOnlyDictionary<string, IQOptions> queueOptions, 
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions)
         {
             _coreApi = api ?? throw new ArgumentNullException(nameof(api));
-            _payloadHandlerResolver = payloadHandlerResolver ?? throw new ArgumentNullException(nameof(payloadHandlerResolver));
+            _payloadHandlers = payloadHandlers ?? throw new ArgumentNullException(nameof(payloadHandlers));
             _retryPolicyAbstractFactory = RetryPolicies.RetryPolicyAbstractFactory.Create();
             _queueOptions = queueOptions ?? throw new ArgumentNullException(nameof(queueOptions));
             _retryPolicyOptions = retryPolicyOptions ?? throw new ArgumentNullException(nameof(retryPolicyOptions));
         }
 
         /// <summary>
-        /// 
+        /// Creates a facade with a caller-provided payload handler builder.
         /// </summary>
-        /// <param name="api"></param>
-        /// <param name="payloadHandlerResolver"></param>
-        /// <param name="retryPolicyOptions"></param>
-        /// <returns></returns>
-        /// 
-        /// <param name="queueOptions"></param>
+        /// <param name="api">The underlying core facade.</param>
+        /// <param name="payloadHandlersBuilder">The builder used to compose the internal payload handlers for cache hydration.</param>
+        /// <param name="retryPolicyOptions">The configured retry policy options.</param>
+        /// <param name="queueOptions">The configured queue options.</param>
         public static API Create(
             ICoreApi api,
-            IPayloadHandlerResolver payloadHandlerResolver,
+            PayloadHandlersBuilder payloadHandlersBuilder,
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions, 
             IReadOnlyDictionary<string, IQOptions> queueOptions)
         {
-            return new API(api, payloadHandlerResolver, queueOptions, retryPolicyOptions);
+            if (payloadHandlersBuilder == null) throw new ArgumentNullException(nameof(payloadHandlersBuilder));
+
+            return new API(api, payloadHandlersBuilder.BuildInternal(), queueOptions, retryPolicyOptions);
         }
+
+        /// <summary>
+        /// Creates a facade with an empty internal payload handler resolver.
+        /// </summary>
+        /// <param name="api">The underlying core facade.</param>
+        /// <param name="retryPolicyOptions">The configured retry policy options.</param>
+        /// <param name="queueOptions">The configured queue options.</param>
+        public static API Create(
+            ICoreApi api,
+            IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
+            IReadOnlyDictionary<string, IQOptions> queueOptions)
+        {
+            return new API(api, PayloadHandlers.Create(), queueOptions, retryPolicyOptions);
+        }
+
         public IQFactoryAdapter QFactory => QFactoryAdapter.Create(_coreApi.QFactory, _retryPolicyAbstractFactory, _queueOptions, _retryPolicyOptions);
         public IRetryPolicyAbstractFactory RetryPolicyAbstractFactory => _retryPolicyAbstractFactory;
         public IDataJobFactory DataJobFactory => _coreApi.DataJobFactory; 
@@ -80,7 +93,7 @@ namespace Fmacias.TplQueue
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (typeResolver == null) throw new ArgumentNullException(nameof(typeResolver));
 
-            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _payloadHandlerResolver, _retryPolicyAbstractFactory);
+            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _payloadHandlers, _retryPolicyAbstractFactory);
         }
 
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory) where T : IRetryPolicy
@@ -134,5 +147,6 @@ namespace Fmacias.TplQueue
         {
             return SystemTextJsonSerializerFactory.Create();
         }
+
     }
 }

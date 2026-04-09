@@ -37,7 +37,6 @@ namespace Fmacias.TplQueue.Test
         {
             return API.Create(
                 GetCoreApiMock().Object,
-                GetJobHandlerResolverMock().Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 new Dictionary<string, IQOptions>());
         }
@@ -80,15 +79,6 @@ namespace Fmacias.TplQueue.Test
                 .Setup(r => r.PolicyByOptions(It.IsAny<IRetryPolicyOptions>()))
                 .Returns(Mock.Of<IRetryPolicy>());
             return retryPolicyMock;
-        }
-
-        public static Mock<IPayloadHandlerResolver> GetJobHandlerResolverMock()
-        {
-            var resolver = new Mock<IPayloadHandlerResolver>();
-            resolver
-                .Setup(r => r.Resolve(It.IsAny<Guid>()))
-                .Returns(Mock.Of<IUniversalPayloadHandler>());
-            return resolver;
         }
 
         public static Mock<ITypeResolver> GetNodeTypeResolverMock()

@@ -14,13 +14,11 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson.Test
             public TestPayload(string name)
             {
                 Name = name;
-                HandlerId = Guid.NewGuid();
             }
 
             public string Name { get; }
             public string PayloadId => "test";
             public DateTime CollectionTime => DateTime.UtcNow;
-            public Guid HandlerId { get; }
         }
 
         [Test]

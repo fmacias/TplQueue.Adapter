@@ -33,7 +33,7 @@ Concrete queue execution, job graphs, and payload-aware runtime semantics still 
 
 ## Creating the facade
 
-Create `API` from an `ICoreApi`, a payload handler resolver, and the named retry-policy and queue option dictionaries:
+Create `API` from an `ICoreApi` and the named retry-policy and queue option dictionaries. When payload-aware cache hydration is required, compose the registrations in a `PayloadHandlersBuilder` and pass that builder into `API.Create(...)`:
 
 ```csharp
 using Fmacias.TplQueue;
@@ -44,7 +44,6 @@ ICoreApi core = CoreApi.Create();
 
 API api = API.Create(
     core,
-    payloadHandlerResolver,
     retryPolicyOptions,
     queueOptions);
 ```
@@ -59,6 +58,42 @@ From the facade you obtain:
 - `IRetryPolicyAbstractFactory`
 - `IObserverFactory`
 - `ISystemTextJsonSerializerFactory`
+
+## Registering payload handlers
+
+`API` owns the payload handler registry internally.
+If your application needs payload-aware cache hydration or plugin-style handler composition, compose the registrations in the application layer with `PayloadHandlersBuilder` and pass that builder into `API.Create(...)`.
+The stable persisted execution identity remains `IPayload.PayloadId`, and `PayloadHandlersBuilder.Build()` exposes `IPayloadHandlers` when a caller needs direct resolver access.
+
+```csharp
+var payloadHandlersBuilder = PayloadHandlersBuilder.Create()
+    .RegisterPlugin(new MeasurementPayloadPlugin());
+
+API api = API.Create(
+    core,
+    payloadHandlersBuilder,
+    retryPolicyOptions,
+    queueOptions);
+
+public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
+{
+    public void Register(IPayloadHandlerRegistry registry)
+    {
+        registry.Register(
+            payloadHandlerKey: "measurements.persist/v1",
+            handlerFactory: () => new MeasurementPayloadHandler());
+    }
+}
+
+public sealed class MeasurementPayloadHandler : IHandler
+{
+    public Task HandleAsync(IPayload payload, CancellationToken ct)
+    {
+        var measurementPayload = (MeasurementPayload)payload;
+        return Task.CompletedTask;
+    }
+}
+```
 
 ## Creating retry policies
 
@@ -103,7 +138,7 @@ IParallelQ queue = api.QFactory.Parallel("main", logger);
 Use the same facade for payload-aware cache creation:
 
 ```csharp
-var serializer = api.SystemTexSerializerFactory().Create();
+var serializer = api.SystemTexSerializerFactory().Serializer();
 
 var cache = api.Cache(
     cacheFactory,
@@ -120,3 +155,16 @@ This package stays thin on purpose:
 - the top-level facade centralizes composition without hiding the public factories that advanced callers may still use directly
 
 That split keeps application entry points compact while avoiding unnecessary coupling between queue execution, retry-policy creation, serialization, cache support, and observer integration.
+
+## Payload handler roadmap
+
+Current step:
+
+- prefer `PayloadHandlersBuilder` and `IPayloadHandlerPlugin`
+- persist and resolve handlers through the stable string key carried by `IPayload.PayloadId`
+- let `API` own the default internal payload handler registry
+
+Next step:
+
+- rely exclusively on plugin-style string keys during hydration
+- keep plugin loading and handler composition outside the facade, in the builder/application layer

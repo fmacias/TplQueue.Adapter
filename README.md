@@ -59,7 +59,7 @@ It wraps:
 
 - an `ICoreApi` instance
 - an `IRetryPolicyAbstractFactory`
-- a payload handler resolver
+- an internal payload handler registry
 - a named queue-options dictionary
 - a named retry-policy-options dictionary
 
@@ -71,10 +71,12 @@ using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Core;
 
 ICoreApi core = CoreApi.Create();
+PayloadHandlersBuilder payloadHandlersBuilder = PayloadHandlersBuilder.Create()
+    .RegisterPlugin(new MeasurementPayloadPlugin());
 
 API api = API.Create(
     core,
-    payloadHandlerResolver,
+    payloadHandlersBuilder,
     retryPolicyOptions,
     queueOptions);
 ```
@@ -84,11 +86,11 @@ API api = API.Create(
 ```csharp
 public static API Create(
     ICoreApi api,
-    IPayloadHandlerResolver payloadHandlerResolver,
+    PayloadHandlersBuilder payloadHandlersBuilder,
     IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
     IReadOnlyDictionary<string, IQOptions> queueOptions)
 {
-    return new API(api, payloadHandlerResolver, queueOptions, retryPolicyOptions);
+    return new API(api, payloadHandlersBuilder.BuildInternal(), queueOptions, retryPolicyOptions);
 }
 
 public IQFactoryAdapter QFactory
@@ -116,14 +118,53 @@ Payload-aware runtime nodes are part of the public model through `IDataJob`, `ID
 
 The execution-side payload model lives in Core, while Adapter provides the integration pieces commonly needed around it:
 
-- payload handler resolution through `IPayloadHandlerResolver`
+- payload handler registration through `PayloadHandlersBuilder`
+- plugin-style registration through `IPayloadHandlerPlugin` and `IPayloadHandlerRegistry`
 - cache abstractions for dehydration and hydration
 - serializer implementations
 - queue creation helpers that combine retry and queue options
 
 This split is intentional: execution semantics stay in Core, while application-specific payload resolution and persistence remain modular.
 
+The stable payload handler key is the payload `PayloadId`. Adapter caches persist that key and use it during hydration to map payload jobs back to their registered handler behavior through `IPayloadHandlers`.
+
+Example plugin-style registration:
+
+```csharp
+public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
+{
+    public void Register(IPayloadHandlerRegistry registry)
+    {
+        registry.Register(
+            payloadHandlerKey: "measurements.persist/v1",
+            handlerFactory: () => new MeasurementPayloadHandler());
+    }
+}
+
+public sealed class MeasurementPayloadHandler : IHandler
+{
+    public Task HandleAsync(IPayload payload, CancellationToken ct)
+    {
+        var typed = (MeasurementPayload)payload;
+        return Task.CompletedTask;
+    }
+}
+```
+
 Payload-aware composition follows the same rule as plain Core graphs: create the payload jobs first, then terminate the graph with an `IDataJobRoot`. Use `payloadRoot.After(payloadJob)` or `payloadJob.Then(payloadRoot)`, not the reverse direction.
+
+## Payload handler roadmap
+
+Current step:
+
+- register payload handlers with `PayloadHandlersBuilder`
+- use `IPayload.PayloadId` as the stable persisted handler key
+- resolve hydrated payload jobs through `IPayloadHandlers`
+
+Next step:
+
+- add optional higher-level plugin discovery helpers once the key-based contract is fully adopted
+- document recommended handler-key versioning conventions for long-lived cached payloads
 
 ## Queues and queue factory adapters
 
@@ -391,10 +432,11 @@ using Fmacias.TplQueue.Core;
 using Microsoft.Extensions.Logging;
 
 ICoreApi core = CoreApi.Create();
+var payloadHandlersBuilder = PayloadHandlersBuilder.Create();
 
 API api = API.Create(
     core,
-    payloadHandlerResolver,
+    payloadHandlersBuilder,
     retryPolicyOptions,
     queueOptions);
 

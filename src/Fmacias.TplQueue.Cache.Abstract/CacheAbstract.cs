@@ -21,7 +21,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
         private readonly ITypeResolver _typeResolver;
         private readonly IDataJobFactory _payloadJobFactory;
         private readonly ICacheEntryFactory _entryFactory;
-        private readonly IPayloadHandlerResolver _payloadHandlerResolver;
+        private readonly IPayloadHandlers _payloadHandlerResolver;
         private readonly IRetryPolicyAbstractFactory _retryPolicyGenericFactory;
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
             IDataJobFactory dataJobFactory,
             ICacheEntryFactory cacheEntryFactory,
             ITypeResolver typeResolver,
-            IPayloadHandlerResolver payloadHandlerResolver, 
+            IPayloadHandlers payloadHandlerResolver, 
             IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             _serializer = serializer
@@ -179,7 +179,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
             );
             var jobNodeDto = oldestRootCachedEntry.JobNodeRecordDto;
             Func<IRetryPolicy> retryPolicy = () => _retryPolicyGenericFactory.PolicyByOptions(jobNodeDto.RetryPolicyOptions);
-            IUniversalPayloadHandler payloadHandler = _payloadHandlerResolver.Resolve(rootPayload.HandlerId);
+            IHandler payloadHandler = ResolvePayloadHandler(jobNodeDto, rootPayload);
 
             var rootJob = _payloadJobFactory.DataJobRoot(
                 jobNodeDto.JobId,
@@ -274,7 +274,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
                 parentJobId: leaseEntry.ParentJobId,
                 rootJobId: rootJobId
             );
-            IUniversalPayloadHandler payloadHandler = _payloadHandlerResolver.Resolve(payload.HandlerId);
+            IHandler payloadHandler = ResolvePayloadHandler(leaseEntry.JobNodeRecordDto, payload);
 
             var node = _payloadJobFactory.DataJob(leaseEntry.JobNodeRecordDto, payload, payloadHandler);
 
@@ -292,6 +292,28 @@ namespace Fmacias.TplQueue.Cache.Abstract
             CacheRepository.TryGet(jobId, out var entry);
             return entry;
         }
+
+        protected virtual IHandler ResolvePayloadHandler(
+            IJobNodeRecord jobNodeRecord,
+            IPayload payload)
+        {
+            if (jobNodeRecord == null) throw new ArgumentNullException(nameof(jobNodeRecord));
+            if (payload == null) throw new ArgumentNullException(nameof(payload));
+
+            if (!string.IsNullOrWhiteSpace(jobNodeRecord.PayloadHandlerKey))
+            {
+                return _payloadHandlerResolver.Handler(jobNodeRecord.PayloadHandlerKey);
+            }
+
+            if (!string.IsNullOrWhiteSpace(payload.PayloadId))
+            {
+                return _payloadHandlerResolver.Handler(payload.PayloadId);
+            }
+
+            throw new InvalidOperationException(
+                $"Unable to resolve a payload handler for JobId '{jobNodeRecord.JobId}'. No registered handler was found for key '{jobNodeRecord.PayloadHandlerKey ?? payload.PayloadId ?? string.Empty}'.");
+        }
+
         protected virtual bool AreRootChildsNotFinalized(Guid rootId)
         {
             var entriesSnapshot = CacheRepository.SnapshotAll();

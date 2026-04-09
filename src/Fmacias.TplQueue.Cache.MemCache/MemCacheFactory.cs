@@ -13,7 +13,7 @@ namespace Fmacias.TplQueue.Cache.MemCache
         public IMemCache CreateCache(IUniversalDataSerializer serializer,
             IDataJobFactory payloadJobFactory,
             ITypeResolver typeResolver, 
-            IPayloadHandlerResolver payloadHandlerResolver, 
+            IPayloadHandlers payloadHandlerResolver, 
             IRetryPolicyAbstractFactory retryPolicyAbstractFactory)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));

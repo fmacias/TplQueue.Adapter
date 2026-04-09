@@ -56,6 +56,30 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             Assert.Throws<ArgumentNullException>(() => dto.Deserialize<object>(null!));
         }
 
+        [Test]
+        public void Create_PersistsPayloadHandlerKey()
+        {
+            var dto = CreateNodeDto();
+
+            Assert.That(dto.PayloadHandlerKey, Is.EqualTo("dummy"));
+        }
+
+        [Test]
+        public void Create_WhenPayloadHandlerKeyIsMissing_ThrowsArgumentException()
+        {
+            var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Loose);
+            var carrier = BuildCarrierJob(payloadHandlerKey: string.Empty);
+            var policy = new Mock<IRetryPolicy>(MockBehavior.Loose);
+            policy.Setup(p => p.ToDescriptor())
+                .Returns(Mock.Of<IRetryPolicyOptions>());
+
+            carrier.Setup(c => c.GetRetryPolicyFactory())
+                .Returns(() => policy.Object);
+
+            Assert.Throws<ArgumentException>(() =>
+                JobNodeDto.Create(serializer.Object, carrier.Object, isFifo: false, parentJob: null));
+        }
+
         private static JobNodeDto CreateNodeDto()
         {
             var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Loose);
@@ -70,12 +94,14 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             return JobNodeDto.Create(serializer.Object, carrier.Object, isFifo: false, parentJob: null);
         }
 
-        private static Mock<IDataJob> BuildCarrierJob()
+        private static Mock<IDataJob> BuildCarrierJob(string payloadHandlerKey = "dummy")
         {
+            var payload = new DummyPayload(payloadHandlerKey);
             var carrier = new Mock<IDataJob>(MockBehavior.Loose);
             carrier.SetupGet(c => c.Id).Returns(Guid.NewGuid());
             carrier.SetupGet(c => c.Name).Returns("job");
-            carrier.Setup(c => c.GetPayload()).Returns(new DummyPayload());
+            carrier.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            carrier.Setup(c => c.GetPayload()).Returns(payload);
             carrier.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             carrier.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
@@ -85,8 +111,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
 
         private sealed class DummyPayload : IPayload
         {
-            public Guid HandlerId { get; } = Guid.NewGuid();
-            public string PayloadId { get; } = "dummy";
+            public DummyPayload(string payloadId)
+            {
+                PayloadId = payloadId;
+            }
+
+            public string PayloadId { get; }
             public DateTime CollectionTime { get; } = DateTime.UtcNow;
         }
     }

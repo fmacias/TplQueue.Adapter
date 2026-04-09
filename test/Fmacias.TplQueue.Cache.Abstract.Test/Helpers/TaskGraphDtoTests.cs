@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Fmacias.TplQueue.Cache.Abstract.Helpers;
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults;
 using Moq;
 using NUnit.Framework;
 
@@ -19,13 +20,15 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
                 .Returns("{}");
 
+            var payload = new DummyPayload("task-graph/root");
             var root = GetRootGraphMock(Guid.NewGuid());
             root.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            root.Setup(c => c.GetPayload()).Returns("payload");
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            root.Setup(c => c.GetPayload()).Returns(payload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
-            root.Setup(c => c.GetRetryPolicyFactory()).Returns(() => Mock.Of<IRetryPolicy>());
+            root.Setup(c => c.GetRetryPolicyFactory()).Returns(() => NoRetryPolicy.Create());
 
             var dto = JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
 
@@ -46,15 +49,17 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
 
             // Root mock (also an IPayloadCarrier)
             Mock<IDataJobRoot<IPayload>> root = GetRootGraphMock(rootId);
+            var payload = new DummyPayload("task-graph/root");
 
             var dataJobNode = root.As<IDataJobNode>();
             dataJobNode.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            dataJobNode.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            dataJobNode.Setup(c => c.GetPayload()).Returns("payload");
+            dataJobNode.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            dataJobNode.Setup(c => c.GetPayload()).Returns(payload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
-            Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+            Func<IRetryPolicy> retryPolicyFactory = () => NoRetryPolicy.Create();
             dataJobNode.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
 
             // GetRetryPolicyFactory is not configured; MockBehavior.Loose will return default,
@@ -102,26 +107,30 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             var childId = Guid.NewGuid();
             var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Loose);
             var child = new Mock<IDataJob>(MockBehavior.Loose);
+            var childPayload = new DummyPayload("task-graph/child");
+            var rootPayload = new DummyPayload("task-graph/root");
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            child.SetupGet(c => c.PayloadType).Returns(typeof(string));
-            child.Setup(c => c.GetPayload()).Returns("payload-child");
+            child.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(childPayload.PayloadId);
+            child.Setup(c => c.GetPayload()).Returns(childPayload);
             child.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
-            Func<IRetryPolicy> childRetryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+            Func<IRetryPolicy> childRetryPolicyFactory = () => NoRetryPolicy.Create();
             child.Setup(c => c.GetRetryPolicyFactory()).Returns(childRetryPolicyFactory);
 
             root.SetupGet(r => r.Id).Returns(rootId);
             root.SetupGet(r => r.Name).Returns("root");
             root.Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
-            root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(string));
-            root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns("payload-root");
+            root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(rootPayload.PayloadId);
+            root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns(rootPayload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
                 .Returns("{}");
-            Func<IRetryPolicy> retryPolicyFactory = () => Mock.Of<IRetryPolicy>();
+            Func<IRetryPolicy> retryPolicyFactory = () => NoRetryPolicy.Create();
             root.Setup(c => c.GetRetryPolicyFactory()).Returns(retryPolicyFactory);
             var dto = (JobGraphDto)JobGraphDto.Create(payloadSerializer.Object, root.Object, isFifo: false);
             var nodes = dto.ExtractNodes((n, rid) => { });
@@ -151,6 +160,17 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             Assert.That(matches, Has.Count.EqualTo(1),
                 "Expected exactly one node to match the predicate.");
             return matches[0];
+        }
+
+        private sealed class DummyPayload : IPayload
+        {
+            public DummyPayload(string payloadId)
+            {
+                PayloadId = payloadId;
+            }
+
+            public string PayloadId { get; }
+            public DateTime CollectionTime => DateTime.UtcNow;
         }
     }
 }
