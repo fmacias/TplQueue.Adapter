@@ -362,21 +362,40 @@ Important contracts and models include:
 - `ICacheEntry`
 - `IJobGraphDto`
 - `IJobNodeDto`
+- `ITypeResolver`
 - `IRuntimeNodeTypeResolver`
 
 Example cache creation through the adapter facade:
 
 ```csharp
-var serializerFactory = api.SystemTexSerializerFactory();
-var serializer = serializerFactory.Create();
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+using Fmacias.TplQueue.Cache.MemCache;
+
+var serializer = api.SystemTexSerializerFactory().Serializer();
+var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
-    memCacheFactory,
+    MemCacheFactory.Create(),
     serializer,
     typeResolver);
 ```
 
 `Fmacias.TplQueue.Cache.MemCache` is the in-memory implementation. It is useful for tests, development, and lightweight scenarios. More persistent cache providers can be added behind the same abstractions.
+
+During hydration the cache first resolves `PayloadTypeName` through `ITypeResolver`, then passes the resulting CLR `Type` into `IUniversalDataSerializer.Deserialize(string, Type)`. The default runtime resolver is `RuntimeNodeTypeResolver`, exposed publicly through `RuntimeNodeTypeResolverFactory`.
+
+### Cache type-resolution roadmap
+
+Current state:
+
+- the default cache type-resolution path is `RuntimeNodeTypeResolver`, which is AppDomain-based
+- that path is acceptable for compatibility and simple runtime probing
+
+Next step:
+
+- if dynamic plugin folders or dedicated runtime loading boundaries become a real requirement, prefer `AssemblyLoadContext` in modern .NET
+- treat `AppDomain` as a .NET Framework-era mechanism and consider the current AppDomain-based resolver a transitional compatibility layer
+- keep the migration at the `ITypeResolver` boundary rather than folding runtime loading concerns into `IUniversalDataSerializer`
 
 ## Serialization
 
@@ -393,7 +412,7 @@ These components are typically used together with:
 - cache dehydration and hydration
 - runtime node reconstruction
 
-The serializer concern stays outside Core so that the execution runtime does not become coupled to one concrete serialization technology.
+The serializer concern stays outside Core so that the execution runtime does not become coupled to one concrete serialization technology. Type-name resolution remains a separate cache-hydration concern through `ITypeResolver`; it is not embedded into `IUniversalDataSerializer`.
 
 ## Dependency injection
 

@@ -29,6 +29,41 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
 Create with:
 - `IUniversalDataSerializer`
 - `IDataJobFactory`
-- `INodeTypeResolver`
+- `ITypeResolver`
+- `IPayloadHandlers`
+- `IRetryPolicyAbstractFactory`
 
 Then use cache dehydration/hydration APIs from `IMemCache`.
+
+Default runtime resolver example:
+
+```csharp
+using Fmacias.TplQueue;
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+using Fmacias.TplQueue.Cache.MemCache;
+using Fmacias.TplQueue.Contracts;
+
+var serializer = api.SystemTexSerializerFactory().Serializer();
+ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
+IPayloadHandlers payloadHandlers = PayloadHandlersBuilder.Create().Build();
+
+IMemCache cache = MemCacheFactory.Create().CreateCache(
+    serializer,
+    api.DataJobFactory,
+    typeResolver,
+    payloadHandlers,
+    api.RetryPolicyAbstractFactory);
+```
+
+If payload types must be resolved from a dedicated `AppDomain`, provide a custom `ITypeResolver` implementation and pass it to `CreateCache(...)`. `MemCache` depends only on the abstraction, not on the concrete runtime resolver.
+
+## Roadmap
+
+Current state:
+
+- `MemCache` depends only on `ITypeResolver`, so it can work with the current AppDomain-based runtime resolver
+
+Next step:
+
+- if plugin payload types start being loaded from dedicated runtime boundaries in modern .NET, the preferred evolution is an `AssemblyLoadContext`-aware resolver behind `ITypeResolver`
+- the current `AppDomain` path should be treated as a compatibility-oriented path rather than the long-term plugin-loading design

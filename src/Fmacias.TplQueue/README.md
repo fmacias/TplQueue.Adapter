@@ -138,13 +138,23 @@ IParallelQ queue = api.QFactory.Parallel("main", logger);
 Use the same facade for payload-aware cache creation:
 
 ```csharp
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+
 var serializer = api.SystemTexSerializerFactory().Serializer();
+var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
     cacheFactory,
     serializer,
     typeResolver);
 ```
+
+The cache helper keeps serializer and type-resolution concerns separate on purpose:
+
+- `ITypeResolver` resolves the persisted payload CLR type name during hydration
+- `IUniversalDataSerializer` deserializes the payload JSON for that resolved CLR type
+
+If your application needs a dedicated `AppDomain` or a whitelist-based resolution policy, replace the default runtime resolver with your own `ITypeResolver`.
 
 ## Design justification
 
@@ -169,3 +179,4 @@ Next step:
 - rely exclusively on plugin-style string keys during hydration
 - keep plugin loading and handler composition outside the facade, in the builder/application layer
 - decide whether payload handler registration should remain in the external `PayloadHandlersBuilder` or move into `API` in a later iteration
+- if dedicated runtime loading becomes necessary for plugin payload types, prefer an `AssemblyLoadContext`-based resolver in modern .NET and treat the current AppDomain-based path as transitional compatibility behavior
