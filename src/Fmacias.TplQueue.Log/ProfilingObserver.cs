@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults.Log;
 using Microsoft.Extensions.Logging;
 using System;
 
