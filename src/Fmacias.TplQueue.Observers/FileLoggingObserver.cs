@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Fmacias.TplQueue.Observers
 {
-    public sealed class FileLoggingObserver : IObserver<IJobEvent>
+    internal sealed class FileLoggingObserver : IFileLoggingObserver
     {
         private readonly ILogger _logger;
         private readonly string _queueName;

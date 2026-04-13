@@ -4,7 +4,7 @@ using System;
 
 namespace Fmacias.TplQueue.Observers
 {
-    public sealed class LoggingObserver : ILoggingObserver
+    internal sealed class LoggingObserver : ILoggingObserver
     {
         private readonly ILogger<ILoggingObserver> _logger;
 

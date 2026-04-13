@@ -3,7 +3,7 @@ using System;
 
 namespace Fmacias.TplQueue.Observers
 {
-    public sealed class ConsoleObserver : IConsoleObserver
+    internal sealed class ConsoleObserver : IConsoleObserver
     {
         private ConsoleObserver() { }
 

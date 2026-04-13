@@ -1,6 +1,7 @@
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Fmacias.TplQueue.RetryPolicies;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
@@ -173,6 +174,21 @@ namespace Fmacias.TplQueue.Test
 
             Assert.That(policy.MaxRetries, Is.EqualTo(5));
             Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(300).Within(0.1));
+        }
+
+        [Test]
+        public void ObserverFactory_ReturnsObserverPackageFactory()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var factory = api.ObserverFactory();
+            var loggingObserver = factory.CreateLoggingObserver(Mock.Of<ILogger<ILoggingObserver>>());
+
+            Assert.That(factory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Observers"));
+            Assert.That(loggingObserver, Is.InstanceOf<ILoggingObserver>());
         }
 
         [Test]

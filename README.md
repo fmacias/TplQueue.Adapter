@@ -1,6 +1,6 @@
 # TplQueue.Adapter
 
-`TplQueue.Adapter` contains the modular integration packages that complement `TplQueue.Core`. It provides the top-level `API` facade and concrete modules for retry-policy creation, logging and UI observers, cache implementations, serialization, and dependency-injection integration.
+`TplQueue.Adapter` contains the modular integration packages that complement `TplQueue.Core`. It provides the top-level `API` facade and concrete modules for retry-policy creation, observer integration, cache implementations, serialization, and dependency-injection integration.
 
 `TplQueue.Core` remains the execution kernel. `TplQueue.Adapter` composes and extends that kernel for practical application scenarios.
 
@@ -32,7 +32,7 @@
 `TplQueue.Adapter` builds on top of that runtime with concrete modules and convenience wiring.
 
 Use Core when you want the execution primitives directly.
-Use Adapter when you want the integration layer that wires those primitives together with named configuration, serializer support, cache implementations, logging observers, or DI registration.
+Use Adapter when you want the integration layer that wires those primitives together with named configuration, serializer support, cache implementations, observers, or DI registration.
 
 For the current graph-composition rules, especially the requirement that `IJobRoot` and `IDataJobRoot` remain the enqueueable terminal nodes, see [TplQueue.Core README](../TplQueue.Core/README.md#job-roots).
 
@@ -46,8 +46,7 @@ The repository currently contains these main modules:
 - `Fmacias.TplQueue.Cache.MemCache`
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
 - `Fmacias.TplQueue.Microsoft.DependencyInjection`
-- `Fmacias.TplQueue.Observers.ViewModel`
-- `Fmacias.TplQueue.Log`
+- `Fmacias.TplQueue.Observers`
 
 At repository level, this README is the entry point. Individual modules may contain their own focused documentation.
 
@@ -294,17 +293,15 @@ This allows queue configuration to stay externalized while the queue runtime its
 
 ## Observers
 
-Core exposes events through `IObservable<IJobEvent>`. Adapter provides concrete observer implementations and dispatch helpers for common scenarios.
+Core exposes events through `IObservable<IJobEvent>`. Adapter provides the `Fmacias.TplQueue.Observers` package for built-in observers, default dispatcher creation, and consumer-side observer integration.
 
 Relevant modules and types include:
 
-- `ConsoleObserver`
-- `LoggingObserver`
-- `FileLoggingObserver`
-- `ProfilingObserver`
-- `ViewModelObserver`
+- `IConsoleObserver`
+- `ILoggingObserver`
+- `IFileLoggingObserver`
+- `IProfilingObserver`
 - `IObserverDispatcher`
-- `DirectObserverDispatcher`
 - `IObserverFactory`
 
 Example factory usage:
@@ -312,39 +309,34 @@ Example factory usage:
 ```csharp
 IObserverFactory observers = api.ObserverFactory();
 IConsoleObserver consoleObserver = observers.CreateConsoleObserver();
+ILoggingObserver loggingObserver = observers.CreateLoggingObserver(
+    loggerFactory.CreateLogger<ILoggingObserver>());
+IFileLoggingObserver fileObserver = observers.CreateFileLoggingObserver(
+    loggerFactory.CreateLogger("TplQueue.Main"),
+    queueName: "main");
+
+using IDisposable consoleSubscription = queue.Subscribe(consoleObserver);
+using IDisposable logSubscription = queue.Subscribe(loggingObserver);
+using IDisposable fileSubscription = queue.Subscribe(fileObserver);
 ```
 
-```csharp
-public IConsoleObserver CreateConsoleObserver()
-{
-    return ConsoleObserver.Create();
-}
+The concrete built-in observers live inside the observer package and are intentionally internal. Use `IObserverFactory` when you want a provided observer, and implement `IObserver<IJobEvent>` in the consumer application when the integration belongs to the application itself.
 
-public ILoggingObserver CreateLoggingObserver(ILogger<ILoggingObserver> logger)
-{
-    return LoggingObserver.Create(logger);
-}
+That is the important extensibility point for real systems: an existing WPF, WinForms, or ASP.NET application can keep its current UI and workflow while a custom observer forwards `IJobEvent` data to a modern dashboard, SignalR hub, metrics pipeline, or logging system.
 
-public IObserverDispatcher CreateObserverDispatcher()
-{
-    return DirectObserverDispatcher.Create();
-}
-
-public IViewModelObserver CreateViewModeObserver(IObserverDispatcher observerDispatcher)
-{
-    return ViewModelObserver.Create(observerDispatcher);
-}
-```
-For UI integration, `ViewModelObserver` is paired with an `IObserverDispatcher` abstraction so the actual marshaling strategy can be adapted per UI stack.
+UI integrations can implement `IObserverDispatcher` to marshal callbacks onto the correct platform context.
 
 Typical mappings are:
 
 - WPF: `Dispatcher.Invoke`
+- WinForms: `Control.BeginInvoke`
 - WinUI: `DispatcherQueue.TryEnqueue`
 - MAUI: `MainThread.BeginInvokeOnMainThread`
 - Blazor: component `InvokeAsync`
 
-`DirectObserverDispatcher` is especially useful for tests or non-UI scenarios where no special marshaling is needed.
+The default dispatcher returned by `CreateObserverDispatcher()` is especially useful for tests or non-UI scenarios where no special marshaling is needed.
+
+For the full observer guide, including custom observer examples for dashboard and legacy UI integration, see [Fmacias.TplQueue.Observers README](src/Fmacias.TplQueue.Observers/README.md).
 
 ## Cache
 

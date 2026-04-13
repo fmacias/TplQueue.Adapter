@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.MemC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.MemCache.Test", "test\Fmacias.TplQueue.Cache.MemCache.Test\Fmacias.TplQueue.Cache.MemCache.Test.csproj", "{D2EE4856-4F04-154E-70B7-14DD6A9E3992}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Observers.Unit.Test", "test\Fmacias.TplQueue.Observers.Unit.Test\Fmacias.TplQueue.Observers.Unit.Test.csproj", "{CA1001A2-E4D8-ECF3-C1D1-5DCA9953CB9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +98,10 @@ Global
 		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2EE4856-4F04-154E-70B7-14DD6A9E3992}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA1001A2-E4D8-ECF3-C1D1-5DCA9953CB9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA1001A2-E4D8-ECF3-C1D1-5DCA9953CB9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA1001A2-E4D8-ECF3-C1D1-5DCA9953CB9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA1001A2-E4D8-ECF3-C1D1-5DCA9953CB9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

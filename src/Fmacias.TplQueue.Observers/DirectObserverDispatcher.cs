@@ -3,7 +3,7 @@ using System;
 
 namespace Fmacias.TplQueue.Observers
 {
-    public sealed class DirectObserverDispatcher : IObserverDispatcher
+    internal sealed class DirectObserverDispatcher : IObserverDispatcher
     {
         private DirectObserverDispatcher() { }
 

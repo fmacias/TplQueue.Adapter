@@ -9,6 +9,7 @@ Thin adapter facade over `TplQueue.Core` and the modular integration packages.
 - [Creating the facade](#creating-the-facade)
 - [Creating retry policies](#creating-retry-policies)
 - [Creating queues and cache helpers](#creating-queues-and-cache-helpers)
+- [Creating observers](#creating-observers)
 - [Design justification](#design-justification)
 
 ## Summary
@@ -165,6 +166,25 @@ The cache helper keeps serializer and type-resolution concerns separate on purpo
 - `IUniversalDataSerializer` deserializes the payload JSON for that resolved CLR type
 
 If your application needs a dedicated `AppDomain` or a whitelist-based resolution policy, replace the default runtime resolver with your own `ITypeResolver`.
+
+## Creating observers
+
+`API.ObserverFactory()` returns the factory owned by `Fmacias.TplQueue.Observers`. The facade exposes the observer package without owning the built-in observer implementations.
+
+```csharp
+IObserverFactory observers = api.ObserverFactory();
+
+ILoggingObserver loggingObserver = observers.CreateLoggingObserver(
+    loggerFactory.CreateLogger<ILoggingObserver>());
+IConsoleObserver consoleObserver = observers.CreateConsoleObserver();
+
+using IDisposable logSubscription = queue.Subscribe(loggingObserver);
+using IDisposable consoleSubscription = queue.Subscribe(consoleObserver);
+```
+
+The built-in observer classes are internal to the observer package. Use the factory contracts for console, logging, file logging, profiling, and default dispatcher creation. Implement `IObserver<IJobEvent>` in the consumer application when you need to feed a WPF, WinForms, ASP.NET, SignalR, metrics, or dashboard integration.
+
+For details, see the observer package README at `../Fmacias.TplQueue.Observers/README.md`.
 
 ## Design justification
 

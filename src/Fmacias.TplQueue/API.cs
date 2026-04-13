@@ -136,7 +136,7 @@ namespace Fmacias.TplQueue
         /// <returns></returns>
         public IObserverFactory ObserverFactory()
         {
-            return Factories.ObserverFactory.Instance();
+            return Observers.ObserverFactory.Create();
         }
 
         /// <summary>

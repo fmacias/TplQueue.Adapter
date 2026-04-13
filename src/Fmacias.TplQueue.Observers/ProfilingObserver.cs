@@ -5,7 +5,7 @@ using System;
 
 namespace Fmacias.TplQueue.Observers
 {
-    public sealed class ProfilingObserver : IProfilingObserver
+    internal sealed class ProfilingObserver : IProfilingObserver
     {
         private readonly ILogger<IProfilingObserver> _logger;
         private long _lastMemoryUsage;
