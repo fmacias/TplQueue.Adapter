@@ -23,9 +23,8 @@
 	<ItemGroup>
 	  <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Cache.MemCache" Version="1.0.0" />
-	  <PackageReference Include="Fmacias.TplQueue.Log" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
-	  <PackageReference Include="Fmacias.TplQueue.Observers.ViewModel" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Observers" Version="1.0.0" />
 	</ItemGroup>
 </Project>

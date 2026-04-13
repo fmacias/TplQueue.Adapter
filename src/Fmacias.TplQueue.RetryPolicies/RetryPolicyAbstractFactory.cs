@@ -1,42 +1,33 @@
-﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
-namespace Fmacias.TplQueue.Factories
+namespace Fmacias.TplQueue.RetryPolicies
 {
     /// <summary>
-    /// <![CDATA[
-    /// Concrete RetryPolicyFactory that supports:
-    ///
-    ///  - Named creation via an options dictionary (string -> RetryPolicyOptions).
-    ///  - Direct creation from RetryPolicyOptions.
-    ///  - Rehydration from IRetryPolicyDescriptor (including plugin policies).
-    ///  - Explicit helpers for NoRetry / Linear / Exponential.
-    ///
-    /// Plugin policies:
-    ///  - Provide a concrete type implementing IRetryPolicy.
-    ///  - Ensure a parameterless constructor (public or internal).
-    ///  - Optionally expose settable properties named MaxRetries, BaseDelayMs,
-    ///    Factor to be automatically populated from the descriptor.
-    ///  - If the constructor is internal, use InternalsVisibleTo so this assembly
-    ///    can instantiate it.
-    /// ]]>
+    /// Resolves retry policies from configured options and creates default retry policy instances.
     /// </summary>
-    internal sealed class RetryPolicyAbstractFactory: IRetryPolicyAbstractFactory
+    /// <remarks>
+    /// Generic methods support the built-in retry policy interfaces directly. Custom policies
+    /// should be requested by concrete type and must expose a public parameterless constructor.
+    /// </remarks>
+    public sealed class RetryPolicyAbstractFactory : IRetryPolicyAbstractFactory
     {
-        private RetryPolicyAbstractFactory(){}
-        
+        private RetryPolicyAbstractFactory()
+        {
+        }
+
         /// <summary>
-        /// Factory method hiding the concrete type.
+        /// Creates a retry policy abstract factory instance.
         /// </summary>
         public static RetryPolicyAbstractFactory Create()
         {
             return new RetryPolicyAbstractFactory();
         }
-        
+
         /// <inheritdoc />
-        public IRetryPolicy CreateByName(string name, IReadOnlyDictionary<string, IRetryPolicyDescriptor> options)
+        public IRetryPolicy PolicyByName(string name, IReadOnlyDictionary<string, IRetryPolicyOptions> options)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Retry policy name cannot be null or empty.", nameof(name));
@@ -44,111 +35,178 @@ namespace Fmacias.TplQueue.Factories
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            if (!options.TryGetValue(name, out var retryPolicyDescriptor))
+            if (!options.TryGetValue(name, out var retryPolicyOptions))
             {
                 return NoRetryPolicy.Create();
             }
-            return Create(retryPolicyDescriptor);
+
+            return PolicyByOptions(retryPolicyOptions);
         }
-        
+
         /// <inheritdoc />
-        public IRetryPolicy Create(IRetryPolicyDescriptor descriptor)
+        public T PolicyByName<T>(string name, IReadOnlyDictionary<string, IRetryPolicyOptions> options)
+            where T : class, IRetryPolicy
         {
-            if (descriptor is null)
-                throw new ArgumentNullException(nameof(descriptor));
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Retry policy name cannot be null or empty.", nameof(name));
 
-            return CreateCustomFromDescriptor(descriptor);
-        }
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="policy"></param>
-        /// <returns></returns>
-        public bool TryGetRetryPolicy<T>(out T policy) where T : class, IRetryPolicy
-        {
-            if (TryConstructRetryPolicy<T>(out policy))
+            if (!options.TryGetValue(name, out var retryPolicyOptions))
             {
-                return true;
+                throw new KeyNotFoundException($"No retry policy descriptor was found for key '{name}'.");
             }
-            return false;
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        private static IRetryPolicy CreateCustomFromDescriptor(IRetryPolicyDescriptor descriptor)
-        {
-            if (descriptor == null)
-                throw new ArgumentNullException(nameof(descriptor));
 
-            IRetryPolicy policyInstance = PolicyByType(descriptor.RetryPolicyType!);
-            policyInstance.SetFromDescriptor(descriptor);
-            return policyInstance;
+            return CreateTypedPolicy<T>(retryPolicyOptions);
+        }
+
+        /// <inheritdoc />
+        public IRetryPolicy PolicyByOptions(IRetryPolicyOptions options)
+        {
+            if (options is null)
+                throw new ArgumentNullException(nameof(options));
+
+            return CreateBuiltInPolicyFromOptions(options);
+        }
+
+        /// <inheritdoc />
+        public T GetPolicy<T>() where T : class, IRetryPolicy
+        {
+            return CreatePolicyByType<T>();
+        }
+
+        /// <summary>
+        /// Creates a built-in retry policy from options that describe the retry shape.
+        /// </summary>
+        /// <param name="options">The retry policy options to apply.</param>
+        /// <returns>
+        /// A no-retry policy when the options do not describe an enabled retry policy, otherwise
+        /// a linear or exponential backoff policy.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+        private static IRetryPolicy CreateBuiltInPolicyFromOptions(IRetryPolicyOptions options)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            if (!CanCreatePolicy(options))
+            {
+                return NoRetryPolicy.Create();
+            }
+
+            if (options.Factor > 0d)
+            {
+                return new ExponentialBackoff().SetFromDescriptor(options);
+            }
+
+            return new LinearBackoff().SetFromDescriptor(options);
+        }
+
+        /// <summary>
+        /// Determines whether options represent a retrying policy instead of the no-retry fallback.
+        /// </summary>
+        /// <param name="options">The retry policy options to inspect.</param>
+        /// <returns><c>true</c> when the options can create a retrying policy; otherwise <c>false</c>.</returns>
+        private static bool CanCreatePolicy(IRetryPolicyOptions options)
+        {
+            return options.MaxRetries > 0
+                && options.BaseDelayMs >= 0
+                && !double.IsNaN(options.Factor)
+                && !double.IsInfinity(options.Factor)
+                && options.Factor >= 0d;
+        }
+
+        /// <summary>
+        /// Creates and configures a retry policy from options.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The requested retry policy type. Built-in retry policy interfaces are mapped to their
+        /// internal implementations. Custom policies must use a concrete type with a public
+        /// parameterless constructor.
+        /// </typeparam>
+        /// <param name="options">The retry policy options to apply.</param>
+        /// <returns>The configured retry policy instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <typeparamref name="T"/> returns a different policy type from
+        /// <see cref="IRetryPolicySerializable.SetFromDescriptor(IRetryPolicyOptions)"/>.
+        /// </exception>
+        private static T CreateTypedPolicy<T>(IRetryPolicyOptions options)
+            where T : class, IRetryPolicy
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            var policy = PolicyByType(typeof(T)).SetFromDescriptor(options);
+            if (policy is T typedPolicy)
+            {
+                return typedPolicy;
+            }
+
+            throw new InvalidOperationException(
+                $"Retry policy '{GetPolicyTypeName(typeof(T))}' returned '{GetPolicyTypeName(policy.GetType())}' " +
+                "when configured from retry policy options.");
+        }
+
+        private static T CreatePolicyByType<T>()
+            where T : class, IRetryPolicy
+        {
+            var policy = PolicyByType(typeof(T));
+            if (policy is T typedPolicy)
+            {
+                return typedPolicy;
+            }
+
+            throw new InvalidOperationException(
+                $"Retry policy '{GetPolicyTypeName(policy.GetType())}' could not be returned as '{GetPolicyTypeName(typeof(T))}'.");
         }
 
         private static IRetryPolicy PolicyByType(Type policyType)
         {
-            if (policyType == null) return NoRetryPolicy.Create();
+            if (policyType == null)
+                throw new ArgumentNullException(nameof(policyType));
 
-            var constructorInfo = ContructPolicy(policyType);
-            var policyInstance = (IRetryPolicy)constructorInfo.Invoke(null);
-            return policyInstance;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="policy"></param>
-        /// <returns></returns>
-        private static bool TryConstructRetryPolicy<T>(out T policy) where T : IRetryPolicy
-        {
-            var policyType = typeof(T);
-            ConstructorInfo ctor = ContructPolicy(policyType);
-            policy = (T)ctor.Invoke(null);
-
-            if (policy is null)
+            if (policyType == typeof(INoRetryPolicy) || policyType == typeof(NoRetryPolicy))
             {
-                return false;
+                return NoRetryPolicy.Create();
             }
-            return true;
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="policyType"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        private static ConstructorInfo ContructPolicy(Type policyType)
-        {
-            var ctor = policyType.GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                binder: null,
-                types: Type.EmptyTypes,
-                modifiers: null);
+            if (policyType == typeof(ILinearBackoff) || policyType == typeof(LinearBackoff))
+            {
+                return new LinearBackoff();
+            }
 
-            if (ctor == null)
+            if (policyType == typeof(IExponentialBackoff) || policyType == typeof(ExponentialBackoff))
+            {
+                return new ExponentialBackoff();
+            }
+
+            if (policyType.IsInterface || policyType.IsAbstract)
             {
                 throw new InvalidOperationException(
-                    $"RetryPolicyType '{policyType.FullName}' must provide a parameterless constructor " +
-                    "so that it can be instantiated dynamically by the retry policy factory.");
+                    $"RetryPolicyType '{GetPolicyTypeName(policyType)}' must be a supported built-in interface or a concrete retry policy type.");
             }
-            return ctor;
+
+            var constructorInfo = policyType.GetConstructor(Type.EmptyTypes);
+            if (constructorInfo == null)
+            {
+                throw new InvalidOperationException(
+                    $"RetryPolicyType '{GetPolicyTypeName(policyType)}' must provide a public parameterless constructor " +
+                    "so that it can be instantiated by the retry policy factory.");
+            }
+
+            return (IRetryPolicy)constructorInfo.Invoke(null);
         }
 
-        public T GetRetryPolicy<T>() where T : class, IRetryPolicy
+        /// <summary>
+        /// Returns a stable display name for exception messages.
+        /// </summary>
+        /// <param name="policyType">The retry policy type to display.</param>
+        /// <returns>The full type name when available; otherwise the simple type name.</returns>
+        private static string GetPolicyTypeName(Type policyType)
         {
-            if (TryGetRetryPolicy<T>(out var policy))
-                return policy;
-
-            throw new InvalidOperationException($"Policy Type '{typeof(T).FullName}' could not be instantiated");
+            return policyType.FullName ?? policyType.Name;
         }
     }
 }

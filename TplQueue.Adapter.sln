@@ -18,11 +18,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.Abst
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Cache.Abstract.Test", "test\Fmacias.TplQueue.Cache.Abstract.Test\Fmacias.TplQueue.Cache.Abstract.Test.csproj", "{56B181DD-D47F-FFE5-5FA5-33BA5B65802C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Log", "src\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj", "{9C7A1292-17E4-DF28-63B7-DE15F9E552A3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Observers", "src\Fmacias.TplQueue.Observers\Fmacias.TplQueue.Observers.csproj", "{9C7A1292-17E4-DF28-63B7-DE15F9E552A3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Microsoft.DependencyInjection", "src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj", "{F3DE7B6B-9A0C-E44C-7EE7-69F55B76DC2A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.Observers.ViewModel", "src\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj", "{7834C6CE-0501-630B-0D5F-765456B021B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fmacias.TplQueue.RetryPolicies", "src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj", "{120173A9-FE94-F47E-48D2-5C1CF013B0B3}"
 EndProject

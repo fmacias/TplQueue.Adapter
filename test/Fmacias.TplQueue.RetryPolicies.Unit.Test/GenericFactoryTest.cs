@@ -52,7 +52,7 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
-        public void PolicyByName_Generic_ReturnsRequestedPolicyType()
+        public void PolicyByName_Generic_LinearBackoffInterface_ReturnsRequestedPolicyType()
         {
             var options = new Dictionary<string, IRetryPolicyOptions>
             {
@@ -67,6 +67,51 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
+        public void PolicyByName_Generic_ExponentialBackoffInterface_ReturnsRequestedPolicyType()
+        {
+            var options = new Dictionary<string, IRetryPolicyOptions>
+            {
+                { "exp", RetryPolicyOptions.Create(baseDelayMs: 75, maxRetries: 4, factor: 2.0) }
+            };
+
+            var policy = _factory.PolicyByName<IExponentialBackoff>("exp", options);
+
+            Assert.That(policy, Is.TypeOf<ExponentialBackoff>());
+            Assert.That(policy.MaxRetries, Is.EqualTo(4));
+            Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(75));
+            Assert.That(policy.Factor, Is.EqualTo(2.0));
+        }
+
+        [Test]
+        public void PolicyByName_Generic_ConcreteCustomPolicy_ReturnsRequestedPolicyType()
+        {
+            var options = new Dictionary<string, IRetryPolicyOptions>
+            {
+                { "custom", RetryPolicyOptions.Create(baseDelayMs: 25, maxRetries: 6) }
+            };
+
+            var policy = _factory.PolicyByName<CustomRetryPolicy>("custom", options);
+
+            Assert.That(policy, Is.TypeOf<CustomRetryPolicy>());
+            Assert.That(policy.ConfiguredMaxRetries, Is.EqualTo(6));
+            Assert.That(policy.ConfiguredBaseDelayMs, Is.EqualTo(25));
+        }
+
+        [Test]
+        public void PolicyByName_Generic_NoRetryPolicyInterface_ReturnsRequestedPolicyType()
+        {
+            var options = new Dictionary<string, IRetryPolicyOptions>
+            {
+                { "none", RetryPolicyOptions.Create(baseDelayMs: 0, maxRetries: 0) }
+            };
+
+            var policy = _factory.PolicyByName<INoRetryPolicy>("none", options);
+
+            Assert.That(policy, Is.TypeOf<NoRetryPolicy>());
+            Assert.That(policy.RetryCount, Is.EqualTo(0));
+        }
+
+        [Test]
         public void PolicyByName_Generic_MissingKey_ThrowsKeyNotFoundException()
         {
             var options = new Dictionary<string, IRetryPolicyOptions>
@@ -78,14 +123,38 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
-        public void PolicyByName_Generic_InterfaceWithoutKnownMapping_ThrowsInvalidOperationException()
+        public void PolicyByName_Generic_NullOptions_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => _factory.PolicyByName<ILinearBackoff>("linear", null!));
+        }
+
+        [Test]
+        public void PolicyByName_Generic_UnknownCustomInterface_ThrowsInvalidOperationException()
         {
             var options = new Dictionary<string, IRetryPolicyOptions>
             {
                 { "custom", RetryPolicyOptions.Create(baseDelayMs: 50, maxRetries: 2) }
             };
 
-            Assert.Throws<InvalidOperationException>(() => _factory.PolicyByName<ICustomRetryPolicy>("custom", options));
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => _factory.PolicyByName<ICustomRetryPolicy>("custom", options));
+
+            Assert.That(exception!.Message, Does.Contain(nameof(ICustomRetryPolicy)));
+        }
+
+        [Test]
+        public void PolicyByName_Generic_DifferentConfiguredPolicyType_ThrowsInvalidOperationException()
+        {
+            var options = new Dictionary<string, IRetryPolicyOptions>
+            {
+                { "custom", RetryPolicyOptions.Create(baseDelayMs: 50, maxRetries: 2) }
+            };
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => _factory.PolicyByName<SwappingRetryPolicy>("custom", options));
+
+            Assert.That(exception!.Message, Does.Contain(nameof(SwappingRetryPolicy)));
+            Assert.That(exception.Message, Does.Contain(nameof(NoRetryPolicy)));
         }
 
         [Test]
@@ -112,9 +181,27 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
-        public void GetPolicy_NoParameterlessConstructor_ThrowsInvalidOperationException()
+        public void GetPolicy_NoRetryPolicyInterface_CreatesPolicy()
         {
-            Assert.Throws<InvalidOperationException>(() => _factory.GetPolicy<NoDefaultCtorPolicy>());
+            var policy = _factory.GetPolicy<INoRetryPolicy>();
+
+            Assert.That(policy, Is.TypeOf<NoRetryPolicy>());
+        }
+
+        [Test]
+        public void GetPolicy_LinearBackoffInterface_CreatesPolicy()
+        {
+            var policy = _factory.GetPolicy<ILinearBackoff>();
+
+            Assert.That(policy, Is.TypeOf<LinearBackoff>());
+        }
+
+        [Test]
+        public void GetPolicy_ExponentialBackoffInterface_CreatesPolicy()
+        {
+            var policy = _factory.GetPolicy<IExponentialBackoff>();
+
+            Assert.That(policy, Is.TypeOf<ExponentialBackoff>());
         }
 
         [Test]
@@ -125,12 +212,24 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
             Assert.That(policy, Is.TypeOf<CustomRetryPolicy>());
         }
 
+        [Test]
+        public void GetPolicy_NoParameterlessConstructor_ThrowsInvalidOperationException()
+        {
+            Assert.Throws<InvalidOperationException>(() => _factory.GetPolicy<NoDefaultCtorPolicy>());
+        }
+
         private interface ICustomRetryPolicy : IRetryPolicy
         {
         }
 
         private sealed class CustomRetryPolicy : IRetryPolicy
         {
+            public CustomRetryPolicy()
+            {
+            }
+
+            public int ConfiguredMaxRetries { get; private set; }
+            public int ConfiguredBaseDelayMs { get; private set; }
             public int RetryCount => 0;
 
             public Task<TResult> ExecuteAsync<TResult>(
@@ -143,7 +242,36 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
 
             public IRetryPolicy SetFromDescriptor(IRetryPolicyOptions descriptor)
             {
+                if (descriptor is null) throw new ArgumentNullException(nameof(descriptor));
+
+                ConfiguredMaxRetries = descriptor.MaxRetries;
+                ConfiguredBaseDelayMs = descriptor.BaseDelayMs;
                 return this;
+            }
+
+            public IRetryPolicyOptions ToDescriptor()
+            {
+                return RetryPolicyOptions.Create(10, 1);
+            }
+        }
+
+        private sealed class SwappingRetryPolicy : IRetryPolicy
+        {
+            public SwappingRetryPolicy()
+            {
+            }
+
+            public int RetryCount => 0;
+
+            public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> action, CancellationToken cancellationToken)
+            {
+                if (action is null) throw new ArgumentNullException(nameof(action));
+                return action(cancellationToken);
+            }
+
+            public IRetryPolicy SetFromDescriptor(IRetryPolicyOptions descriptor)
+            {
+                return NoRetryPolicy.Create();
             }
 
             public IRetryPolicyOptions ToDescriptor()

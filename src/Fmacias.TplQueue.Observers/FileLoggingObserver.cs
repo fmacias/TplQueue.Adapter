@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
 
-namespace Fmacias.TplQueue.Log
+namespace Fmacias.TplQueue.Observers
 {
     public sealed class FileLoggingObserver : IObserver<IJobEvent>
     {

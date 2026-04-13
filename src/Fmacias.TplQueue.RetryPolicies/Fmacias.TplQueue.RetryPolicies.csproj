@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <Compile Remove="Facade.cs" />
-    <Compile Remove="RetryPolicyAbstractFactory.cs" />
     <Compile Remove="RetryPolicySerializer.cs" />
   </ItemGroup>
 
@@ -25,8 +24,5 @@
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>Fmacias.TplQueue.Test</_Parameter1>
 		</AssemblyAttribute>
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj" />
 	</ItemGroup>
 </Project>

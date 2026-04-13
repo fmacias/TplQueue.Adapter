@@ -4,7 +4,7 @@ Retry-policy implementations and factories used by `TplQueue.Adapter`.
 
 ## Contents
 
-- `RetryPolicyAbstractFactory` for named and descriptor-based creation.
+- `RetryPolicyAbstractFactory` for named and options-based creation.
 - `FactoryAbstract<TPolicy>` for typed retry-policy factories.
 - `NoRetryPolicy`, `LinearBackoff`, and `ExponentialBackoff`.
 - `LinearBackoffFactory` and `ExponentialBackoffFactory`.
@@ -23,6 +23,34 @@ IExponentialBackoff exponential = exponentialFactory.ExponentialBackof(maxRetrie
 ```
 
 When using the top-level `API` facade, the same factories can be passed to `api.RetryPolicy(...)` overloads for creation by default, by name, by `IRetryPolicyOptions`, or by explicit built-in arguments.
+
+## Abstract factory usage
+
+`RetryPolicyAbstractFactory` resolves built-in retry policy interfaces without exposing the internal implementation classes:
+
+```csharp
+IRetryPolicyAbstractFactory factory = RetryPolicyAbstractFactory.Create();
+
+ILinearBackoff linear = factory.PolicyByName<ILinearBackoff>("linear-default", retryPolicyOptions);
+IExponentialBackoff exponential = factory.GetPolicy<IExponentialBackoff>();
+INoRetryPolicy noRetry = factory.GetPolicy<INoRetryPolicy>();
+```
+
+The non-generic `PolicyByName(...)` overload keeps the queue-level fallback behavior:
+
+```csharp
+IRetryPolicy policy = factory.PolicyByName("missing-policy", retryPolicyOptions);
+```
+
+When the name is missing, the non-generic overload returns `NoRetryPolicy`. The generic `PolicyByName<T>(...)` overload is a typed lookup and throws `KeyNotFoundException` when the name is missing, because a `NoRetryPolicy` fallback may not be assignable to the requested type.
+
+Custom retry policies should be requested by concrete type:
+
+```csharp
+CustomRetryPolicy custom = factory.GetPolicy<CustomRetryPolicy>();
+```
+
+The custom policy must implement `IRetryPolicy` and expose a public parameterless constructor. Custom interfaces are not resolved automatically by `RetryPolicyAbstractFactory`; use a concrete custom type unless a registration mechanism is added later.
 
 ## Local pipeline
 

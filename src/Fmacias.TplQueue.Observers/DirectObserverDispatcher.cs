@@ -1,7 +1,7 @@
-using Fmacias.TplQueue.Contracts;
+﻿using Fmacias.TplQueue.Contracts;
 using System;
 
-namespace Fmacias.TplQueue.Observers.ViewModel
+namespace Fmacias.TplQueue.Observers
 {
     public sealed class DirectObserverDispatcher : IObserverDispatcher
     {

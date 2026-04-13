@@ -3,7 +3,7 @@ using Fmacias.TplQueue.Defaults.Log;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmacias.TplQueue.Log
+namespace Fmacias.TplQueue.Observers
 {
     public sealed class ProfilingObserver : IProfilingObserver
     {

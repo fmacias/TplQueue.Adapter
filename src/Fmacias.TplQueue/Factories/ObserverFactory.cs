@@ -1,6 +1,5 @@
 using Fmacias.TplQueue.Contracts;
-using Fmacias.TplQueue.Log;
-using Fmacias.TplQueue.Observers.ViewModel;
+using Fmacias.TplQueue.Observers;
 using Microsoft.Extensions.Logging;
 
 namespace Fmacias.TplQueue.Factories
@@ -30,10 +29,6 @@ namespace Fmacias.TplQueue.Factories
         public IProfilingObserver CreateProfilingObserver(ILogger<IProfilingObserver> logger)
         {
             return ProfilingObserver.Create(logger);
-        }
-        public IViewModelObserver CreateViewModeObserver(IObserverDispatcher observerDispatcher)
-        {
-            return ViewModelObserver.Create(observerDispatcher);
         }
     }
 }

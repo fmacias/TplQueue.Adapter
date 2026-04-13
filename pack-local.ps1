@@ -117,15 +117,14 @@ function Pack-Dependencies {
 }
 
 # Return local project paths that should be packed before the solution.
-# Example: includes src\TplQueue.Log\TplQueue.Log.csproj.
+# Example: includes src\Fmacias.TplQueue.Observers\Fmacias.TplQueue.Observers.csproj.
 function Get-LocalProjects {
   param([string]$RepoRoot)
 
   return @(
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Observers\Fmacias.TplQueue.Observers.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),    
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj')

@@ -2,7 +2,7 @@ using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace Fmacias.TplQueue.Log
+namespace Fmacias.TplQueue.Observers
 {
     public sealed class LoggingObserver : ILoggingObserver
     {

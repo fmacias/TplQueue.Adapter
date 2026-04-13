@@ -1,6 +1,6 @@
-# TplQueue.Log
+# Fmacias.TplQueue.Observers
 
-Logging support package for `TplQueue`.
+Observer support package for `TplQueue`.
 
 ## Table of contents
 
@@ -12,7 +12,7 @@ Logging support package for `TplQueue`.
 
 ## Summary
 
-`TplQueue.Log` contains reusable logging primitives and concrete logging-oriented observers.
+`Fmacias.TplQueue.Observers` contains reusable concrete observers and logging-oriented observer helpers.
 
 ## Module purpose
 
@@ -24,6 +24,7 @@ This package owns:
 - `FileLoggingObserver`
 - `ProfilingObserver`
 - `ConsoleObserver`
+- `DirectObserverDispatcher`
 - logging subscription helpers
 
 ## How to use

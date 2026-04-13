@@ -18,7 +18,7 @@ Thin adapter facade over `TplQueue.Core` and the modular integration packages.
 - `TplQueue.Core` for queue execution and job graph orchestration
 - `Fmacias.TplQueue.RetryPolicies` for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
-- `Fmacias.TplQueue.Log` and `Fmacias.TplQueue.Observers.ViewModel` for concrete observers
+- `Fmacias.TplQueue.Observers` for concrete observers
 
 ## Module purpose
 
@@ -122,7 +122,17 @@ IExponentialBackoff explicitExponential = api.RetryPolicy(
     factor: 2d);
 ```
 
-For queue-level named resolution through `IRetryPolicyAbstractFactory`, missing names fall back to `NoRetryPolicy`. The typed `IRetryPolicyFactory<TPolicy>` overloads keep the behavior of the provided factory.
+For queue-level named resolution through `IRetryPolicyAbstractFactory`, missing names fall back to `NoRetryPolicy` when using the non-generic `PolicyByName(...)` overload. Generic lookup through `PolicyByName<T>(...)` and `GetPolicy<T>()` supports the built-in retry policy interfaces `INoRetryPolicy`, `ILinearBackoff`, and `IExponentialBackoff`. Custom retry policies should be requested by concrete type and must expose a public parameterless constructor.
+
+```csharp
+IRetryPolicyAbstractFactory abstractFactory = api.RetryPolicyAbstractFactory;
+
+ILinearBackoff linearByName = abstractFactory.PolicyByName<ILinearBackoff>(
+    "linear-default",
+    api.RetryPolicyOptions);
+
+IExponentialBackoff exponentialDefault = abstractFactory.GetPolicy<IExponentialBackoff>();
+```
 
 ## Creating queues and cache helpers
 

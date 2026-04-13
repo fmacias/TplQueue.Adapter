@@ -15,8 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fmacias.TplQueue\Fmacias.TplQueue.csproj" />
-    <ProjectReference Include="..\..\src\Fmacias.TplQueue.Log\Fmacias.TplQueue.Log.csproj" />
-    <ProjectReference Include="..\..\src\Fmacias.TplQueue.Observers.ViewModel\Fmacias.TplQueue.Observers.ViewModel.csproj" />
+    <ProjectReference Include="..\..\src\Fmacias.TplQueue.Observers\Fmacias.TplQueue.Observers.csproj" />
   </ItemGroup> 
 
 </Project>

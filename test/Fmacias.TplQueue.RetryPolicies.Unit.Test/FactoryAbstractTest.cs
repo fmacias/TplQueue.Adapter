@@ -9,6 +9,10 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
     {
         private class TestRetryPolicy : IExponentialBackoff
         {
+            public TestRetryPolicy()
+            {
+            }
+
             public int RetryCount { get; private set; }
 
             public int MaxRetries { get; private set; }
