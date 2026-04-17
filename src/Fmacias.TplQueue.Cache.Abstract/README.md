@@ -32,14 +32,11 @@ using Fmacias.TplQueue.Contracts;
 
 var serializer = api.SystemTexSerializerFactory().Serializer();
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
-IPayloadHandlers payloadHandlers = PayloadHandlersBuilder.Create().Build();
 
-IMemCache cache = MemCacheFactory.Create().CreateCache(
+IMemCache cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
     serializer,
-    api.DataJobFactory,
-    typeResolver,
-    payloadHandlers,
-    api.RetryPolicyAbstractFactory);
+    typeResolver);
 ```
 
 Custom `AppDomain` usage through the public factory:

@@ -4,6 +4,8 @@ using Fmacias.TplQueue.RetryPolicies;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Fmacias.TplQueue.Test
 {
@@ -54,16 +56,6 @@ namespace Fmacias.TplQueue.Test
         {
             Assert.Throws<ArgumentNullException>(() => API.Create(
                 null!,
-                new Dictionary<string, IRetryPolicyOptions>(),
-                _queueOptions));
-        }
-
-        [Test]
-        public void Create_WhenPayloadHandlersBuilderIsNull_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() => API.Create(
-                _coreApi.Object,
-                (PayloadHandlersBuilder)null!,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions));
         }
@@ -233,10 +225,137 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
-        public void Create_WithPayloadHandlersBuilder_UsesRegisteredHandlersWhenCreatingCache()
+        public void RegisterPayloadHandler_WithHandlerInstance_UsesRegisteredHandlerWhenCreatingCache()
+        {
+            const string handlerKey = "plugins/test/api-instance-v1";
+            IApi api = CreateDefaultApi();
+            var registeredHandler = Mock.Of<IHandler>();
+
+            api.RegisterPayloadHandler(handlerKey, registeredHandler);
+
+            var resolver = CapturePayloadHandlers(api);
+
+            Assert.That(resolver.Handler(handlerKey), Is.SameAs(registeredHandler));
+        }
+
+        [Test]
+        public async Task RegisterPayloadHandler_WithFactory_ResolvesHandlersThroughCompositionRoot()
+        {
+            const string handlerKey = "plugins/test/api-factory-v1";
+            IApi api = CreateDefaultApi();
+            var recorder = new RecordingService();
+            var createdHandlers = 0;
+
+            api.RegisterPayloadHandler(handlerKey, () =>
+            {
+                createdHandlers++;
+                return new RecordingHandler(recorder);
+            });
+
+            var resolver = CapturePayloadHandlers(api);
+
+            await resolver.Handler(handlerKey).HandleAsync(new TestPayload("first", handlerKey), CancellationToken.None);
+            await resolver.Handler(handlerKey).HandleAsync(new TestPayload("second", handlerKey), CancellationToken.None);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(createdHandlers, Is.EqualTo(2));
+                Assert.That(recorder.Values, Is.EqualTo(new[] { "first", "second" }));
+            });
+        }
+
+        [Test]
+        public async Task RegisterPayloadHandler_WithUntypedDelegate_ResolvesAndExecutesHandler()
+        {
+            const string handlerKey = "plugins/test/api-untyped-v1";
+            IApi api = CreateDefaultApi();
+            object? receivedPayload = null;
+
+            api.RegisterPayloadHandler(handlerKey, (payload, ct) =>
+            {
+                receivedPayload = payload;
+                return Task.CompletedTask;
+            });
+
+            var resolver = CapturePayloadHandlers(api);
+            var payload = new TestPayload("untyped", handlerKey);
+
+            await resolver.Handler(handlerKey).HandleAsync(payload, CancellationToken.None);
+
+            Assert.That(receivedPayload, Is.SameAs(payload));
+        }
+
+        [Test]
+        public async Task RegisterPayloadHandler_WithTypedDelegate_ResolvesAndExecutesHandler()
+        {
+            const string handlerKey = "plugins/test/api-typed-v1";
+            IApi api = CreateDefaultApi();
+            var recorder = new RecordingService();
+
+            api.RegisterPayloadHandler<TestPayload>(handlerKey, (payload, ct) =>
+            {
+                recorder.Values.Add(payload.Value);
+                return Task.CompletedTask;
+            });
+
+            var resolver = CapturePayloadHandlers(api);
+
+            await resolver.Handler(handlerKey).HandleAsync(new TestPayload("typed", handlerKey), CancellationToken.None);
+
+            Assert.That(recorder.Values, Is.EqualTo(new[] { "typed" }));
+        }
+
+        [Test]
+        public void RegisterPayloadHandler_WithTypedDelegate_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
+        {
+            const string handlerKey = "plugins/test/api-type-check-v1";
+            IApi api = CreateDefaultApi();
+
+            api.RegisterPayloadHandler<TestPayload>(handlerKey, (payload, ct) => Task.CompletedTask);
+
+            var resolver = CapturePayloadHandlers(api);
+            var handler = resolver.Handler(handlerKey);
+
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await handler.HandleAsync(new OtherPayload(handlerKey), CancellationToken.None));
+        }
+
+        [Test]
+        public void RegisterPayloadHandlerPlugin_DelegatesRegistrationsToPlugin()
+        {
+            const string handlerKey = "plugins/test/api-plugin-v1";
+            IApi api = CreateDefaultApi();
+
+            api.RegisterPayloadHandlerPlugin(new TestPlugin(handlerKey));
+
+            var resolver = CapturePayloadHandlers(api);
+
+            Assert.That(resolver.Handler(handlerKey), Is.Not.Null);
+        }
+
+        [Test]
+        public void RegisterPayloadHandler_WhenDuplicateKeyUsesDifferentHandler_ThrowsInvalidOperationException()
+        {
+            const string handlerKey = "plugins/test/api-duplicate-v1";
+            IApi api = CreateDefaultApi();
+
+            api.RegisterPayloadHandler(handlerKey, Mock.Of<IHandler>());
+
+            Assert.Throws<InvalidOperationException>(() =>
+                api.RegisterPayloadHandler(handlerKey, Mock.Of<IHandler>()));
+        }
+
+        private IApi CreateDefaultApi()
+        {
+            return API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+        }
+
+        private IPayloadHandlers CapturePayloadHandlers(IApi api)
         {
             IPayloadHandlers capturedResolver = null!;
-            var registeredHandler = Mock.Of<IHandler>();
             var cacheFactory = new Mock<ICacheFactory<IDataJobCache>>();
             cacheFactory
                 .Setup(f => f.CreateCache(
@@ -249,18 +368,82 @@ namespace Fmacias.TplQueue.Test
                     (_, _, _, payloadHandlers, _) => capturedResolver = payloadHandlers)
                 .Returns(Mock.Of<IDataJobCache>());
 
-            var payloadHandlersBuilder = PayloadHandlersBuilder.Create()
-                .Register("plugins/test/registered-v1", registeredHandler);
-
-            var api = API.Create(
-                _coreApi.Object,
-                payloadHandlersBuilder,
-                new Dictionary<string, IRetryPolicyOptions>(),
-                _queueOptions);
-
             _ = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>(), _nodeTypeResolver.Object);
 
-            Assert.That(capturedResolver.Handler("plugins/test/registered-v1"), Is.SameAs(registeredHandler));
+            return capturedResolver;
+        }
+
+        private sealed class TestPlugin : IPayloadHandlerPlugin
+        {
+            private readonly string _handlerKey;
+
+            public TestPlugin(string handlerKey)
+            {
+                _handlerKey = handlerKey;
+            }
+
+            public void Register(IPayloadHandlerRegistry registry)
+            {
+                registry.Register(_handlerKey, new NoopHandler());
+            }
+        }
+
+        private sealed class RecordingHandler : IHandler
+        {
+            private readonly RecordingService _recordingService;
+
+            public RecordingHandler(RecordingService recordingService)
+            {
+                _recordingService = recordingService ?? throw new ArgumentNullException(nameof(recordingService));
+            }
+
+            public Task HandleAsync(IPayload payload, CancellationToken cancellationToken)
+            {
+                if (!(payload is TestPayload testPayload))
+                {
+                    throw new InvalidOperationException("Unexpected payload type.");
+                }
+
+                _recordingService.Values.Add(testPayload.Value);
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class NoopHandler : IHandler
+        {
+            public Task HandleAsync(IPayload payload, CancellationToken cancellationToken)
+            {
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class RecordingService
+        {
+            public List<string> Values { get; } = new List<string>();
+        }
+
+        private sealed class TestPayload : IPayload
+        {
+            public TestPayload(string value, string payloadId)
+            {
+                Value = value;
+                PayloadId = payloadId;
+            }
+
+            public string Value { get; }
+            public string PayloadId { get; }
+            public DateTime CollectionTime => DateTime.UtcNow;
+        }
+
+        private sealed class OtherPayload : IPayload
+        {
+            public OtherPayload(string payloadId)
+            {
+                PayloadId = payloadId;
+            }
+
+            public string PayloadId { get; }
+            public DateTime CollectionTime => DateTime.UtcNow;
         }
 
     }

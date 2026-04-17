@@ -3,6 +3,8 @@ using Fmacias.TplQueue.Factories;
 using Fmacias.TplQueue.Serialization.SystemTextJson;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Fmacias.TplQueue
 {
@@ -35,24 +37,6 @@ namespace Fmacias.TplQueue
         }
 
         /// <summary>
-        /// Creates a facade with a caller-provided payload handler builder.
-        /// </summary>
-        /// <param name="api">The underlying core facade.</param>
-        /// <param name="payloadHandlersBuilder">The builder used to compose the internal payload handlers for cache hydration.</param>
-        /// <param name="retryPolicyOptions">The configured retry policy options.</param>
-        /// <param name="queueOptions">The configured queue options.</param>
-        public static API Create(
-            ICoreApi api,
-            PayloadHandlersBuilder payloadHandlersBuilder,
-            IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions, 
-            IReadOnlyDictionary<string, IQOptions> queueOptions)
-        {
-            if (payloadHandlersBuilder == null) throw new ArgumentNullException(nameof(payloadHandlersBuilder));
-
-            return new API(api, payloadHandlersBuilder.BuildInternal(), queueOptions, retryPolicyOptions);
-        }
-
-        /// <summary>
         /// Creates a facade with an empty internal payload handler resolver.
         /// </summary>
         /// <param name="api">The underlying core facade.</param>
@@ -72,6 +56,42 @@ namespace Fmacias.TplQueue
         public IReadOnlyDictionary<string, IRetryPolicyOptions> RetryPolicyOptions => _retryPolicyOptions;
         public IReadOnlyDictionary<string, IQOptions> QueueOptions => _queueOptions;
         public IJobFactory JobFactory => _coreApi.JobFactory;
+
+        /// <inheritdoc />
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
+        {
+            _payloadHandlers.Register(payloadHandlerKey, handler);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> handlerFactory)
+        {
+            _payloadHandlers.Register(payloadHandlerKey, handlerFactory);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler)
+        {
+            _payloadHandlers.Register(payloadHandlerKey, handler);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
+            where TPayload : IPayload
+        {
+            _payloadHandlers.Register(payloadHandlerKey, handler);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
+        {
+            _payloadHandlers.RegisterPlugin(plugin);
+            return this;
+        }
 
         /// <summary>
         /// todo where statement needs to be a class? 

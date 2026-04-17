@@ -34,7 +34,7 @@ Concrete queue execution, job graphs, and payload-aware runtime semantics still 
 
 ## Creating the facade
 
-Create `API` from an `ICoreApi` and the named retry-policy and queue option dictionaries. When payload-aware cache hydration is required, compose the registrations in a `PayloadHandlersBuilder` and pass that builder into `API.Create(...)`:
+Create `API` from an `ICoreApi` and the named retry-policy and queue option dictionaries. When payload-aware cache hydration is required, register payload handlers directly on the API facade:
 
 ```csharp
 using Fmacias.TplQueue;
@@ -46,7 +46,8 @@ ICoreApi core = CoreApi.Create();
 API api = API.Create(
     core,
     retryPolicyOptions,
-    queueOptions);
+    queueOptions)
+    .RegisterPayloadHandlerPlugin(new MeasurementPayloadPlugin());
 ```
 
 `API.Create(...)` returns the concrete `API` instance. You can still reference it through `IApi` when you only want the abstraction.
@@ -63,18 +64,15 @@ From the facade you obtain:
 ## Registering payload handlers
 
 `API` owns the payload handler registry internally.
-If your application needs payload-aware cache hydration or plugin-style handler composition, compose the registrations in the application layer with `PayloadHandlersBuilder` and pass that builder into `API.Create(...)`.
-The stable persisted execution identity remains `IPayload.PayloadId`, and `PayloadHandlersBuilder.Build()` exposes `IPayloadHandlers` when a caller needs direct resolver access.
+If your application needs payload-aware cache hydration or plugin-style handler composition, register handlers through `IApi.RegisterPayloadHandler(...)` or `IApi.RegisterPayloadHandlerPlugin(...)`.
+The stable persisted execution identity remains `IPayload.PayloadId`, and cache hydration uses the API-owned internal handler registry.
 
 ```csharp
-var payloadHandlersBuilder = PayloadHandlersBuilder.Create()
-    .RegisterPlugin(new MeasurementPayloadPlugin());
-
 API api = API.Create(
     core,
-    payloadHandlersBuilder,
     retryPolicyOptions,
-    queueOptions);
+    queueOptions)
+    .RegisterPayloadHandlerPlugin(new MeasurementPayloadPlugin());
 
 public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
 {
@@ -200,13 +198,12 @@ That split keeps application entry points compact while avoiding unnecessary cou
 
 Current step:
 
-- prefer `PayloadHandlersBuilder` and `IPayloadHandlerPlugin`
+- prefer `IApi.RegisterPayloadHandler(...)` and `IApi.RegisterPayloadHandlerPlugin(...)`
 - persist and resolve handlers through the stable string key carried by `IPayload.PayloadId`
 - let `API` own the default internal payload handler registry
 
 Next step:
 
 - rely exclusively on plugin-style string keys during hydration
-- keep plugin loading and handler composition outside the facade, in the builder/application layer
-- decide whether payload handler registration should remain in the external `PayloadHandlersBuilder` or move into `API` in a later iteration
+- keep plugin discovery outside the facade while direct handler registration remains on `IApi`
 - if dedicated runtime loading becomes necessary for plugin payload types, prefer an `AssemblyLoadContext`-based resolver in modern .NET and treat the current AppDomain-based path as transitional compatibility behavior

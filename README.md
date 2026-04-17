@@ -70,14 +70,12 @@ using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Core;
 
 ICoreApi core = CoreApi.Create();
-PayloadHandlersBuilder payloadHandlersBuilder = PayloadHandlersBuilder.Create()
-    .RegisterPlugin(new MeasurementPayloadPlugin());
 
 API api = API.Create(
     core,
-    payloadHandlersBuilder,
     retryPolicyOptions,
-    queueOptions);
+    queueOptions)
+    .RegisterPayloadHandlerPlugin(new MeasurementPayloadPlugin());
 ```
 
 > It explains the adapter’s real role very well—it does not replace Core, it composes it.
@@ -85,12 +83,11 @@ API api = API.Create(
 ```csharp
 public static API Create(
     ICoreApi api,
-    PayloadHandlersBuilder payloadHandlersBuilder,
     IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
-    IReadOnlyDictionary<string, IQOptions> queueOptions)
-{
-    return new API(api, payloadHandlersBuilder.BuildInternal(), queueOptions, retryPolicyOptions);
-}
+    IReadOnlyDictionary<string, IQOptions> queueOptions);
+
+public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin);
+public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler);
 
 public IQFactoryAdapter QFactory
     => QFactoryAdapter.Create(_coreApi.QFactory, _retryPolicyAbstractFactory, _queueOptions, _retryPolicyOptions);
@@ -117,7 +114,7 @@ Payload-aware runtime nodes are part of the public model through `IDataJob`, `ID
 
 The execution-side payload model lives in Core, while Adapter provides the integration pieces commonly needed around it:
 
-- payload handler registration through `PayloadHandlersBuilder`
+- payload handler registration through `IApi.RegisterPayloadHandler(...)`
 - plugin-style registration through `IPayloadHandlerPlugin` and `IPayloadHandlerRegistry`
 - cache abstractions for dehydration and hydration
 - serializer implementations
@@ -156,7 +153,7 @@ Payload-aware composition follows the same rule as plain Core graphs: create the
 
 Current step:
 
-- register payload handlers with `PayloadHandlersBuilder`
+- register payload handlers through `IApi.RegisterPayloadHandler(...)`
 - use `IPayload.PayloadId` as the stable persisted handler key
 - resolve hydrated payload jobs through `IPayloadHandlers`
 
@@ -164,7 +161,7 @@ Next step:
 
 - add optional higher-level plugin discovery helpers once the key-based contract is fully adopted
 - document recommended handler-key versioning conventions for long-lived cached payloads
-- decide whether payload handler registration should remain in the external `PayloadHandlersBuilder` or move into `API` in a later iteration
+- keep direct registration on `IApi` as the public composition path
 
 ## Queues and queue factory adapters
 
@@ -444,11 +441,9 @@ using Fmacias.TplQueue.Core;
 using Microsoft.Extensions.Logging;
 
 ICoreApi core = CoreApi.Create();
-var payloadHandlersBuilder = PayloadHandlersBuilder.Create();
 
 API api = API.Create(
     core,
-    payloadHandlersBuilder,
     retryPolicyOptions,
     queueOptions);
 

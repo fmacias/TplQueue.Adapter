@@ -45,14 +45,11 @@ using Fmacias.TplQueue.Contracts;
 
 var serializer = api.SystemTexSerializerFactory().Serializer();
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
-IPayloadHandlers payloadHandlers = PayloadHandlersBuilder.Create().Build();
 
-IMemCache cache = MemCacheFactory.Create().CreateCache(
+IMemCache cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
     serializer,
-    api.DataJobFactory,
-    typeResolver,
-    payloadHandlers,
-    api.RetryPolicyAbstractFactory);
+    typeResolver);
 ```
 
 If payload types must be resolved from a dedicated `AppDomain`, provide a custom `ITypeResolver` implementation and pass it to `CreateCache(...)`. `MemCache` depends only on the abstraction, not on the concrete runtime resolver.

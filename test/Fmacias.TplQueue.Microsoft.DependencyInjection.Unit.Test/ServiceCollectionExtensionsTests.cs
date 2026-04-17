@@ -22,6 +22,32 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         public ISystemTextJsonSerializerFactory SystemTexSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
 
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
+        {
+            return this;
+        }
+
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> handlerFactory)
+        {
+            return this;
+        }
+
+        public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler)
+        {
+            return this;
+        }
+
+        public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
+            where TPayload : IPayload
+        {
+            return this;
+        }
+
+        public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
+        {
+            return this;
+        }
+
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory, string name) where T : IRetryPolicy
         {
             throw new NotImplementedException();

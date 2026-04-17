@@ -8,16 +8,15 @@ using System.Threading.Tasks;
 namespace Fmacias.TplQueue.Test
 {
     [TestFixture]
-    public sealed class PayloadHandlersBuilderTests
+    public sealed class PayloadHandlersTests
     {
         [Test]
         public async Task Register_WithHandlerInstance_ResolvesAndExecutesHandler()
         {
             const string handlerKey = "plugins/test/v1";
             var recorder = new RecordingService();
-            var payloadHandlers = PayloadHandlersBuilder.Create()
-                .Register(handlerKey, new RecordingHandler(recorder))
-                .Build();
+            var payloadHandlers = PayloadHandlers.Create()
+                .Register(handlerKey, new RecordingHandler(recorder));
 
             await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("ok", handlerKey), CancellationToken.None);
 
@@ -30,13 +29,12 @@ namespace Fmacias.TplQueue.Test
             const string handlerKey = "plugins/test/factory-v1";
             var recorder = new RecordingService();
             var createdHandlers = 0;
-            var payloadHandlers = PayloadHandlersBuilder.Create()
+            var payloadHandlers = PayloadHandlers.Create()
                 .Register(handlerKey, () =>
                 {
                     createdHandlers++;
                     return new RecordingHandler(recorder);
-                })
-                .Build();
+                });
 
             await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("first", handlerKey), CancellationToken.None);
             await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("second", handlerKey), CancellationToken.None);
@@ -53,13 +51,12 @@ namespace Fmacias.TplQueue.Test
         {
             const string handlerKey = "plugins/test/untyped-v1";
             object? receivedPayload = null;
-            var payloadHandlers = PayloadHandlersBuilder.Create()
+            var payloadHandlers = PayloadHandlers.Create()
                 .Register(handlerKey, (payload, ct) =>
                 {
                     receivedPayload = payload;
                     return Task.CompletedTask;
-                })
-                .Build();
+                });
 
             var payload = new TestPayload("untyped", handlerKey);
             await payloadHandlers.Handler(handlerKey).HandleAsync(payload, CancellationToken.None);
@@ -70,9 +67,8 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void RegisterPlugin_DelegatesRegistrationsToPlugin()
         {
-            var payloadHandlers = PayloadHandlersBuilder.Create()
-                .RegisterPlugin(new TestPlugin())
-                .Build();
+            var payloadHandlers = PayloadHandlers.Create()
+                .RegisterPlugin(new TestPlugin());
 
             var handler = payloadHandlers.Handler("plugins/test/plugin-v1");
 
@@ -82,7 +78,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void Register_WhenDuplicateKeyUsesDifferentHandler_ThrowsInvalidOperationException()
         {
-            var payloadHandlers = PayloadHandlersBuilder.Create()
+            var payloadHandlers = PayloadHandlers.Create()
                 .Register("plugins/test/duplicate-v1", (payload, ct) => Task.CompletedTask);
 
             Assert.Throws<InvalidOperationException>(() =>
@@ -92,8 +88,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void Handler_WhenKeyIsMissing_ThrowsKeyNotFoundException()
         {
-            var payloadHandlers = PayloadHandlersBuilder.Create()
-                .Build();
+            var payloadHandlers = PayloadHandlers.Create();
 
             Assert.Throws<KeyNotFoundException>(() => payloadHandlers.Handler("plugins/test/missing-v1"));
         }
@@ -102,9 +97,8 @@ namespace Fmacias.TplQueue.Test
         public void Register_TypedHandler_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
         {
             const string handlerKey = "plugins/test/type-check-v1";
-            var payloadHandlers = PayloadHandlersBuilder.Create()
-                .Register<TestPayload>(handlerKey, (payload, ct) => Task.CompletedTask)
-                .Build();
+            var payloadHandlers = PayloadHandlers.Create()
+                .Register<TestPayload>(handlerKey, (payload, ct) => Task.CompletedTask);
 
             var handler = payloadHandlers.Handler(handlerKey);
 
