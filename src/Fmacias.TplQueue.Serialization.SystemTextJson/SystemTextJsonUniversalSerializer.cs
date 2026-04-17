@@ -65,7 +65,7 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson
 
         public T Deserialize<T>(string json)
         {
-            if (json is null) throw new ArgumentNullException(nameof(json));
+            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentNullException(nameof(json));
             var result = JsonSerializer.Deserialize<T>(json, _options);
             if (result is null)
             {
