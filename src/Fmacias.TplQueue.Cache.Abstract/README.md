@@ -91,8 +91,13 @@ ITypeResolver typeResolver = new PluginDomainTypeResolver(customAppDomain);
 Keeping `ITypeResolver` separate from `IUniversalDataSerializer` is the cleaner SRP boundary for this module:
 
 - type identity lookup is a runtime concern
-- JSON materialization is a serialization concern
+- payload materialization is a serialization concern
 - cache hydration composes both concerns but does not collapse them into one interface
+
+## Compatibility note
+
+Some public contracts still expose JSON-oriented names such as `PayloadJson` and `IUniversalDataSerializer.Deserialize(string json, Type type)`.
+Those names are retained for compatibility and should be read as serializer-specific payload content, not as a JSON-only storage rule.
 
 ## Runtime type resolution roadmap
 

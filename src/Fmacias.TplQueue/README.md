@@ -175,7 +175,7 @@ Serializer surface:
 - XML support uses `IXmlSerializerFactory` and `IXmlUniversalSerializer : IUniversalDataSerializer`
 - serializer plugin discovery and serializer registries are outside the current facade scope
 
-Existing JSON-oriented public names are compatibility concerns. They should not be renamed as part of adding XML support.
+Existing JSON-oriented public names are compatibility concerns. `PayloadJson` and serializer parameters named `json` should be read as serializer-specific payload content, not as JSON-only behavior. They should not be renamed as part of adding XML support.
 
 ## Creating observers
 

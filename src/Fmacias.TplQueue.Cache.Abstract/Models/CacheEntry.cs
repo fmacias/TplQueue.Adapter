@@ -76,18 +76,18 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         }
 
         /// <summary>
-        /// Marks the entry as acknowledged, updating the payload JSON if the execution produced an output.
+        /// Marks the entry as acknowledged, updating the serialized payload content if execution produced an output.
         /// </summary>
-        public void MarkAck(ISerializable payloadData, IUniversalDataSerializer jsonUniversalPayloadSerializer)
+        public void MarkAck(ISerializable payloadData, IUniversalDataSerializer serializer)
         {
             if (payloadData is null) throw new ArgumentNullException(nameof(payloadData));
-            if (jsonUniversalPayloadSerializer == null) throw new ArgumentNullException(nameof(jsonUniversalPayloadSerializer));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            var jsonOutput = payloadData.Serialize(jsonUniversalPayloadSerializer);
+            var serializedOutput = payloadData.Serialize(serializer);
 
-            if (!string.IsNullOrEmpty(jsonOutput))
+            if (!string.IsNullOrEmpty(serializedOutput))
             {
-                JobNodeRecordDto.UpdatePayloadJson(jsonOutput);
+                JobNodeRecordDto.UpdatePayloadJson(serializedOutput);
             }
 
             Status = EntryStatus.Acknownledged;

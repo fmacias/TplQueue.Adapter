@@ -5,7 +5,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
 {
     /// <summary>
     /// Concrete DTO(Data Transfer Object) for a payload job(<see cref="IDataJob{IPayload}"/>) node.
-    /// Enforces non-null <see cref="PayloadTypeName"/> and <see cref="PayloadJson"/>.
+    /// Enforces non-null <see cref="PayloadTypeName"/> and serialized payload content.
     /// </summary>
     internal sealed class JobNodeDto : IJobNodeDto
     {
@@ -22,6 +22,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         public bool IsFifo { get; }
         public string PayloadTypeName { get; }
         public Type PayloadType { get; }
+        /// <summary>
+        /// Serialized payload content. The property name is retained for compatibility and is not limited to JSON.
+        /// </summary>
         public string PayloadJson { get; private set; }
         public string PayloadHandlerKey { get; }
 
@@ -58,12 +61,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         }
 
         public static JobNodeDto Create(
-            IUniversalDataSerializer jsonSerializer,
+            IUniversalDataSerializer serializer,
             IDataJobNode dataJob,
             bool isFifo,
             IDataJobNode? parentJob)
         {
-            if (jsonSerializer is null) throw new ArgumentNullException(nameof(jsonSerializer));
+            if (serializer is null) throw new ArgumentNullException(nameof(serializer));
             if (dataJob is null) throw new ArgumentNullException(nameof(dataJob));
 
             var payload = dataJob.GetPayload()
@@ -84,7 +87,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
             return new JobNodeDto(
                 jobId: dataJob.Id,
                 parentJobId: parentJob?.Id ?? Guid.Empty,
-                payloadJson: SerializePayload(dataJob, jsonSerializer),
+                payloadJson: SerializePayload(dataJob, serializer),
                 payloadType: payload.GetType(),
                 isRoot: dataJob is IDataJobRoot,
                 isFifo: isFifo,
@@ -96,7 +99,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         public void UpdatePayloadJson(string payloadJson)
         {
             if (string.IsNullOrWhiteSpace(payloadJson))
-                throw new ArgumentException("Payload json cannot be null or whitespace.", nameof(payloadJson));
+                throw new ArgumentException("Serialized payload content cannot be null or whitespace.", nameof(payloadJson));
 
             PayloadJson = payloadJson;
         }

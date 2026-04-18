@@ -415,7 +415,7 @@ XML serializer surface:
 - the concrete XML module is `Fmacias.TplQueue.Serialization.Xml`
 - no serializer plugin discovery, serializer registry, or external serializer dependency is part of this scope
 
-Existing JSON-oriented public names remain compatibility concerns. The `SystemTexSerializerFactory()` typo is handled separately, and persisted members such as `PayloadJson` should not be renamed as part of XML support.
+Existing JSON-oriented public names remain compatibility concerns. The `SystemTexSerializerFactory()` typo is handled separately, and persisted members such as `PayloadJson` should not be renamed as part of XML support. Treat those names as compatibility aliases for serializer-specific payload content.
 
 ## Dependency injection
 
