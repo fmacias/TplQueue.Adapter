@@ -150,18 +150,17 @@ public sealed class MeasurementPayloadHandler : IHandler
 
 Payload-aware composition follows the same rule as plain Core graphs: create the payload jobs first, then terminate the graph with an `IDataJobRoot`. Use `payloadRoot.After(payloadJob)` or `payloadJob.Then(payloadRoot)`, not the reverse direction.
 
-## Payload handler roadmap
+## Payload handler contract status
 
-Current step:
+Current state:
 
 - register payload handlers through `IApi.RegisterPayloadHandler(...)`
 - use `IPayload.PayloadId` as the stable persisted handler key
 - resolve hydrated payload jobs through `IPayloadHandlers`
 
-Next step:
+Deferred work:
 
 - add optional higher-level plugin discovery helpers once the key-based contract is fully adopted
-- document recommended handler-key versioning conventions for long-lived cached payloads
 - keep direct registration on `IApi` as the public composition path
 
 ## Queues and queue factory adapters
@@ -361,7 +360,7 @@ Example cache creation through the adapter facade:
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 
-var serializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
 var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
@@ -374,14 +373,72 @@ var cache = api.Cache(
 
 During hydration the cache first resolves `PayloadTypeName` through `ITypeResolver`, then passes the resulting CLR `Type` into `IUniversalDataSerializer.Deserialize(string, Type)`. The default runtime resolver is `RuntimeNodeTypeResolver`, exposed publicly through `RuntimeNodeTypeResolverFactory`.
 
-### Cache type-resolution roadmap
+### Cache to queue dispatch
+
+This is the end-to-end adapter flow from serializer creation, through cache hydration, into queue dispatch:
+
+```csharp
+public sealed class MeasurementPayload : IPayload
+{
+    public const string HandlerKey = "measurements.persist/v1";
+
+    public string SensorId { get; set; } = string.Empty;
+    public double Value { get; set; }
+    public string PayloadId => HandlerKey;
+    public DateTime CollectionTime => DateTime.UtcNow;
+}
+
+public sealed class MeasurementPayloadHandler : IHandler
+{
+    public Task HandleAsync(IPayload payload, CancellationToken ct)
+    {
+        var measurement = (MeasurementPayload)payload;
+        return Task.CompletedTask;
+    }
+}
+
+IHandler handler = new MeasurementPayloadHandler();
+
+api.RegisterPayloadHandler(MeasurementPayload.HandlerKey, handler);
+
+IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
+ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
+
+IMemCache cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
+    serializer,
+    typeResolver);
+
+IDataJobRoot<MeasurementPayload> root = api.DataJobFactory.DataJobRoot(
+    new MeasurementPayload { SensorId = "S-01", Value = 12.5 },
+    handler,
+    name: "PersistMeasurement");
+
+cache.Dehydrate(root, isFifo: false);
+
+ILogger<IParallelQ> queueLogger = loggerFactory.CreateLogger<IParallelQ>();
+
+if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
+{
+    IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
+
+    queue.Enqueue(hydratedRoot, CancellationToken.None);
+    queue.Start();
+
+    await hydratedRoot.WaitUntilFinishedAsync();
+}
+```
+
+Use `api.XmlSerializerFactory().Serializer()` in the same flow when XML payload storage is required.
+
+### Cache type-resolution status
 
 Current state:
 
 - the default cache type-resolution path is `RuntimeNodeTypeResolver`, which is AppDomain-based
 - that path is acceptable for compatibility and simple runtime probing
 
-Next step:
+Deferred work:
 
 - if dynamic plugin folders or dedicated runtime loading boundaries become a real requirement, prefer `AssemblyLoadContext` in modern .NET
 - treat `AppDomain` as a .NET Framework-era mechanism and consider the current AppDomain-based resolver a transitional compatibility layer
@@ -405,6 +462,16 @@ These components are typically used together with:
 - runtime node reconstruction
 
 The serializer concern stays outside Core so that the execution runtime does not become coupled to one concrete serialization technology. Type-name resolution remains a separate cache-hydration concern through `ITypeResolver`; it is not embedded into `IUniversalDataSerializer`.
+
+Create serializers through the facade:
+
+```csharp
+IUniversalDataSerializer jsonSerializer =
+    api.SystemTextSerializerFactory().Serializer();
+
+IUniversalDataSerializer xmlSerializer =
+    api.XmlSerializerFactory().Serializer();
+```
 
 XML serializer surface:
 

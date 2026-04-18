@@ -151,7 +151,7 @@ Use the same facade for payload-aware cache creation:
 ```csharp
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 
-var serializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
 var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
@@ -176,6 +176,69 @@ Serializer surface:
 - serializer plugin discovery and serializer registries are outside the current facade scope
 
 Existing JSON-oriented public names are compatibility concerns. `SystemTexSerializerFactory()` remains available as the legacy typo-preserving alias; new code should use `SystemTextSerializerFactory()`. `PayloadJson` and serializer parameters named `json` should be read as serializer-specific payload content, not as JSON-only behavior. They should not be renamed as part of adding XML support.
+
+Create either supported serializer through the facade:
+
+```csharp
+IUniversalDataSerializer jsonSerializer =
+    api.SystemTextSerializerFactory().Serializer();
+
+IUniversalDataSerializer xmlSerializer =
+    api.XmlSerializerFactory().Serializer();
+```
+
+The same serializer contract is used when a payload graph moves through cache hydration and into queue dispatch:
+
+```csharp
+public sealed class MeasurementPayload : IPayload
+{
+    public const string HandlerKey = "measurements.persist/v1";
+
+    public string SensorId { get; set; } = string.Empty;
+    public double Value { get; set; }
+    public string PayloadId => HandlerKey;
+    public DateTime CollectionTime => DateTime.UtcNow;
+}
+
+public sealed class MeasurementPayloadHandler : IHandler
+{
+    public Task HandleAsync(IPayload payload, CancellationToken ct)
+    {
+        var measurement = (MeasurementPayload)payload;
+        return Task.CompletedTask;
+    }
+}
+
+IHandler handler = new MeasurementPayloadHandler();
+
+api.RegisterPayloadHandler(MeasurementPayload.HandlerKey, handler);
+
+var cache = api.Cache(
+    MemCacheFactory.Create(),
+    jsonSerializer,
+    RuntimeNodeTypeResolverFactory.Create().Resolver());
+
+var root = api.DataJobFactory.DataJobRoot(
+    new MeasurementPayload { SensorId = "S-01", Value = 12.5 },
+    handler,
+    name: "PersistMeasurement");
+
+cache.Dehydrate(root, isFifo: false);
+
+ILogger<IParallelQ> queueLogger = loggerFactory.CreateLogger<IParallelQ>();
+
+if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
+{
+    IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
+
+    queue.Enqueue(hydratedRoot, CancellationToken.None);
+    queue.Start();
+
+    await hydratedRoot.WaitUntilFinishedAsync();
+}
+```
+
+Replace `jsonSerializer` with `xmlSerializer` when the cache should persist XML payload content.
 
 ## Creating observers
 
@@ -206,16 +269,15 @@ This package stays thin on purpose:
 
 That split keeps application entry points compact while avoiding unnecessary coupling between queue execution, retry-policy creation, serialization, cache support, and observer integration.
 
-## Payload handler roadmap
+## Payload handler contract status
 
-Current step:
+Current state:
 
 - prefer `IApi.RegisterPayloadHandler(...)` and `IApi.RegisterPayloadHandlerPlugin(...)`
 - persist and resolve handlers through the stable string key carried by `IPayload.PayloadId`
 - let `API` own the default internal payload handler registry
 
-Next step:
+Deferred work:
 
-- rely exclusively on plugin-style string keys during hydration
 - keep plugin discovery outside the facade while direct handler registration remains on `IApi`
 - if dedicated runtime loading becomes necessary for plugin payload types, prefer an `AssemblyLoadContext`-based resolver in modern .NET and treat the current AppDomain-based path as transitional compatibility behavior

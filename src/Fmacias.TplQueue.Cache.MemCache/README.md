@@ -43,24 +43,44 @@ using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 
-var serializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer jsonSerializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer xmlSerializer = api.XmlSerializerFactory().Serializer();
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 IMemCache cache = api.Cache<IMemCache>(
     MemCacheFactory.Create(),
-    serializer,
+    jsonSerializer,
     typeResolver);
 ```
 
 If payload types must be resolved from a dedicated `AppDomain`, provide a custom `ITypeResolver` implementation and pass it to `CreateCache(...)`. `MemCache` depends only on the abstraction, not on the concrete runtime resolver.
 
-## Roadmap
+Use the same cache object to dehydrate a payload root, hydrate it back, and dispatch it through a queue:
+
+```csharp
+cache.Dehydrate(payloadRoot, isFifo: false);
+
+ILogger<IParallelQ> queueLogger = loggerFactory.CreateLogger<IParallelQ>();
+
+if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
+{
+    IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
+
+    queue.Enqueue(hydratedRoot, CancellationToken.None);
+    queue.Start();
+
+    await hydratedRoot.WaitUntilFinishedAsync();
+}
+```
+
+Use `xmlSerializer` instead of `jsonSerializer` in `api.Cache<IMemCache>(...)` when XML payload storage is required.
+
+## Runtime type resolution status
 
 Current state:
 
 - `MemCache` depends only on `ITypeResolver`, so it can work with the current AppDomain-based runtime resolver
 
-Next step:
+Deferred work:
 
 - if plugin payload types start being loaded from dedicated runtime boundaries in modern .NET, the preferred evolution is an `AssemblyLoadContext`-aware resolver behind `ITypeResolver`
-- the current `AppDomain` path should be treated as a compatibility-oriented path rather than the long-term plugin-loading design

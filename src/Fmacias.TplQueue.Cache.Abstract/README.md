@@ -30,12 +30,13 @@ using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 
-var serializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer jsonSerializer = api.SystemTextSerializerFactory().Serializer();
+IUniversalDataSerializer xmlSerializer = api.XmlSerializerFactory().Serializer();
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 IMemCache cache = api.Cache<IMemCache>(
     MemCacheFactory.Create(),
-    serializer,
+    jsonSerializer,
     typeResolver);
 ```
 
@@ -86,6 +87,28 @@ AppDomain customAppDomain = AppDomain.CurrentDomain; // replace with your applic
 ITypeResolver typeResolver = new PluginDomainTypeResolver(customAppDomain);
 ```
 
+## Hydration into queue dispatch
+
+After a cache hydrates a payload graph, dispatch the returned `IDataJobRoot` through the normal queue API:
+
+```csharp
+cache.Dehydrate(payloadRoot, isFifo: false);
+
+ILogger<IParallelQ> queueLogger = loggerFactory.CreateLogger<IParallelQ>();
+
+if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
+{
+    IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
+
+    queue.Enqueue(hydratedRoot, CancellationToken.None);
+    queue.Start();
+
+    await hydratedRoot.WaitUntilFinishedAsync();
+}
+```
+
+Use `jsonSerializer` or `xmlSerializer` during cache creation depending on the storage format you want. The hydration flow remains the same because cache modules depend on `IUniversalDataSerializer`.
+
 ## Design note
 
 Keeping `ITypeResolver` separate from `IUniversalDataSerializer` is the cleaner SRP boundary for this module:
@@ -99,18 +122,17 @@ Keeping `ITypeResolver` separate from `IUniversalDataSerializer` is the cleaner 
 Some public contracts still expose JSON-oriented names such as `PayloadJson` and `IUniversalDataSerializer.Deserialize(string json, Type type)`.
 Those names are retained for compatibility and should be read as serializer-specific payload content, not as a JSON-only storage rule.
 
-## Runtime type resolution roadmap
+## Runtime type resolution status
 
 Current state:
 
 - `RuntimeNodeTypeResolver` uses `AppDomain` because the current implementation is compatibility-first and simple to wire
 - this remains adequate while payload CLR types live in the default host runtime or another explicitly selected AppDomain
 
-Next step:
+Deferred work:
 
 - when dynamic plugin loading becomes a first-class scenario in modern .NET, move the dedicated-loading design toward `AssemblyLoadContext`
-- consider `AppDomain` a .NET Framework-era abstraction that should eventually be replaced or upgraded for modern plugin-loading scenarios
-- preserve the `ITypeResolver` seam so the runtime loading mechanism can change without redesigning the serializer contract
+- preserve the `ITypeResolver` boundary so the runtime loading mechanism can change without redesigning the serializer contract
 
 ## Local pipeline
 Run from `TplQueue.Adapter` root:
