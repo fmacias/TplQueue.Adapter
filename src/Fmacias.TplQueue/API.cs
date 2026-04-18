@@ -160,12 +160,25 @@ namespace Fmacias.TplQueue
         }
 
         /// <summary>
-        /// 
+        /// Creates the System.Text.Json serializer factory exposed by the adapter facade.
         /// </summary>
-        /// <returns></returns>
-        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory()
+        /// <returns>A System.Text.Json serializer factory.</returns>
+        public ISystemTextJsonSerializerFactory SystemTextSerializerFactory()
         {
             return SystemTextJsonSerializerFactory.Create();
+        }
+
+        /// <summary>
+        /// Creates the System.Text.Json serializer factory exposed by the adapter facade.
+        /// </summary>
+        /// <remarks>
+        /// This typo-preserving member is retained for source and binary compatibility.
+        /// Prefer <see cref="SystemTextSerializerFactory"/>.
+        /// </remarks>
+        /// <returns>A System.Text.Json serializer factory.</returns>
+        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory()
+        {
+            return SystemTextSerializerFactory();
         }
 
         /// <summary>

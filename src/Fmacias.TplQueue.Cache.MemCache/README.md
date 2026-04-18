@@ -43,7 +43,7 @@ using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 
-var serializer = api.SystemTexSerializerFactory().Serializer();
+var serializer = api.SystemTextSerializerFactory().Serializer();
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 IMemCache cache = api.Cache<IMemCache>(

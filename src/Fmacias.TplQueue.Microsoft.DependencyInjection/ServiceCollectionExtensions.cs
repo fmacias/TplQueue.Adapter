@@ -86,7 +86,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                 .AddSingleton(facade.DataJobFactory)
                 .AddSingleton(facade.QFactory)
                 .AddSingleton(facade.ObserverFactory())
-                .AddSingleton(facade.SystemTexSerializerFactory())
+                .AddSingleton(facade.SystemTextSerializerFactory())
                 .AddSingleton(facade.XmlSerializerFactory());
         }
         /// <summary>

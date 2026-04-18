@@ -361,7 +361,7 @@ Example cache creation through the adapter facade:
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 
-var serializer = api.SystemTexSerializerFactory().Serializer();
+var serializer = api.SystemTextSerializerFactory().Serializer();
 var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
@@ -415,7 +415,7 @@ XML serializer surface:
 - the concrete XML module is `Fmacias.TplQueue.Serialization.Xml`
 - no serializer plugin discovery, serializer registry, or external serializer dependency is part of this scope
 
-Existing JSON-oriented public names remain compatibility concerns. The `SystemTexSerializerFactory()` typo is handled separately, and persisted members such as `PayloadJson` should not be renamed as part of XML support. Treat those names as compatibility aliases for serializer-specific payload content.
+Existing JSON-oriented public names remain compatibility concerns. The legacy `SystemTexSerializerFactory()` typo is still available for compatibility; new code should use `SystemTextSerializerFactory()`. Persisted members such as `PayloadJson` should not be renamed as part of XML support. Treat those names as compatibility aliases for serializer-specific payload content.
 
 ## Dependency injection
 

@@ -202,6 +202,42 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
+        public void SystemTextSerializerFactory_ReturnsSystemTextJsonPackageFactory()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var factory = api.SystemTextSerializerFactory();
+            var serializer = factory.Serializer();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(factory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Serialization.SystemTextJson"));
+                Assert.That(serializer, Is.InstanceOf<ISystemTextJsonUniversalSerializer>());
+            });
+        }
+
+        [Test]
+        public void SystemTexSerializerFactory_LegacyTypo_ReturnsSystemTextJsonPackageFactory()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var factory = api.SystemTexSerializerFactory();
+            var serializer = factory.Serializer();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(factory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Serialization.SystemTextJson"));
+                Assert.That(serializer, Is.InstanceOf<ISystemTextJsonUniversalSerializer>());
+            });
+        }
+
+        [Test]
         public void Cache_WithNullTypeResolver_ThrowsArgumentNullException()
         {
             var api = API.Create(

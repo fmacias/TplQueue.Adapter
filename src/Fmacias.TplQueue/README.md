@@ -151,7 +151,7 @@ Use the same facade for payload-aware cache creation:
 ```csharp
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 
-var serializer = api.SystemTexSerializerFactory().Serializer();
+var serializer = api.SystemTextSerializerFactory().Serializer();
 var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
@@ -169,13 +169,13 @@ If your application needs a dedicated `AppDomain` or a whitelist-based resolutio
 
 Serializer surface:
 
-- JSON remains available through `SystemTexSerializerFactory()`
+- JSON remains available through `SystemTextSerializerFactory()`
 - XML support is available through `XmlSerializerFactory()`
 - cache creation continues to accept `IUniversalDataSerializer` instead of a JSON- or XML-specific serializer contract
 - XML support uses `IXmlSerializerFactory` and `IXmlUniversalSerializer : IUniversalDataSerializer`
 - serializer plugin discovery and serializer registries are outside the current facade scope
 
-Existing JSON-oriented public names are compatibility concerns. `PayloadJson` and serializer parameters named `json` should be read as serializer-specific payload content, not as JSON-only behavior. They should not be renamed as part of adding XML support.
+Existing JSON-oriented public names are compatibility concerns. `SystemTexSerializerFactory()` remains available as the legacy typo-preserving alias; new code should use `SystemTextSerializerFactory()`. `PayloadJson` and serializer parameters named `json` should be read as serializer-specific payload content, not as JSON-only behavior. They should not be renamed as part of adding XML support.
 
 ## Creating observers
 

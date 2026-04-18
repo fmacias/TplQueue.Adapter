@@ -20,6 +20,8 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         public IObserverFactory ObserverFactory() => Mock.Of<IObserverFactory>();
 
+        public ISystemTextJsonSerializerFactory SystemTextSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
+
         public ISystemTextJsonSerializerFactory SystemTexSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
 
         public IXmlSerializerFactory XmlSerializerFactory() => Mock.Of<IXmlSerializerFactory>();
