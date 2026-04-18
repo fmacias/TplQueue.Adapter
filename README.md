@@ -75,11 +75,12 @@ ICoreApi core = CoreApi.Create();
 API api = API.Create(
     core,
     retryPolicyOptions,
-    queueOptions)
-    .RegisterPayloadHandlerPlugin(new MeasurementPayloadPlugin());
-```
+    queueOptions);
 
-> It explains the adapter’s real role very well—it does not replace Core, it composes it.
+api.RegisterPayloadHandler(
+    MeasurementPayload.HandlerKey,
+    new MeasurementPayloadHandler());
+```
 
 ```csharp
 public static API Create(
@@ -87,17 +88,23 @@ public static API Create(
     IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
     IReadOnlyDictionary<string, IQOptions> queueOptions);
 
-public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin);
 public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler);
+public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> handlerFactory);
+public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler);
+public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
+    where TPayload : IPayload;
+public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin);
 
 public IQFactoryAdapter QFactory
     => QFactoryAdapter.Create(_coreApi.QFactory, _retryPolicyAbstractFactory, _queueOptions, _retryPolicyOptions);
 
 public IDataJobFactory DataJobFactory => _coreApi.DataJobFactory;
 public IJobFactory JobFactory => _coreApi.JobFactory;
+public ISystemTextJsonSerializerFactory SystemTextSerializerFactory();
+public IXmlSerializerFactory XmlSerializerFactory();
 ```
 
-From the IAPI facade you obtain:
+From the `IApi` facade you obtain:
 
 - `IJobFactory`
 - `IDataJobFactory`
@@ -105,6 +112,7 @@ From the IAPI facade you obtain:
 - `IRetryPolicyAbstractFactory`
 - `IObserverFactory`
 - `ISystemTextJsonSerializerFactory`
+- `IXmlSerializerFactory`
 - cache creation helpers through `Cache<T>(...)`
 
 This keeps the application entry point compact while leaving the underlying modules independently replaceable.
@@ -125,7 +133,24 @@ This split is intentional: execution semantics stay in Core, while application-s
 
 The stable payload handler key is the payload `PayloadId`. Adapter caches persist that key and use it during hydration to map payload jobs back to their registered handler behavior through `IPayloadHandlers`.
 
-Example plugin-style registration:
+Use versioned keys for any payload that can outlive the current deployment in a cache. A good default shape is `<domain>.<operation>/v<version>`, for example `measurements.persist/v1`. Do not reuse a key for incompatible payload shape or handler behavior; introduce a new key such as `measurements.persist/v2` and keep the old handler registered while old cached jobs may still hydrate.
+
+Preferred direct registration:
+
+```csharp
+api.RegisterPayloadHandler(
+    MeasurementPayload.HandlerKey,
+    new MeasurementPayloadHandler());
+
+api.RegisterPayloadHandler<MeasurementPayload>(
+    MeasurementPayload.HandlerKey,
+    (payload, ct) =>
+    {
+        return Task.CompletedTask;
+    });
+```
+
+Plugin-style registration is useful when a package or module contributes several handlers at once:
 
 ```csharp
 public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
@@ -156,6 +181,7 @@ Current state:
 
 - register payload handlers through `IApi.RegisterPayloadHandler(...)`
 - use `IPayload.PayloadId` as the stable persisted handler key
+- version persisted handler keys when payload shape or handler behavior changes incompatibly
 - resolve hydrated payload jobs through `IPayloadHandlers`
 
 Deferred work:
@@ -184,8 +210,6 @@ IParallelQ queue = api.QFactory.GetCoreQ<IParallelQ>("main", logger);
 ```
 
 The adapter does not re-implement queue execution. It delegates actual queue construction to the Core `IQFactory` and enriches creation with configuration-driven policy resolution.
-
-> It shows exactly how Adapter enriches Core queue creation with named configuration and retry-policy resolution.
 
 ```csharp
 public IParallelQ Parallel(
