@@ -168,5 +168,14 @@ namespace Fmacias.TplQueue
             return SystemTextJsonSerializerFactory.Create();
         }
 
+        /// <summary>
+        /// Creates the XML serializer factory exposed by the adapter facade.
+        /// </summary>
+        /// <returns>An XML serializer factory.</returns>
+        public IXmlSerializerFactory XmlSerializerFactory()
+        {
+            return Fmacias.TplQueue.Serialization.Xml.XmlSerializerFactory.Create();
+        }
+
     }
 }

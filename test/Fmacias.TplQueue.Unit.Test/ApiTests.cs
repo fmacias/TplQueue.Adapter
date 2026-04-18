@@ -184,6 +184,24 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
+        public void XmlSerializerFactory_ReturnsXmlPackageFactory()
+        {
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var factory = api.XmlSerializerFactory();
+            var serializer = factory.Serializer();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(factory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Serialization.Xml"));
+                Assert.That(serializer, Is.InstanceOf<IXmlUniversalSerializer>());
+            });
+        }
+
+        [Test]
         public void Cache_WithNullTypeResolver_ThrowsArgumentNullException()
         {
             var api = API.Create(

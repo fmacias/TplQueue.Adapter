@@ -127,6 +127,7 @@ function Get-LocalProjects {
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Observers\Fmacias.TplQueue.Observers.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),    
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.Xml\Fmacias.TplQueue.Serialization.Xml.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj')
   )
 }

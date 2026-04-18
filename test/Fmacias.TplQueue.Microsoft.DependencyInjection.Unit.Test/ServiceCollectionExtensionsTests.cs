@@ -22,6 +22,8 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         public ISystemTextJsonSerializerFactory SystemTexSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
 
+        public IXmlSerializerFactory XmlSerializerFactory() => Mock.Of<IXmlSerializerFactory>();
+
         public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
         {
             return this;
@@ -126,6 +128,25 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             Assert.That(registeredDispatchers, Is.Not.Null);
             Assert.That(registeredRetries!.ContainsKey("default"), Is.True);
             Assert.That(registeredDispatchers!.ContainsKey("default"), Is.True);
+        }
+
+        [Test]
+        public void AddTplQueue_WithDictionaries_RegistersSerializerFactories()
+        {
+            var services = new ServiceCollection();
+
+            services.AddTplQueue(
+                new FakeApi(),
+                new Dictionary<string, IRetryPolicyOptions>(),
+                new Dictionary<string, IQOptions>());
+
+            var provider = services.BuildServiceProvider();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(provider.GetService<ISystemTextJsonSerializerFactory>(), Is.Not.Null);
+                Assert.That(provider.GetService<IXmlSerializerFactory>(), Is.Not.Null);
+            });
         }
 
         [Test]

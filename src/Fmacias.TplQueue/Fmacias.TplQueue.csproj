@@ -25,6 +25,7 @@
 	  <PackageReference Include="Fmacias.TplQueue.Cache.MemCache" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.RetryPolicies" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Serialization.SystemTextJson" Version="1.0.0" />
+	  <PackageReference Include="Fmacias.TplQueue.Serialization.Xml" Version="1.0.0" />
 	  <PackageReference Include="Fmacias.TplQueue.Observers" Version="1.0.0" />
 	</ItemGroup>
 </Project>

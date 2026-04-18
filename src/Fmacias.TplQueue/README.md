@@ -19,6 +19,7 @@ Thin adapter facade over `TplQueue.Core` and the modular integration packages.
 - `TplQueue.Core` for queue execution and job graph orchestration
 - `Fmacias.TplQueue.RetryPolicies` for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
+- `Fmacias.TplQueue.Serialization.Xml` for XML serializer creation
 - `Fmacias.TplQueue.Observers` for concrete observers
 
 ## Module purpose
@@ -60,6 +61,7 @@ From the facade you obtain:
 - `IRetryPolicyAbstractFactory`
 - `IObserverFactory`
 - `ISystemTextJsonSerializerFactory`
+- `IXmlSerializerFactory`
 
 ## Registering payload handlers
 
@@ -161,9 +163,19 @@ var cache = api.Cache(
 The cache helper keeps serializer and type-resolution concerns separate on purpose:
 
 - `ITypeResolver` resolves the persisted payload CLR type name during hydration
-- `IUniversalDataSerializer` deserializes the payload JSON for that resolved CLR type
+- `IUniversalDataSerializer` deserializes the payload data for that resolved CLR type
 
 If your application needs a dedicated `AppDomain` or a whitelist-based resolution policy, replace the default runtime resolver with your own `ITypeResolver`.
+
+Serializer surface:
+
+- JSON remains available through `SystemTexSerializerFactory()`
+- XML support is available through `XmlSerializerFactory()`
+- cache creation continues to accept `IUniversalDataSerializer` instead of a JSON- or XML-specific serializer contract
+- XML support uses `IXmlSerializerFactory` and `IXmlUniversalSerializer : IUniversalDataSerializer`
+- serializer plugin discovery and serializer registries are outside the current facade scope
+
+Existing JSON-oriented public names are compatibility concerns. They should not be renamed as part of adding XML support.
 
 ## Creating observers
 

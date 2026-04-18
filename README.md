@@ -45,6 +45,7 @@ The repository currently contains these main modules:
 - `Fmacias.TplQueue.Cache.Abstract`
 - `Fmacias.TplQueue.Cache.MemCache`
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
+- `Fmacias.TplQueue.Serialization.Xml`
 - `Fmacias.TplQueue.Microsoft.DependencyInjection`
 - `Fmacias.TplQueue.Observers`
 
@@ -388,12 +389,14 @@ Next step:
 
 ## Serialization
 
-Serialization support is provided by `Fmacias.TplQueue.Serialization.SystemTextJson`.
+Current serialization support is provided by `Fmacias.TplQueue.Serialization.SystemTextJson` and `Fmacias.TplQueue.Serialization.Xml`.
 
 Important types include:
 
 - `SystemTextJsonSerializerFactory`
 - `SystemTextJsonUniversalSerializer`
+- `XmlSerializerFactory`
+- `XmlUniversalSerializer`
 
 These components are typically used together with:
 
@@ -402,6 +405,17 @@ These components are typically used together with:
 - runtime node reconstruction
 
 The serializer concern stays outside Core so that the execution runtime does not become coupled to one concrete serialization technology. Type-name resolution remains a separate cache-hydration concern through `ITypeResolver`; it is not embedded into `IUniversalDataSerializer`.
+
+XML serializer surface:
+
+- cache creation and hydration continue to depend on `IUniversalDataSerializer`
+- XML support uses `IXmlSerializerFactory`
+- XML serializers implement `IXmlUniversalSerializer : IUniversalDataSerializer`
+- the facade exposes `IApi.XmlSerializerFactory()` beside the existing JSON factory
+- the concrete XML module is `Fmacias.TplQueue.Serialization.Xml`
+- no serializer plugin discovery, serializer registry, or external serializer dependency is part of this scope
+
+Existing JSON-oriented public names remain compatibility concerns. The `SystemTexSerializerFactory()` typo is handled separately, and persisted members such as `PayloadJson` should not be renamed as part of XML support.
 
 ## Dependency injection
 

@@ -86,7 +86,8 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection
                 .AddSingleton(facade.DataJobFactory)
                 .AddSingleton(facade.QFactory)
                 .AddSingleton(facade.ObserverFactory())
-                .AddSingleton(facade.SystemTexSerializerFactory());
+                .AddSingleton(facade.SystemTexSerializerFactory())
+                .AddSingleton(facade.XmlSerializerFactory());
         }
         /// <summary>
         /// Fluent builder for code-based configuration of retry policies and dispatcher options.
