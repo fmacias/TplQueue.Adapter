@@ -10,13 +10,13 @@ Reusable cache orchestration primitives for data-job graph dehydration/hydration
 
 ## Hydration flow
 
-`CacheAbstract` does not infer payload CLR types from JSON. It hydrates payload nodes in two explicit steps:
+`CacheAbstract` does not infer payload CLR types from serialized payload content. It hydrates payload nodes in two explicit steps:
 
 1. `JobNodeDto` persists `PayloadTypeName` from `payload.GetType().AssemblyQualifiedName`.
 2. `CacheAbstract.DeserializePayload(...)` resolves that stored string through `ITypeResolver`.
 3. The resolved `Type` is passed into `IUniversalDataSerializer.Deserialize(string, Type)`.
 
-That split is the reason `RuntimeNodeTypeResolver` exists: the serializer knows how to materialize JSON for a known CLR type, while the resolver knows how to map persisted type names back to runtime types.
+That split is the reason `RuntimeNodeTypeResolver` exists: the serializer knows how to materialize payload content for a known CLR type, while the resolver knows how to map persisted type names back to runtime types.
 
 ## Runtime node type resolution
 

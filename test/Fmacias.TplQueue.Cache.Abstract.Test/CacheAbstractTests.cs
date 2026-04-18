@@ -242,6 +242,115 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             payloadHandlers.Verify(h => h.Handler(payload.PayloadId), Times.Once);
         }
 
+        [Test]
+        public void TryHydrateNextJob_DeserializerReceivesTypeResolvedByTypeResolver()
+        {
+            var rootJobId = Guid.NewGuid();
+            const string persistedPayloadTypeName = "persisted/plugin/payload-type";
+            var payload = new DummyPayload("payload/type-resolver");
+            var expectedHandler = Mock.Of<IHandler>();
+            var hydratedRoot = Mock.Of<IDataJobRoot<IPayload>>();
+            var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Strict);
+            serializer
+                .Setup(s => s.Deserialize("{}", typeof(DummyPayload)))
+                .Returns(payload);
+
+            var typeResolver = new Mock<ITypeResolver>(MockBehavior.Strict);
+            typeResolver
+                .Setup(r => r.Resolve(persistedPayloadTypeName))
+                .Returns(typeof(DummyPayload));
+
+            var retryPolicyFactory = new Mock<IRetryPolicyAbstractFactory>(MockBehavior.Strict);
+            retryPolicyFactory
+                .Setup(f => f.PolicyByOptions(It.IsAny<IRetryPolicyOptions>()))
+                .Returns(Mock.Of<IRetryPolicy>());
+
+            var payloadHandlers = new Mock<IPayloadHandlers>(MockBehavior.Strict);
+            payloadHandlers
+                .Setup(h => h.Handler(payload.PayloadId))
+                .Returns(expectedHandler);
+
+            var payloadJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
+            payloadJobFactory
+                .Setup(f => f.DataJobRoot<IPayload>(
+                    rootJobId,
+                    It.Is<IPayload>(candidate => ReferenceEquals(candidate, payload)),
+                    expectedHandler,
+                    "root",
+                    It.IsAny<Func<IRetryPolicy>>()))
+                .Returns(hydratedRoot);
+
+            var cacheRepository = new Mock<ICacheRepository>(MockBehavior.Strict);
+            var rootLease = CreateLeaseEntry(
+                CreateJobNodeRecord(rootJobId, string.Empty, persistedPayloadTypeName).Object,
+                rootJobId);
+            cacheRepository
+                .Setup(r => r.SelectOldestPendingRoot())
+                .Returns(rootLease.Object);
+            cacheRepository
+                .Setup(r => r.SelectPendingChildren(rootJobId))
+                .Returns(Array.Empty<ICacheEntry>().OrderBy(entry => entry.CacheUtc));
+
+            var cache = new FakeCache(
+                serializer.Object,
+                cacheRepository.Object,
+                typeResolver.Object,
+                payloadJobFactory.Object,
+                Mock.Of<ICacheEntryFactory>(),
+                payloadHandlers.Object,
+                retryPolicyFactory.Object);
+
+            var leased = cache.TryHydrateNextJob(out var payloadJobRoot, out var lease);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(leased, Is.True);
+                Assert.That(payloadJobRoot, Is.SameAs(hydratedRoot));
+                Assert.That(lease, Is.SameAs(rootLease.Object));
+            });
+            typeResolver.Verify(r => r.Resolve(persistedPayloadTypeName), Times.Once);
+            serializer.Verify(s => s.Deserialize("{}", typeof(DummyPayload)), Times.Once);
+        }
+
+        [Test]
+        public void TryHydrateNextJob_WhenTypeResolverFails_DoesNotCallDeserializer()
+        {
+            var rootJobId = Guid.NewGuid();
+            const string persistedPayloadTypeName = "missing/plugin/payload-type";
+            var expectedException = new InvalidOperationException("Cannot resolve persisted payload type.");
+            var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Strict);
+
+            var typeResolver = new Mock<ITypeResolver>(MockBehavior.Strict);
+            typeResolver
+                .Setup(r => r.Resolve(persistedPayloadTypeName))
+                .Throws(expectedException);
+
+            var cacheRepository = new Mock<ICacheRepository>(MockBehavior.Strict);
+            var rootLease = CreateLeaseEntry(
+                CreateJobNodeRecord(rootJobId, "payload/handler", persistedPayloadTypeName).Object,
+                rootJobId);
+            cacheRepository
+                .Setup(r => r.SelectOldestPendingRoot())
+                .Returns(rootLease.Object);
+
+            var cache = new FakeCache(
+                serializer.Object,
+                cacheRepository.Object,
+                typeResolver.Object,
+                Mock.Of<IDataJobFactory>(),
+                Mock.Of<ICacheEntryFactory>(),
+                Mock.Of<IPayloadHandlers>(),
+                Mock.Of<IRetryPolicyAbstractFactory>());
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                cache.TryHydrateNextJob(out _, out _));
+
+            Assert.That(exception, Is.SameAs(expectedException));
+            serializer.Verify(
+                s => s.Deserialize(It.IsAny<string>(), It.IsAny<Type>()),
+                Times.Never);
+        }
+
         private static FakeCache CreateCache()
         {
             return new FakeCache(
@@ -270,7 +379,10 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             return root;
         }
 
-        private static Mock<IJobNodeRecord> CreateJobNodeRecord(Guid jobId, string payloadHandlerKey)
+        private static Mock<IJobNodeRecord> CreateJobNodeRecord(
+            Guid jobId,
+            string payloadHandlerKey,
+            string? payloadTypeName = null)
         {
             var jobNodeRecord = new Mock<IJobNodeRecord>(MockBehavior.Strict);
             jobNodeRecord.SetupGet(r => r.JobId).Returns(jobId);
@@ -280,7 +392,8 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             jobNodeRecord.SetupGet(r => r.NodeCreationUtc).Returns(DateTime.UtcNow);
             jobNodeRecord.SetupGet(r => r.IsRoot).Returns(true);
             jobNodeRecord.SetupGet(r => r.IsFifo).Returns(false);
-            jobNodeRecord.SetupGet(r => r.PayloadTypeName).Returns(typeof(DummyPayload).AssemblyQualifiedName!);
+            jobNodeRecord.SetupGet(r => r.PayloadTypeName)
+                .Returns(payloadTypeName ?? typeof(DummyPayload).AssemblyQualifiedName!);
             jobNodeRecord.SetupGet(r => r.PayloadJson).Returns("{}");
             jobNodeRecord.SetupGet(r => r.RetryPolicyOptions).Returns(Mock.Of<IRetryPolicyOptions>());
 
