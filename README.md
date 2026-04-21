@@ -574,3 +574,20 @@ For execution semantics and queue behavior details, see `TplQueue.Core`.
 `TplQueue.Adapter` is distributed under the MIT license.
 
 It is designed to complement `TplQueue.Core`, which is distributed separately under EULA terms.
+
+# Roadmap
+
+Implementation/Iimprovement:
+
+1. ITypeResolver internal concreate implementation
+
+The service ITypeResolver is expected in the API method `
+```chsarp 
+public T Cache<T>(ICacheFactory<T> cacheFactory,
+            IUniversalDataSerializer serializer,
+            ITypeResolver typeResolver) where T : IDataJobCache
+```, as usually every cache will use the same ITypeResolver service, I would like that a common internal concreate implementation resides into the `Fmacias.TplQueue` module and to have two signature to create a Cache from the API, one with ITypeResolver and the other without ITypeResolver at the method's signature.
+
+Documetation:
+
+The module `Fmacias.TplQueue` extend the core functionality due to accesing the public factories of the related submodules(retry policies, observers and Cache elements) between others. Please, link everithing with each other in the README documentation when ever a submodule or one of its examples are named. Link in both directions. Also to TplQueue.Core repository folder.
