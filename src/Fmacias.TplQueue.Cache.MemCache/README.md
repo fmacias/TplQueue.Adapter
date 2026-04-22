@@ -1,13 +1,13 @@
 ﻿# Fmacias.TplQueue.Cache.MemCache
 
-In-memory cache provider built on top of [Fmacias.TplQueue.Cache.Abstract](../Fmacias.TplQueue.Cache.Abstract/README.md).
+In-memory cache provider built on top of [Fmacias.TplQueue.Cache.Abstract](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md).
 
 See also:
 
-- [TplQueue.Adapter root README](../../README.md)
-- [TplQueue.Core cache section](../../../TplQueue.Core/README.md#cache-and-persistence)
-- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
-- [Fmacias.TplQueue.Cache.Abstract README](../Fmacias.TplQueue.Cache.Abstract/README.md)
+- [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 
 ## Contents
 - `MemCacheFactory` creation entry point.

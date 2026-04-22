@@ -1,15 +1,15 @@
 # Fmacias.TplQueue
 
-Thin adapter facade over [TplQueue.Core](../../../TplQueue.Core/README.md) and the modular integration packages.
+Thin adapter facade over [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) and the modular integration packages.
 
 See also:
 
-- [TplQueue.Adapter root README](../../README.md)
-- [TplQueue.Core README](../../../TplQueue.Core/README.md)
-- [Fmacias.TplQueue.Cache.Abstract README](../Fmacias.TplQueue.Cache.Abstract/README.md)
-- [Fmacias.TplQueue.Cache.MemCache README](../Fmacias.TplQueue.Cache.MemCache/README.md)
-- [Fmacias.TplQueue.RetryPolicies README](../Fmacias.TplQueue.RetryPolicies/README.md)
-- [Fmacias.TplQueue.Observers README](../Fmacias.TplQueue.Observers/README.md)
+- [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
+- [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
+- [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
+- [Fmacias.TplQueue.RetryPolicies README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
+- [Fmacias.TplQueue.Observers README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
 ## Table of contents
 
@@ -25,11 +25,11 @@ See also:
 
 `Fmacias.TplQueue` composes the Core orchestration engine with the concrete Adapter modules used by application code:
 
-- [TplQueue.Core](../../../TplQueue.Core/README.md) for queue execution and job graph orchestration
-- [Fmacias.TplQueue.RetryPolicies](../Fmacias.TplQueue.RetryPolicies/README.md) for concrete retry-policy factories
+- [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) for queue execution and job graph orchestration
+- [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md) for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
 - `Fmacias.TplQueue.Serialization.Xml` for XML serializer creation
-- [Fmacias.TplQueue.Observers](../Fmacias.TplQueue.Observers/README.md) for concrete observers
+- [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md) for concrete observers
 
 ## Module purpose
 
@@ -40,7 +40,7 @@ This package exposes the adapter-facing entry points:
 - cache creation helpers through `Cache<T>(...)`
 - retry-policy creation helpers that wrap `IRetryPolicyFactory<TPolicy>` and the built-in backoff factories
 
-Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to [TplQueue.Core](../../../TplQueue.Core/README.md).
+Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md).
 
 ## Creating the facade
 
@@ -130,7 +130,7 @@ public sealed class MeasurementPayloadHandler : IHandler
 
 `API` wraps the `IRetryPolicyFactory<TPolicy>` contract so callers can create retry policies from the same facade used for queues, payload handlers, and cache helpers.
 
-The typed factories remain intentionally public in [Fmacias.TplQueue.RetryPolicies](../Fmacias.TplQueue.RetryPolicies/README.md), and their `Create()` methods return the concrete factory instance itself. That means you can either use the factory directly or pass it through the facade.
+The typed factories remain intentionally public in [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md), and their `Create()` methods return the concrete factory instance itself. That means you can either use the factory directly or pass it through the facade.
 
 ```csharp
 using Fmacias.TplQueue.Defaults;
@@ -278,7 +278,7 @@ Replace `jsonSerializer` with `xmlSerializer` when the cache should persist XML 
 
 ## Creating observers
 
-`API.ObserverFactory()` returns the factory owned by [Fmacias.TplQueue.Observers](../Fmacias.TplQueue.Observers/README.md). The facade exposes the observer package without owning the built-in observer implementations.
+`API.ObserverFactory()` returns the factory owned by [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md). The facade exposes the observer package without owning the built-in observer implementations.
 
 ```csharp
 IObserverFactory observers = api.ObserverFactory();
@@ -293,13 +293,13 @@ using IDisposable consoleSubscription = queue.Subscribe(consoleObserver);
 
 The built-in observer classes are internal to the observer package. Use the factory contracts for console, logging, file logging, profiling, and default dispatcher creation. Implement `IObserver<IJobEvent>` in the consumer application when you need to feed a WPF, WinForms, ASP.NET, SignalR, metrics, or dashboard integration.
 
-For details, see the [observer package README](../Fmacias.TplQueue.Observers/README.md).
+For details, see the [observer package README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md).
 
 ## Design justification
 
 This package stays thin on purpose:
 
-- runtime orchestration belongs in [TplQueue.Core](../../../TplQueue.Core/README.md)
+- runtime orchestration belongs in [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
 - concrete integration modules stay in focused Adapter packages
 - the top-level facade centralizes composition without hiding the public factories that advanced callers may still use directly
 

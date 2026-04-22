@@ -1,6 +1,6 @@
 # TplQueue.Adapter
 
-`TplQueue.Adapter` contains the modular integration packages that complement [TplQueue.Core](../TplQueue.Core/README.md). It provides the top-level `API` facade and concrete modules for retry-policy creation, observer integration, cache implementations, serialization, and dependency-injection integration.
+`TplQueue.Adapter` contains the modular integration packages that complement [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md). It provides the top-level `API` facade and concrete modules for retry-policy creation, observer integration, cache implementations, serialization, and dependency-injection integration.
 
 `TplQueue.Core` remains the execution kernel. `TplQueue.Adapter` composes and extends that kernel for practical application scenarios.
 
@@ -21,7 +21,7 @@
 
 ## Relationship to TplQueue.Core
 
-[`TplQueue.Core`](../TplQueue.Core/README.md) owns the runtime execution model:
+[`TplQueue.Core`](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) owns the runtime execution model:
 
 - `Job` and `JobRoot` graphs
 - `IQ`, `IParallelQ`, `IFifoQ`, and `ICacheQ`
@@ -34,26 +34,26 @@
 Use Core when you want the execution primitives directly.
 Use Adapter when you want the integration layer that wires those primitives together with named configuration, serializer support, cache implementations, observers, or DI registration.
 
-For the current graph-composition rules, especially the requirement that `IJobRoot` and `IDataJobRoot` remain the enqueueable terminal nodes, see [TplQueue.Core README](../TplQueue.Core/README.md#job-roots).
+For the current graph-composition rules, especially the requirement that `IJobRoot` and `IDataJobRoot` remain the enqueueable terminal nodes, see [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#job-roots).
 
 ## Repository modules
 
 The repository currently contains these main modules:
 
-- [Fmacias.TplQueue](src/Fmacias.TplQueue/README.md)
-- [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md)
-- [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md)
-- [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md)
+- [Fmacias.TplQueue](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
+- [Fmacias.TplQueue.Cache.Abstract](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
 - `Fmacias.TplQueue.Serialization.Xml`
-- [Fmacias.TplQueue.Microsoft.DependencyInjection](src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md)
-- [Fmacias.TplQueue.Observers](src/Fmacias.TplQueue.Observers/README.md)
+- [Fmacias.TplQueue.Microsoft.DependencyInjection](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md)
+- [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
 At repository level, this README is the entry point. Individual modules may contain their own focused documentation.
 
 ## The `API` facade
 
-[`Fmacias.TplQueue.API`](src/Fmacias.TplQueue/README.md) is the top-level facade for adapter-side composition.
+[`Fmacias.TplQueue.API`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md) is the top-level facade for adapter-side composition.
 
 It wraps:
 
@@ -235,7 +235,7 @@ public IParallelQ Parallel(
 
 ## Retry policies
 
-Adapter contains the concrete retry-policy modules and factories used by application code. See also [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md) and the [Core retry overview](../TplQueue.Core/README.md#retry-policies).
+Adapter contains the concrete retry-policy modules and factories used by application code. See also [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md) and the [Core retry overview](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#retry-policies).
 
 Important types include:
 
@@ -305,7 +305,7 @@ IExponentialBackoff explicitExponential = api.RetryPolicy(
     factor: 2d);
 ```
 
-The concrete retry-policy factories are intentionally public in [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md), and `Create()` returns the concrete factory instance itself. Use them directly when you want low-level control, or pass them to `API.RetryPolicy(...)` when you want centralized adapter composition.
+The concrete retry-policy factories are intentionally public in [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md), and `Create()` returns the concrete factory instance itself. Use them directly when you want low-level control, or pass them to `API.RetryPolicy(...)` when you want centralized adapter composition.
 
 Or queue creation driven by named options:
 
@@ -318,7 +318,7 @@ This allows queue configuration to stay externalized while the queue runtime its
 
 ## Observers
 
-Core exposes events through `IObservable<IJobEvent>`. Adapter provides the [Fmacias.TplQueue.Observers](src/Fmacias.TplQueue.Observers/README.md) package for built-in observers, default dispatcher creation, and consumer-side observer integration.
+Core exposes events through `IObservable<IJobEvent>`. Adapter provides the [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md) package for built-in observers, default dispatcher creation, and consumer-side observer integration.
 
 Relevant modules and types include:
 
@@ -361,16 +361,16 @@ Typical mappings are:
 
 The default dispatcher returned by `CreateObserverDispatcher()` is especially useful for tests or non-UI scenarios where no special marshaling is needed.
 
-For the full observer guide, including custom observer examples for dashboard and legacy UI integration, see [Fmacias.TplQueue.Observers README](src/Fmacias.TplQueue.Observers/README.md).
+For the full observer guide, including custom observer examples for dashboard and legacy UI integration, see [Fmacias.TplQueue.Observers README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md).
 
 ## Cache
 
-Adapter contains the cache abstractions and concrete cache implementations used by `ICacheQ` and payload-aware recovery scenarios. See also the [Core cache section](../TplQueue.Core/README.md#cache-and-persistence), [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md), and [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md).
+Adapter contains the cache abstractions and concrete cache implementations used by `ICacheQ` and payload-aware recovery scenarios. See also the [Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence), [Fmacias.TplQueue.Cache.Abstract](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md), and [Fmacias.TplQueue.Cache.MemCache](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md).
 
 Key modules:
 
-- [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md)
-- [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md)
+- [Fmacias.TplQueue.Cache.Abstract](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 
 Important contracts and models include:
 
@@ -394,7 +394,7 @@ var cache = api.Cache(
     serializer);
 ```
 
-[Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md) is the in-memory implementation. It is useful for tests, development, and lightweight scenarios. More persistent cache providers can be added behind the same abstractions.
+[Fmacias.TplQueue.Cache.MemCache](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md) is the in-memory implementation. It is useful for tests, development, and lightweight scenarios. More persistent cache providers can be added behind the same abstractions.
 
 During hydration the cache first resolves `PayloadTypeName` through `ITypeResolver`, then passes the resulting CLR `Type` into `IUniversalDataSerializer.Deserialize(string, Type)`. By default, `Fmacias.TplQueue.API` creates that resolver internally for `api.Cache(..., serializer)`. Keep the explicit overload when you need a dedicated `AppDomain` or a custom whitelist-based resolution policy.
 
@@ -523,7 +523,7 @@ Existing JSON-oriented public names remain compatibility concerns. The legacy `S
 
 ## Dependency injection
 
-[`Fmacias.TplQueue.Microsoft.DependencyInjection`](src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md) provides integration with `Microsoft.Extensions.DependencyInjection`.
+[`Fmacias.TplQueue.Microsoft.DependencyInjection`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md) provides integration with `Microsoft.Extensions.DependencyInjection`.
 
 Main entry points:
 
@@ -580,13 +580,13 @@ root.After(validate);
 queue.Enqueue(root, CancellationToken.None);
 ```
 
-For execution semantics and queue behavior details, see [TplQueue.Core](../TplQueue.Core/README.md).
+For execution semantics and queue behavior details, see [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md).
 
 ## License
 
 `TplQueue.Adapter` is distributed under the MIT license.
 
-It is designed to complement [TplQueue.Core](../TplQueue.Core/README.md), which is distributed separately under EULA terms.
+It is designed to complement [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md), which is distributed separately under EULA terms.
 
 # Roadmap
 
@@ -596,4 +596,4 @@ Completed recently:
 
 2. The cache documentation now presents the facade-owned resolver path as the default and keeps the explicit `ITypeResolver` overload for advanced scenarios.
 
-3. README links were expanded across [TplQueue.Core](../TplQueue.Core/README.md), this repository root, and the related adapter submodules so the navigation is bidirectional.
+3. README links were expanded across [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md), this repository root, and the related adapter submodules so the navigation is bidirectional.

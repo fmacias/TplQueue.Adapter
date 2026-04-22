@@ -1,12 +1,12 @@
 # Fmacias.TplQueue.RetryPolicies
 
-Retry-policy implementations and factories used by [TplQueue.Adapter](../../README.md).
+Retry-policy implementations and factories used by [TplQueue.Adapter](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md).
 
 See also:
 
-- [TplQueue.Adapter root README](../../README.md)
-- [TplQueue.Core retry section](../../../TplQueue.Core/README.md#retry-policies)
-- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
+- [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
+- [TplQueue.Core retry section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#retry-policies)
+- [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
 ## Contents
 
@@ -28,7 +28,7 @@ ExponentialBackoffFactory exponentialFactory = ExponentialBackoffFactory.Create(
 IExponentialBackoff exponential = exponentialFactory.ExponentialBackof(maxRetries: 4, delayMs: 200, factor: 2d);
 ```
 
-When using the top-level [Fmacias.TplQueue API facade](../Fmacias.TplQueue/README.md), the same factories can be passed to `api.RetryPolicy(...)` overloads for creation by default, by name, by `IRetryPolicyOptions`, or by explicit built-in arguments.
+When using the top-level [Fmacias.TplQueue API facade](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md), the same factories can be passed to `api.RetryPolicy(...)` overloads for creation by default, by name, by `IRetryPolicyOptions`, or by explicit built-in arguments.
 
 ## Abstract factory usage
 

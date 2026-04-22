@@ -4,10 +4,10 @@ Reusable cache orchestration primitives for data-job graph dehydration/hydration
 
 See also:
 
-- [TplQueue.Adapter root README](../../README.md)
-- [TplQueue.Core cache section](../../../TplQueue.Core/README.md#cache-and-persistence)
-- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
-- [Fmacias.TplQueue.Cache.MemCache README](../Fmacias.TplQueue.Cache.MemCache/README.md)
+- [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 
 ## Contents
 - `CacheAbstract`: base workflow implementation.
