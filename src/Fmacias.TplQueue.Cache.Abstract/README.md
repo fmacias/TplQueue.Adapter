@@ -2,6 +2,13 @@
 
 Reusable cache orchestration primitives for data-job graph dehydration/hydration and lease lifecycle handling.
 
+See also:
+
+- [TplQueue.Adapter root README](../../README.md)
+- [TplQueue.Core cache section](../../../TplQueue.Core/README.md#cache-and-persistence)
+- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.Cache.MemCache README](../Fmacias.TplQueue.Cache.MemCache/README.md)
+
 ## Contents
 - `CacheAbstract`: base workflow implementation.
 - Domain models (`CacheEntry`, `JobNodeDto`, runtime node metadata).
@@ -22,16 +29,26 @@ That split is the reason `RuntimeNodeTypeResolver` exists: the serializer knows 
 
 `RuntimeNodeTypeResolver` is the default runtime-oriented implementation of `ITypeResolver`. Internally it uses `TypeDeserializer.TryResolveType(...)` against an `AppDomain`, defaulting to `AppDomain.CurrentDomain`.
 
-Default runtime usage through the public factory:
+Default runtime usage through the `Fmacias.TplQueue` facade:
 
 ```csharp
 using Fmacias.TplQueue;
-using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 
 IUniversalDataSerializer jsonSerializer = api.SystemTextSerializerFactory().Serializer();
 IUniversalDataSerializer xmlSerializer = api.XmlSerializerFactory().Serializer();
+
+IMemCache cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
+    jsonSerializer);
+```
+
+If you need an explicit resolver, keep using the advanced overload:
+
+```csharp
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 IMemCache cache = api.Cache<IMemCache>(

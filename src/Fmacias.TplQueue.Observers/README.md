@@ -2,6 +2,12 @@
 
 Observer support package for `TplQueue` job lifecycle events.
 
+See also:
+
+- [TplQueue.Adapter root README](../../README.md)
+- [TplQueue.Core observers section](../../../TplQueue.Core/README.md#observers)
+- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
+
 ## Table of contents
 
 - [Summary](#summary)
@@ -46,7 +52,7 @@ This package owns:
 - the internal `DirectObserverDispatcher` implementation returned by the factory for inline dispatch
 - logging subscription helpers for queue event streams
 
-Core still owns event publication through `IQ : IObservable<IJobEvent>`. This package owns the reusable observer implementations and the consumer-side construction entry point.
+Core still owns event publication through [`IQ : IObservable<IJobEvent>`](../../../TplQueue.Core/README.md#observers). This package owns the reusable observer implementations and the consumer-side construction entry point.
 
 ## Factory-first usage
 

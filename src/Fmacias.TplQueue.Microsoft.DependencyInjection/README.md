@@ -1,6 +1,12 @@
 ﻿# Fmacias.TplQueue.Microsoft.DependencyInjection
 
-Dependency Injection integration for `TplQueue.Adapter` using `Microsoft.Extensions.DependencyInjection`.
+Dependency Injection integration for [TplQueue.Adapter](../../README.md) using `Microsoft.Extensions.DependencyInjection`.
+
+See also:
+
+- [TplQueue.Adapter root README](../../README.md)
+- [TplQueue.Core README](../../../TplQueue.Core/README.md)
+- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
 
 ## Contents
 - `ServiceCollectionExtensions.AddTplQueue(...)` overloads.

@@ -11,26 +11,24 @@ namespace Fmacias.TplQueue
     public sealed class API : IApi
     {
         private readonly ICoreApi _coreApi;
+        private readonly PayloadHandlers _cacheDataHandlers;
         private readonly IRetryPolicyAbstractFactory _retryPolicyAbstractFactory;
-        private readonly PayloadHandlers _payloadHandlers;
         private readonly IReadOnlyDictionary<string, IQOptions> _queueOptions;
         private readonly IReadOnlyDictionary<string, IRetryPolicyOptions> _retryPolicyOptions;
 
         /// <summary>
-        /// Initializes a new <see cref="API"/> instance using the provided internal payload handler registry.
+        /// Initializes a new <see cref="API"/> instance.
         /// </summary>
         /// <param name="api">The underlying core facade.</param>
-        /// <param name="payloadHandlers">The internal payload handlers used for cache hydration.</param>
         /// <param name="queueOptions">The configured queue options.</param>
         /// <param name="retryPolicyOptions">The configured retry policy options.</param>
         private API(
             ICoreApi api,
-            PayloadHandlers payloadHandlers,
-            IReadOnlyDictionary<string, IQOptions> queueOptions, 
+            IReadOnlyDictionary<string, IQOptions> queueOptions,
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions)
         {
             _coreApi = api ?? throw new ArgumentNullException(nameof(api));
-            _payloadHandlers = payloadHandlers ?? throw new ArgumentNullException(nameof(payloadHandlers));
+            _cacheDataHandlers = PayloadHandlers.Create();
             _retryPolicyAbstractFactory = RetryPolicies.RetryPolicyAbstractFactory.Create();
             _queueOptions = queueOptions ?? throw new ArgumentNullException(nameof(queueOptions));
             _retryPolicyOptions = retryPolicyOptions ?? throw new ArgumentNullException(nameof(retryPolicyOptions));
@@ -47,7 +45,7 @@ namespace Fmacias.TplQueue
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions,
             IReadOnlyDictionary<string, IQOptions> queueOptions)
         {
-            return new API(api, PayloadHandlers.Create(), queueOptions, retryPolicyOptions);
+            return new API(api, queueOptions, retryPolicyOptions);
         }
 
         public IQFactoryAdapter QFactory => QFactoryAdapter.Create(_coreApi.QFactory, _retryPolicyAbstractFactory, _queueOptions, _retryPolicyOptions);
@@ -60,21 +58,21 @@ namespace Fmacias.TplQueue
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
         {
-            _payloadHandlers.Register(payloadHandlerKey, handler);
+            _cacheDataHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> handlerFactory)
         {
-            _payloadHandlers.Register(payloadHandlerKey, handlerFactory);
+            _cacheDataHandlers.Register(payloadHandlerKey, handlerFactory);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler)
         {
-            _payloadHandlers.Register(payloadHandlerKey, handler);
+            _cacheDataHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
@@ -82,29 +80,38 @@ namespace Fmacias.TplQueue
         public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
             where TPayload : IPayload
         {
-            _payloadHandlers.Register(payloadHandlerKey, handler);
+            _cacheDataHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
         {
-            _payloadHandlers.RegisterPlugin(plugin);
+            _cacheDataHandlers.RegisterPlugin(plugin);
             return this;
         }
 
         /// <summary>
-        /// todo where statement needs to be a class? 
-        /// ex.: where T: Class, IDataJobCache
+        /// Creates a cache using the facade-owned default runtime type resolver.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="cacheFactory"></param>
-        /// <param name="serializer"></param>
-        /// <param name="typeResolver"></param>
-        /// 
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// 
+        /// <typeparam name="T">The concrete cache contract.</typeparam>
+        /// <param name="cacheFactory">The cache factory.</param>
+        /// <param name="serializer">The serializer used to persist payload data.</param>
+        /// <returns>The created cache instance.</returns>
+        public T Cache<T>(ICacheFactory<T> cacheFactory,
+            IUniversalDataSerializer serializer) where T : IDataJobCache
+        {
+            return Cache(cacheFactory, serializer, DefaultTypeResolver.Create());
+        }
+
+        /// <summary>
+        /// Creates a cache using an explicit payload type resolver.
+        /// </summary>
+        /// <typeparam name="T">The concrete cache contract.</typeparam>
+        /// <param name="cacheFactory">The cache factory.</param>
+        /// <param name="serializer">The serializer used to persist payload data.</param>
+        /// <param name="typeResolver">The payload type resolver.</param>
+        /// <returns>The created cache instance.</returns>
         public T Cache<T>(ICacheFactory<T> cacheFactory,
             IUniversalDataSerializer serializer,
             ITypeResolver typeResolver) where T : IDataJobCache
@@ -113,7 +120,7 @@ namespace Fmacias.TplQueue
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (typeResolver == null) throw new ArgumentNullException(nameof(typeResolver));
 
-            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _payloadHandlers, _retryPolicyAbstractFactory);
+            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _cacheDataHandlers, _retryPolicyAbstractFactory);
         }
 
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory) where T : IRetryPolicy

@@ -250,6 +250,69 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
+        public void Cache_WithoutExplicitTypeResolver_UsesFacadeOwnedDefaultResolver()
+        {
+            ITypeResolver capturedTypeResolver = null!;
+            var expectedCache = Mock.Of<IDataJobCache>();
+            var cacheFactory = new Mock<ICacheFactory<IDataJobCache>>();
+            cacheFactory
+                .Setup(f => f.CreateCache(
+                    It.IsAny<IUniversalDataSerializer>(),
+                    It.IsAny<IDataJobFactory>(),
+                    It.IsAny<ITypeResolver>(),
+                    It.IsAny<IPayloadHandlers>(),
+                    It.IsAny<IRetryPolicyAbstractFactory>()))
+                .Callback<IUniversalDataSerializer, IDataJobFactory, ITypeResolver, IPayloadHandlers, IRetryPolicyAbstractFactory>(
+                    (_, _, typeResolver, _, _) => capturedTypeResolver = typeResolver)
+                .Returns(expectedCache);
+
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var cache = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(cache, Is.SameAs(expectedCache));
+                Assert.That(capturedTypeResolver, Is.Not.Null);
+                Assert.That(capturedTypeResolver.Resolve(typeof(ApiTests).AssemblyQualifiedName!), Is.EqualTo(typeof(ApiTests)));
+            });
+        }
+
+        [Test]
+        public void Cache_WithExplicitTypeResolver_UsesProvidedResolver()
+        {
+            ITypeResolver capturedTypeResolver = null!;
+            var expectedCache = Mock.Of<IDataJobCache>();
+            var cacheFactory = new Mock<ICacheFactory<IDataJobCache>>();
+            cacheFactory
+                .Setup(f => f.CreateCache(
+                    It.IsAny<IUniversalDataSerializer>(),
+                    It.IsAny<IDataJobFactory>(),
+                    It.IsAny<ITypeResolver>(),
+                    It.IsAny<IPayloadHandlers>(),
+                    It.IsAny<IRetryPolicyAbstractFactory>()))
+                .Callback<IUniversalDataSerializer, IDataJobFactory, ITypeResolver, IPayloadHandlers, IRetryPolicyAbstractFactory>(
+                    (_, _, typeResolver, _, _) => capturedTypeResolver = typeResolver)
+                .Returns(expectedCache);
+
+            var api = API.Create(
+                _coreApi.Object,
+                new Dictionary<string, IRetryPolicyOptions>(),
+                _queueOptions);
+
+            var cache = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>(), _nodeTypeResolver.Object);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(cache, Is.SameAs(expectedCache));
+                Assert.That(capturedTypeResolver, Is.SameAs(_nodeTypeResolver.Object));
+            });
+        }
+
+        [Test]
         public void Create_WithoutPayloadHandlers_UsesInternalResolverWhenCreatingCache()
         {
             IPayloadHandlers capturedResolver = null!;

@@ -1,6 +1,13 @@
 ﻿# Fmacias.TplQueue.Cache.MemCache
 
-In-memory cache provider built on top of `Fmacias.TplQueue.Cache.Abstract`.
+In-memory cache provider built on top of [Fmacias.TplQueue.Cache.Abstract](../Fmacias.TplQueue.Cache.Abstract/README.md).
+
+See also:
+
+- [TplQueue.Adapter root README](../../README.md)
+- [TplQueue.Core cache section](../../../TplQueue.Core/README.md#cache-and-persistence)
+- [Fmacias.TplQueue README](../Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.Cache.Abstract README](../Fmacias.TplQueue.Cache.Abstract/README.md)
 
 ## Contents
 - `MemCacheFactory` creation entry point.
@@ -35,16 +42,26 @@ Create with:
 
 Then use cache dehydration/hydration APIs from `IMemCache`.
 
-Default runtime resolver example:
+Default facade-owned resolver example:
 
 ```csharp
 using Fmacias.TplQueue;
-using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 using Fmacias.TplQueue.Contracts;
 
 IUniversalDataSerializer jsonSerializer = api.SystemTextSerializerFactory().Serializer();
 IUniversalDataSerializer xmlSerializer = api.XmlSerializerFactory().Serializer();
+
+IMemCache cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
+    jsonSerializer);
+```
+
+If payload types must be resolved from a dedicated `AppDomain`, provide a custom `ITypeResolver` implementation and pass it through the explicit facade overload. `MemCache` depends only on the abstraction, not on the concrete runtime resolver.
+
+```csharp
+using Fmacias.TplQueue.Cache.Abstract.Factories;
+
 ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 IMemCache cache = api.Cache<IMemCache>(
@@ -52,8 +69,6 @@ IMemCache cache = api.Cache<IMemCache>(
     jsonSerializer,
     typeResolver);
 ```
-
-If payload types must be resolved from a dedicated `AppDomain`, provide a custom `ITypeResolver` implementation and pass it to `CreateCache(...)`. `MemCache` depends only on the abstraction, not on the concrete runtime resolver.
 
 Use the same cache object to dehydrate a payload root, hydrate it back, and dispatch it through a queue:
 

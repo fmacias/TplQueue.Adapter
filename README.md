@@ -1,6 +1,6 @@
 # TplQueue.Adapter
 
-`TplQueue.Adapter` contains the modular integration packages that complement `TplQueue.Core`. It provides the top-level `API` facade and concrete modules for retry-policy creation, observer integration, cache implementations, serialization, and dependency-injection integration.
+`TplQueue.Adapter` contains the modular integration packages that complement [TplQueue.Core](../TplQueue.Core/README.md). It provides the top-level `API` facade and concrete modules for retry-policy creation, observer integration, cache implementations, serialization, and dependency-injection integration.
 
 `TplQueue.Core` remains the execution kernel. `TplQueue.Adapter` composes and extends that kernel for practical application scenarios.
 
@@ -21,7 +21,7 @@
 
 ## Relationship to TplQueue.Core
 
-`TplQueue.Core` owns the runtime execution model:
+[`TplQueue.Core`](../TplQueue.Core/README.md) owns the runtime execution model:
 
 - `Job` and `JobRoot` graphs
 - `IQ`, `IParallelQ`, `IFifoQ`, and `ICacheQ`
@@ -40,20 +40,20 @@ For the current graph-composition rules, especially the requirement that `IJobRo
 
 The repository currently contains these main modules:
 
-- `Fmacias.TplQueue`
-- `Fmacias.TplQueue.RetryPolicies`
-- `Fmacias.TplQueue.Cache.Abstract`
-- `Fmacias.TplQueue.Cache.MemCache`
+- [Fmacias.TplQueue](src/Fmacias.TplQueue/README.md)
+- [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md)
+- [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md)
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
 - `Fmacias.TplQueue.Serialization.Xml`
-- `Fmacias.TplQueue.Microsoft.DependencyInjection`
-- `Fmacias.TplQueue.Observers`
+- [Fmacias.TplQueue.Microsoft.DependencyInjection](src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md)
+- [Fmacias.TplQueue.Observers](src/Fmacias.TplQueue.Observers/README.md)
 
 At repository level, this README is the entry point. Individual modules may contain their own focused documentation.
 
 ## The `API` facade
 
-`Fmacias.TplQueue.API` is the top-level facade for adapter-side composition.
+[`Fmacias.TplQueue.API`](src/Fmacias.TplQueue/README.md) is the top-level facade for adapter-side composition.
 
 It wraps:
 
@@ -102,6 +102,10 @@ public IDataJobFactory DataJobFactory => _coreApi.DataJobFactory;
 public IJobFactory JobFactory => _coreApi.JobFactory;
 public ISystemTextJsonSerializerFactory SystemTextSerializerFactory();
 public IXmlSerializerFactory XmlSerializerFactory();
+public T Cache<T>(ICacheFactory<T> cacheFactory, IUniversalDataSerializer serializer)
+    where T : IDataJobCache;
+public T Cache<T>(ICacheFactory<T> cacheFactory, IUniversalDataSerializer serializer, ITypeResolver typeResolver)
+    where T : IDataJobCache;
 ```
 
 From the `IApi` facade you obtain:
@@ -231,7 +235,7 @@ public IParallelQ Parallel(
 
 ## Retry policies
 
-Adapter contains the concrete retry-policy modules and factories used by application code.
+Adapter contains the concrete retry-policy modules and factories used by application code. See also [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md) and the [Core retry overview](../TplQueue.Core/README.md#retry-policies).
 
 Important types include:
 
@@ -301,7 +305,7 @@ IExponentialBackoff explicitExponential = api.RetryPolicy(
     factor: 2d);
 ```
 
-The concrete retry-policy factories are intentionally public in `Fmacias.TplQueue.RetryPolicies`, and `Create()` returns the concrete factory instance itself. Use them directly when you want low-level control, or pass them to `API.RetryPolicy(...)` when you want centralized adapter composition.
+The concrete retry-policy factories are intentionally public in [Fmacias.TplQueue.RetryPolicies](src/Fmacias.TplQueue.RetryPolicies/README.md), and `Create()` returns the concrete factory instance itself. Use them directly when you want low-level control, or pass them to `API.RetryPolicy(...)` when you want centralized adapter composition.
 
 Or queue creation driven by named options:
 
@@ -314,7 +318,7 @@ This allows queue configuration to stay externalized while the queue runtime its
 
 ## Observers
 
-Core exposes events through `IObservable<IJobEvent>`. Adapter provides the `Fmacias.TplQueue.Observers` package for built-in observers, default dispatcher creation, and consumer-side observer integration.
+Core exposes events through `IObservable<IJobEvent>`. Adapter provides the [Fmacias.TplQueue.Observers](src/Fmacias.TplQueue.Observers/README.md) package for built-in observers, default dispatcher creation, and consumer-side observer integration.
 
 Relevant modules and types include:
 
@@ -361,12 +365,12 @@ For the full observer guide, including custom observer examples for dashboard an
 
 ## Cache
 
-Adapter contains the cache abstractions and concrete cache implementations used by `ICacheQ` and payload-aware recovery scenarios.
+Adapter contains the cache abstractions and concrete cache implementations used by `ICacheQ` and payload-aware recovery scenarios. See also the [Core cache section](../TplQueue.Core/README.md#cache-and-persistence), [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md), and [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md).
 
 Key modules:
 
-- `Fmacias.TplQueue.Cache.Abstract`
-- `Fmacias.TplQueue.Cache.MemCache`
+- [Fmacias.TplQueue.Cache.Abstract](src/Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md)
 
 Important contracts and models include:
 
@@ -378,24 +382,36 @@ Important contracts and models include:
 - `ITypeResolver`
 - `IRuntimeNodeTypeResolver`
 
-Example cache creation through the adapter facade:
+Default cache creation through the adapter facade:
+
+```csharp
+using Fmacias.TplQueue.Cache.MemCache;
+
+IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
+
+var cache = api.Cache(
+    MemCacheFactory.Create(),
+    serializer);
+```
+
+[Fmacias.TplQueue.Cache.MemCache](src/Fmacias.TplQueue.Cache.MemCache/README.md) is the in-memory implementation. It is useful for tests, development, and lightweight scenarios. More persistent cache providers can be added behind the same abstractions.
+
+During hydration the cache first resolves `PayloadTypeName` through `ITypeResolver`, then passes the resulting CLR `Type` into `IUniversalDataSerializer.Deserialize(string, Type)`. By default, `Fmacias.TplQueue.API` creates that resolver internally for `api.Cache(..., serializer)`. Keep the explicit overload when you need a dedicated `AppDomain` or a custom whitelist-based resolution policy.
+
+Advanced explicit resolver example:
 
 ```csharp
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.MemCache;
 
 IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
-var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
+ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
     MemCacheFactory.Create(),
     serializer,
     typeResolver);
 ```
-
-`Fmacias.TplQueue.Cache.MemCache` is the in-memory implementation. It is useful for tests, development, and lightweight scenarios. More persistent cache providers can be added behind the same abstractions.
-
-During hydration the cache first resolves `PayloadTypeName` through `ITypeResolver`, then passes the resulting CLR `Type` into `IUniversalDataSerializer.Deserialize(string, Type)`. The default runtime resolver is `RuntimeNodeTypeResolver`, exposed publicly through `RuntimeNodeTypeResolverFactory`.
 
 ### Cache to queue dispatch
 
@@ -426,12 +442,9 @@ IHandler handler = new MeasurementPayloadHandler();
 api.RegisterPayloadHandler(MeasurementPayload.HandlerKey, handler);
 
 IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
-ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
-
 IMemCache cache = api.Cache<IMemCache>(
     MemCacheFactory.Create(),
-    serializer,
-    typeResolver);
+    serializer);
 
 IDataJobRoot<MeasurementPayload> root = api.DataJobFactory.DataJobRoot(
     new MeasurementPayload { SensorId = "S-01", Value = 12.5 },
@@ -510,7 +523,7 @@ Existing JSON-oriented public names remain compatibility concerns. The legacy `S
 
 ## Dependency injection
 
-`Fmacias.TplQueue.Microsoft.DependencyInjection` provides integration with `Microsoft.Extensions.DependencyInjection`.
+[`Fmacias.TplQueue.Microsoft.DependencyInjection`](src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md) provides integration with `Microsoft.Extensions.DependencyInjection`.
 
 Main entry points:
 
@@ -567,27 +580,20 @@ root.After(validate);
 queue.Enqueue(root, CancellationToken.None);
 ```
 
-For execution semantics and queue behavior details, see `TplQueue.Core`.
+For execution semantics and queue behavior details, see [TplQueue.Core](../TplQueue.Core/README.md).
 
 ## License
 
 `TplQueue.Adapter` is distributed under the MIT license.
 
-It is designed to complement `TplQueue.Core`, which is distributed separately under EULA terms.
+It is designed to complement [TplQueue.Core](../TplQueue.Core/README.md), which is distributed separately under EULA terms.
 
 # Roadmap
 
-Implementation/Iimprovement:
+Completed recently:
 
-1. ITypeResolver internal concreate implementation
+1. `Fmacias.TplQueue.API` now owns a default runtime `ITypeResolver` for cache creation and exposes both `api.Cache(cacheFactory, serializer)` and `api.Cache(cacheFactory, serializer, typeResolver)`.
 
-The service ITypeResolver is expected in the API method `
-```chsarp 
-public T Cache<T>(ICacheFactory<T> cacheFactory,
-            IUniversalDataSerializer serializer,
-            ITypeResolver typeResolver) where T : IDataJobCache
-```, as usually every cache will use the same ITypeResolver service, I would like that a common internal concreate implementation resides into the `Fmacias.TplQueue` module and to have two signature to create a Cache from the API, one with ITypeResolver and the other without ITypeResolver at the method's signature.
+2. The cache documentation now presents the facade-owned resolver path as the default and keeps the explicit `ITypeResolver` overload for advanced scenarios.
 
-Documetation:
-
-The module `Fmacias.TplQueue` extend the core functionality due to accesing the public factories of the related submodules(retry policies, observers and Cache elements) between others. Please, link everithing with each other in the README documentation when ever a submodule or one of its examples are named. Link in both directions. Also to TplQueue.Core repository folder.
+3. README links were expanded across [TplQueue.Core](../TplQueue.Core/README.md), this repository root, and the related adapter submodules so the navigation is bidirectional.

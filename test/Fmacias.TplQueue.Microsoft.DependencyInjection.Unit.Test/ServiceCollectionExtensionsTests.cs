@@ -57,6 +57,12 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
+        public T Cache<T>(ICacheFactory<T> cacheFactory, IUniversalDataSerializer serializer)
+            where T : IDataJobCache
+        {
+            throw new NotImplementedException();
+        }
+
         public T Cache<T>(ICacheFactory<T> cacheFactory, IUniversalDataSerializer serializer, ITypeResolver typeResolver)
             where T : IDataJobCache
         {

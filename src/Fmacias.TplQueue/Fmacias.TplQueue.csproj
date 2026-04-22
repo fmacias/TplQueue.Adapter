@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Contracts\ICacheResolver.cs" />
     <Compile Remove="Factories\PayloadJobFactory1.cs" />
     <Compile Remove="Factories\SerializedPayloadFactory.cs" />
     <Compile Remove="Jobs\SerializedPayloadSnapshot.cs" />
@@ -18,6 +19,7 @@
 		</AssemblyAttribute>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Contracts\" />
 	  <Folder Include="Documentation\" />
 	</ItemGroup>	
 	<ItemGroup>

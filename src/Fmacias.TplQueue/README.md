@@ -1,6 +1,15 @@
 # Fmacias.TplQueue
 
-Thin adapter facade over `TplQueue.Core` and the modular integration packages.
+Thin adapter facade over [TplQueue.Core](../../../TplQueue.Core/README.md) and the modular integration packages.
+
+See also:
+
+- [TplQueue.Adapter root README](../../README.md)
+- [TplQueue.Core README](../../../TplQueue.Core/README.md)
+- [Fmacias.TplQueue.Cache.Abstract README](../Fmacias.TplQueue.Cache.Abstract/README.md)
+- [Fmacias.TplQueue.Cache.MemCache README](../Fmacias.TplQueue.Cache.MemCache/README.md)
+- [Fmacias.TplQueue.RetryPolicies README](../Fmacias.TplQueue.RetryPolicies/README.md)
+- [Fmacias.TplQueue.Observers README](../Fmacias.TplQueue.Observers/README.md)
 
 ## Table of contents
 
@@ -16,11 +25,11 @@ Thin adapter facade over `TplQueue.Core` and the modular integration packages.
 
 `Fmacias.TplQueue` composes the Core orchestration engine with the concrete Adapter modules used by application code:
 
-- `TplQueue.Core` for queue execution and job graph orchestration
-- `Fmacias.TplQueue.RetryPolicies` for concrete retry-policy factories
+- [TplQueue.Core](../../../TplQueue.Core/README.md) for queue execution and job graph orchestration
+- [Fmacias.TplQueue.RetryPolicies](../Fmacias.TplQueue.RetryPolicies/README.md) for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
 - `Fmacias.TplQueue.Serialization.Xml` for XML serializer creation
-- `Fmacias.TplQueue.Observers` for concrete observers
+- [Fmacias.TplQueue.Observers](../Fmacias.TplQueue.Observers/README.md) for concrete observers
 
 ## Module purpose
 
@@ -31,7 +40,7 @@ This package exposes the adapter-facing entry points:
 - cache creation helpers through `Cache<T>(...)`
 - retry-policy creation helpers that wrap `IRetryPolicyFactory<TPolicy>` and the built-in backoff factories
 
-Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to `TplQueue.Core`.
+Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to [TplQueue.Core](../../../TplQueue.Core/README.md).
 
 ## Creating the facade
 
@@ -121,7 +130,7 @@ public sealed class MeasurementPayloadHandler : IHandler
 
 `API` wraps the `IRetryPolicyFactory<TPolicy>` contract so callers can create retry policies from the same facade used for queues, payload handlers, and cache helpers.
 
-The typed factories remain intentionally public in `Fmacias.TplQueue.RetryPolicies`, and their `Create()` methods return the concrete factory instance itself. That means you can either use the factory directly or pass it through the facade.
+The typed factories remain intentionally public in [Fmacias.TplQueue.RetryPolicies](../Fmacias.TplQueue.RetryPolicies/README.md), and their `Create()` methods return the concrete factory instance itself. That means you can either use the factory directly or pass it through the facade.
 
 ```csharp
 using Fmacias.TplQueue.Defaults;
@@ -170,23 +179,30 @@ IParallelQ queue = api.QFactory.Parallel("main", logger);
 Use the same facade for payload-aware cache creation:
 
 ```csharp
+IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
+
+var cache = api.Cache(
+    cacheFactory,
+    serializer);
+```
+
+The cache helper keeps serializer and type-resolution concerns separate on purpose:
+
+- the facade-owned default `ITypeResolver` resolves the persisted payload CLR type name during hydration
+- `IUniversalDataSerializer` deserializes the payload data for that resolved CLR type
+
+If your application needs a dedicated `AppDomain` or a whitelist-based resolution policy, replace the default runtime resolver with your own `ITypeResolver` through the explicit overload:
+
+```csharp
 using Fmacias.TplQueue.Cache.Abstract.Factories;
 
-IUniversalDataSerializer serializer = api.SystemTextSerializerFactory().Serializer();
-var typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
+ITypeResolver typeResolver = RuntimeNodeTypeResolverFactory.Create().Resolver();
 
 var cache = api.Cache(
     cacheFactory,
     serializer,
     typeResolver);
 ```
-
-The cache helper keeps serializer and type-resolution concerns separate on purpose:
-
-- `ITypeResolver` resolves the persisted payload CLR type name during hydration
-- `IUniversalDataSerializer` deserializes the payload data for that resolved CLR type
-
-If your application needs a dedicated `AppDomain` or a whitelist-based resolution policy, replace the default runtime resolver with your own `ITypeResolver`.
 
 Serializer surface:
 
@@ -236,8 +252,7 @@ api.RegisterPayloadHandler(MeasurementPayload.HandlerKey, handler);
 
 var cache = api.Cache(
     MemCacheFactory.Create(),
-    jsonSerializer,
-    RuntimeNodeTypeResolverFactory.Create().Resolver());
+    jsonSerializer);
 
 var root = api.DataJobFactory.DataJobRoot(
     new MeasurementPayload { SensorId = "S-01", Value = 12.5 },
@@ -263,7 +278,7 @@ Replace `jsonSerializer` with `xmlSerializer` when the cache should persist XML 
 
 ## Creating observers
 
-`API.ObserverFactory()` returns the factory owned by `Fmacias.TplQueue.Observers`. The facade exposes the observer package without owning the built-in observer implementations.
+`API.ObserverFactory()` returns the factory owned by [Fmacias.TplQueue.Observers](../Fmacias.TplQueue.Observers/README.md). The facade exposes the observer package without owning the built-in observer implementations.
 
 ```csharp
 IObserverFactory observers = api.ObserverFactory();
@@ -278,13 +293,13 @@ using IDisposable consoleSubscription = queue.Subscribe(consoleObserver);
 
 The built-in observer classes are internal to the observer package. Use the factory contracts for console, logging, file logging, profiling, and default dispatcher creation. Implement `IObserver<IJobEvent>` in the consumer application when you need to feed a WPF, WinForms, ASP.NET, SignalR, metrics, or dashboard integration.
 
-For details, see the observer package README at `../Fmacias.TplQueue.Observers/README.md`.
+For details, see the [observer package README](../Fmacias.TplQueue.Observers/README.md).
 
 ## Design justification
 
 This package stays thin on purpose:
 
-- runtime orchestration belongs in `TplQueue.Core`
+- runtime orchestration belongs in [TplQueue.Core](../../../TplQueue.Core/README.md)
 - concrete integration modules stay in focused Adapter packages
 - the top-level facade centralizes composition without hiding the public factories that advanced callers may still use directly
 
