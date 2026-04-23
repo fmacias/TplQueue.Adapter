@@ -47,6 +47,21 @@
 		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
 
+	<!-- Official strong-name signing is enabled only by release builds that provide an external key path. -->
+	<PropertyGroup>
+		<TplQueueOfficialSign Condition="'$(TplQueueOfficialSign)' == ''">false</TplQueueOfficialSign>
+		<SignAssembly Condition="'$(TplQueueOfficialSign)' == 'true'">true</SignAssembly>
+		<AssemblyOriginatorKeyFile Condition="'$(TplQueueOfficialSign)' == 'true'">$(TplQueueStrongNameKeyFile)</AssemblyOriginatorKeyFile>
+		<TplQueueInternalsVisibleToPublicKeySuffix Condition="'$(TplQueueOfficialSign)' == 'true'">, PublicKey=$(TplQueueStrongNamePublicKey)</TplQueueInternalsVisibleToPublicKeySuffix>
+		<TplQueuePackageVersion Condition="'$(TplQueuePackageVersion)' == ''">1.0.0</TplQueuePackageVersion>
+	</PropertyGroup>
+
+	<Target Name="ValidateTplQueueOfficialStrongNameSigning" BeforeTargets="CoreCompile" Condition="'$(TplQueueOfficialSign)' == 'true'">
+		<Error Condition="'$(TplQueueStrongNameKeyFile)' == ''" Text="TplQueueOfficialSign=true requires TplQueueStrongNameKeyFile." />
+		<Error Condition="!Exists('$(TplQueueStrongNameKeyFile)')" Text="Strong-name key file was not found: $(TplQueueStrongNameKeyFile)" />
+		<Error Condition="'$(TplQueueStrongNamePublicKey)' == ''" Text="TplQueueOfficialSign=true requires TplQueueStrongNamePublicKey." />
+	</Target>
+
 	<!-- =========================
        Test projects overrides
        (works whether IsTestProject came from csproj or auto-detection above)

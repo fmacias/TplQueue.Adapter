@@ -8,6 +8,8 @@ See also:
 - [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
+Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+
 ## Contents
 - `ServiceCollectionExtensions.AddTplQueue(...)` overloads.
 - `TplQueueOptionsBuilder` for fluent retry-policy and queue registration.

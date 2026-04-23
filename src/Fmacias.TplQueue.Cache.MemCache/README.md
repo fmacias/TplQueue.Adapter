@@ -9,6 +9,8 @@ See also:
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 
+Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+
 ## Contents
 - `MemCacheFactory` creation entry point.
 - `MemCache` in-memory implementation of `IMemCache`.

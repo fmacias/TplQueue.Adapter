@@ -11,6 +11,8 @@ See also:
 - [Fmacias.TplQueue.RetryPolicies README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
 - [Fmacias.TplQueue.Observers README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
+Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+
 ## Table of contents
 
 - [Summary](#summary)

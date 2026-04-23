@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="$(TplQueuePackageVersion)" />
     <PackageReference Include="Moq" Version="4.16.1" />
   </ItemGroup>
 

@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="$(TplQueuePackageVersion)" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
   </ItemGroup>
 

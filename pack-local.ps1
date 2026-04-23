@@ -1,5 +1,7 @@
 param(
-  [string]$Version
+  [string]$Version,
+  [string]$StrongNameKeyFile,
+  [string]$StrongNamePublicKey
 )
 
 $ErrorActionPreference = 'Stop'
@@ -15,28 +17,57 @@ function Invoke-Dotnet {
   }
 }
 
-function Get-PackVersionProperties {
-  param([string]$Version)
+function Get-PackProperties {
+  param(
+    [string]$Version,
+    [string]$StrongNameKeyFile,
+    [string]$StrongNamePublicKey
+  )
 
-  if ([string]::IsNullOrWhiteSpace($Version)) {
-    return @()
+  if (-not [string]::IsNullOrWhiteSpace($StrongNameKeyFile) -and [string]::IsNullOrWhiteSpace($StrongNamePublicKey)) {
+    throw 'StrongNamePublicKey is required when StrongNameKeyFile is provided.'
   }
 
-  return @(
-    "-p:Version=$Version",
-    "-p:PackageVersion=$Version"
-  )
+  $properties = @()
+  if (-not [string]::IsNullOrWhiteSpace($Version)) {
+    $properties += @(
+      "-p:Version=$Version",
+      "-p:PackageVersion=$Version",
+      "-p:TplQueuePackageVersion=$Version"
+    )
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($StrongNameKeyFile)) {
+    $properties += @(
+      '-p:TplQueueOfficialSign=true',
+      "-p:TplQueueStrongNameKeyFile=$StrongNameKeyFile"
+    )
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($StrongNamePublicKey)) {
+    $properties += "-p:TplQueueStrongNamePublicKey=$StrongNamePublicKey"
+  }
+
+  return $properties
 }
 
 function Invoke-PackScript {
   param(
     [string]$ScriptPath,
-    [string]$Version
+    [string]$Version,
+    [string]$StrongNameKeyFile,
+    [string]$StrongNamePublicKey
   )
 
   $scriptArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $ScriptPath)
   if (-not [string]::IsNullOrWhiteSpace($Version)) {
     $scriptArgs += @('-Version', $Version)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($StrongNameKeyFile)) {
+    $scriptArgs += @('-StrongNameKeyFile', $StrongNameKeyFile)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($StrongNamePublicKey)) {
+    $scriptArgs += @('-StrongNamePublicKey', $StrongNamePublicKey)
   }
 
   & powershell @scriptArgs
@@ -136,13 +167,15 @@ function Get-DependencyScripts {
 function Pack-Dependencies {
   param(
     [string[]]$ScriptPaths,
-    [string]$Version
+    [string]$Version,
+    [string]$StrongNameKeyFile,
+    [string]$StrongNamePublicKey
   )
 
   foreach ($scriptPath in $ScriptPaths) {
     if (Test-Path $scriptPath) {
       Write-Host "Packing dependency via $scriptPath..."
-      Invoke-PackScript -ScriptPath $scriptPath -Version $Version
+      Invoke-PackScript -ScriptPath $scriptPath -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey
     }
   }
 }
@@ -159,7 +192,8 @@ function Get-LocalProjects {
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj'),
     (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Serialization.Xml\Fmacias.TplQueue.Serialization.Xml.csproj'),
-    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj')
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj'),
+    (Join-Path $RepoRoot 'src\Fmacias.TplQueue\Fmacias.TplQueue.csproj')
   )
 }
 
@@ -169,7 +203,9 @@ function Pack-LocalProjects {
   param(
     [string[]]$ProjectPaths,
     [string]$NugetRoot,
-    [string]$Version
+    [string]$Version,
+    [string]$StrongNameKeyFile,
+    [string]$StrongNamePublicKey
   )
 
   foreach ($projectPath in $ProjectPaths) {
@@ -183,7 +219,7 @@ function Pack-LocalProjects {
         '-p:SkipPackLocal=true',
         '-p:RestoreNoCache=true',
         '-p:RestoreForce=true'
-      ) + (Get-PackVersionProperties -Version $Version)
+      ) + (Get-PackProperties -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey)
 
       Invoke-Dotnet -DotnetArgs $dotnetArgs
     }
@@ -214,7 +250,9 @@ function Pack-Local {
     [string]$PackTarget,
     [string]$NugetRoot,
     [string]$RepoRoot,
-    [string]$Version
+    [string]$Version,
+    [string]$StrongNameKeyFile,
+    [string]$StrongNamePublicKey
   )
 
   $nugetConfigPath = Join-Path $RepoRoot 'NuGet.config'
@@ -232,7 +270,7 @@ function Pack-Local {
     '-p:SkipPackLocal=true',
     '-p:RestoreNoCache=true',
     '-p:RestoreForce=true'
-  ) + (Get-PackVersionProperties -Version $Version)
+  ) + (Get-PackProperties -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey)
 
   Invoke-Dotnet -DotnetArgs $dotnetArgs
   Write-Host 'Local NuGet packages created successfully.'
@@ -245,19 +283,19 @@ function Main {
   if (-not [string]::IsNullOrWhiteSpace($Version)) {
     Write-Host "Coordinated package version: $Version"
   }
+  if (-not [string]::IsNullOrWhiteSpace($StrongNameKeyFile)) {
+    Write-Host 'Official strong-name signing: enabled'
+  }
 
   $nugetRoot = Ensure-NugetLocal -RepoRoot $repoRoot
   Ensure-NugetSource -SourceName 'TplQueue.NugetLocal' -SourcePath $nugetRoot
   Clear-LocalNugetCache
 
   $dependencyScripts = Get-DependencyScripts -RepoRoot $repoRoot
-  Pack-Dependencies -ScriptPaths $dependencyScripts -Version $Version
+  Pack-Dependencies -ScriptPaths $dependencyScripts -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey
 
   $localProjects = Get-LocalProjects -RepoRoot $repoRoot
-  Pack-LocalProjects -ProjectPaths $localProjects -NugetRoot $nugetRoot -Version $Version
-
-  $packTarget = Get-PackTarget -RepoRoot $repoRoot
-  Pack-Local -PackTarget $packTarget -NugetRoot $nugetRoot -RepoRoot $repoRoot -Version $Version
+  Pack-LocalProjects -ProjectPaths $localProjects -NugetRoot $nugetRoot -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey
 }
 
 try {

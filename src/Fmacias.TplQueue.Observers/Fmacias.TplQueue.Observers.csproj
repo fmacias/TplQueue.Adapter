@@ -9,12 +9,12 @@
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Fmacias.TplQueue.Test</_Parameter1>
+      <_Parameter1>Fmacias.TplQueue.Test$(TplQueueInternalsVisibleToPublicKeySuffix)</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Fmacias.TplQueue.Abstractions" Version="$(TplQueuePackageVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
   </ItemGroup>
 </Project>

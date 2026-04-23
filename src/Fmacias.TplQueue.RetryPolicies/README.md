@@ -8,6 +8,8 @@ See also:
 - [TplQueue.Core retry section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#retry-policies)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
+Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+
 ## Contents
 
 - `RetryPolicyAbstractFactory` for named and options-based creation.

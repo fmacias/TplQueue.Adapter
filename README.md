@@ -17,6 +17,7 @@
 - [Serialization](#serialization)
 - [Dependency injection](#dependency-injection)
 - [Minimal example](#minimal-example)
+- [Strong-name signing](#strong-name-signing)
 - [License](#license)
 
 ## Relationship to TplQueue.Core
@@ -44,8 +45,8 @@ The repository currently contains these main modules:
 - [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
 - [Fmacias.TplQueue.Cache.Abstract](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 - [Fmacias.TplQueue.Cache.MemCache](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
-- `Fmacias.TplQueue.Serialization.SystemTextJson`
-- `Fmacias.TplQueue.Serialization.Xml`
+- [Fmacias.TplQueue.Serialization.SystemTextJson](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Serialization.SystemTextJson/README.md)
+- [Fmacias.TplQueue.Serialization.Xml](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Serialization.Xml/README.md)
 - [Fmacias.TplQueue.Microsoft.DependencyInjection](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Microsoft.DependencyInjection/README.md)
 - [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
@@ -581,6 +582,21 @@ queue.Enqueue(root, CancellationToken.None);
 ```
 
 For execution semantics and queue behavior details, see [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md).
+
+## Strong-name signing
+
+Normal source builds are unsigned. Official release packages are strong-named only when the pack script receives an external private key path and the matching full public key.
+
+```powershell
+.\pack-local.ps1 `
+  -Version 0.1.0-preview.1 `
+  -StrongNameKeyFile C:\secure\keys\Fmacias.TplQueue.official.snk `
+  -StrongNamePublicKey <public-key>
+```
+
+The private `.snk` file is never stored in this repository. Adapter component projects append the public key to `InternalsVisibleTo` declarations only for official signed builds. For key creation, public-key extraction, and verification, see `..\WorkspaceTplQueue\docs\strong-name-signing.md`.
+
+Component READMEs describe package-specific usage. Repository-wide packaging and signing rules live in this README.
 
 ## License
 
