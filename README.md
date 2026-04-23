@@ -596,6 +596,8 @@ Normal source builds are unsigned. Official release packages are strong-named on
 
 The private `.snk` file is never stored in this repository. Adapter component projects append the public key to `InternalsVisibleTo` declarations only for official signed builds. For key creation, public-key extraction, and verification, see `..\WorkspaceTplQueue\docs\strong-name-signing.md`.
 
+This is assembly strong-name signing only. NuGet package X.509 signing and obfuscation are not part of the current v1.0.0 release flow; the central policy is maintained in `..\WorkspaceTplQueue\docs\release-policy.md`.
+
 Component READMEs describe package-specific usage. Repository-wide packaging and signing rules live in this README.
 
 ## License
