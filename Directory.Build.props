@@ -23,6 +23,7 @@
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PackageTags>tplqueue;job;queue;concurrency;adapter</PackageTags>
 		
 		<!-- Generation of documentation -->
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -78,6 +79,10 @@
 		
 		<EnableNETAnalyzers>false</EnableNETAnalyzers>
 
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(IsTestProject)' != 'true' and Exists('$(MSBuildProjectDirectory)\README.md')">
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<!-- Common test packages (restore happens during .props import, so it's safe here) -->

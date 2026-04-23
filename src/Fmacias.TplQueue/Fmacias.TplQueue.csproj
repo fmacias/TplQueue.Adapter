@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
 	<Version>1.0.0</Version>
     <PackageId>Fmacias.TplQueue</PackageId>
+    <Description>Adapter facade that composes TplQueue Core with retry policies, observers, cache modules, serializers, and configuration-driven queue creation.</Description>
+    <PackageTags>tplqueue;adapter;job;queue;concurrency;retry;observer;cache;serialization</PackageTags>
+    <PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 

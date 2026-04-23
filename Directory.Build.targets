@@ -1,3 +1,7 @@
 <Project>
   <Import Project="..\WorkspaceTplQueue\Directory.Build.targets" Condition="Exists('..\WorkspaceTplQueue\Directory.Build.targets') and '$(SolutionFileName)' == 'WorkspaceTplQueue.sln'" />
+
+  <ItemGroup Condition="'$(IsTestProject)' != 'true' and Exists('$(MSBuildProjectDirectory)\README.md')">
+    <None Update="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

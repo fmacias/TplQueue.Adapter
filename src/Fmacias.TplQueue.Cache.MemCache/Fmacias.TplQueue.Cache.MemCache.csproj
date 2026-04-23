@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>1.0.0</Version>
+    <PackageId>Fmacias.TplQueue.Cache.MemCache</PackageId>
+    <Description>In-memory TplQueue cache provider for payload job dehydration, hydration, leasing, and package-consumption validation scenarios.</Description>
+    <PackageTags>tplqueue;cache;memory;payload;hydration;queue;job</PackageTags>
+    <PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

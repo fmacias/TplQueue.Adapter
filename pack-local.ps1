@@ -152,6 +152,24 @@ function Clear-LocalNugetCache {
     Remove-Item -Recurse -Force
 }
 
+# Remove local-feed artifacts from package IDs that were renamed before publication.
+function Clear-ObsoleteLocalFeedPackages {
+  param([string]$NugetRoot)
+
+  if (-not (Test-Path $NugetRoot)) {
+    return
+  }
+
+  $obsoletePackageIds = @(
+    'Fmaciasruano.TplQueue.Microsoft.DependencyInjection'
+  )
+
+  foreach ($packageId in $obsoletePackageIds) {
+    Get-ChildItem -Path $NugetRoot -File -Filter "$packageId.*.nupkg" | Remove-Item -Force
+    Get-ChildItem -Path $NugetRoot -File -Filter "$packageId.*.snupkg" | Remove-Item -Force
+  }
+}
+
 # Return the dependency pack-local scripts that should run before packing this repo.
 # Example: includes ..\TplQueue.Abstractions\pack-local.ps1.
 function Get-DependencyScripts {
@@ -290,6 +308,7 @@ function Main {
   $nugetRoot = Ensure-NugetLocal -RepoRoot $repoRoot
   Ensure-NugetSource -SourceName 'TplQueue.NugetLocal' -SourcePath $nugetRoot
   Clear-LocalNugetCache
+  Clear-ObsoleteLocalFeedPackages -NugetRoot $nugetRoot
 
   $dependencyScripts = Get-DependencyScripts -RepoRoot $repoRoot
   Pack-Dependencies -ScriptPaths $dependencyScripts -Version $Version -StrongNameKeyFile $StrongNameKeyFile -StrongNamePublicKey $StrongNamePublicKey

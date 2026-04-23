@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>1.0.0</Version>
     <PackageId>Fmacias.TplQueue.RetryPolicies</PackageId>
+    <Description>Built-in retry policy factories and implementations for TplQueue queue and job execution flows.</Description>
+    <PackageTags>tplqueue;retry;policy;backoff;queue;job;concurrency</PackageTags>
+    <PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
