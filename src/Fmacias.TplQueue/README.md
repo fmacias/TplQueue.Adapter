@@ -1,6 +1,6 @@
 # Fmacias.TplQueue
 
-Thin adapter facade over [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) and the modular integration packages.
+Top-level adapter facade over [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) and the modular TplQueue integration packages.
 
 See also:
 
@@ -16,6 +16,7 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 ## Table of contents
 
 - [Summary](#summary)
+- [Install](#install)
 - [Module purpose](#module-purpose)
 - [Creating the facade](#creating-the-facade)
 - [Creating retry policies](#creating-retry-policies)
@@ -33,12 +34,21 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 - `Fmacias.TplQueue.Serialization.Xml` for XML serializer creation
 - [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md) for concrete observers
 
+`Fmacias.TplQueue` is the recommended entry point when you want the adapter-side composition surface instead of wiring the individual adapter modules manually.
+
+## Install
+
+```bash
+dotnet add package Fmacias.TplQueue --version 0.1.0-preview.1
+```
+
 ## Module purpose
 
 This package exposes the adapter-facing entry points:
 
 - `API`
 - `IQFactoryAdapter`
+- `IApi`
 - cache creation helpers through `Cache<T>(...)`
 - retry-policy creation helpers that wrap `IRetryPolicyFactory<TPolicy>` and the built-in backoff factories
 

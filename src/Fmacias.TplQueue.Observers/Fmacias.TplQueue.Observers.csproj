@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>1.0.0</Version>
     <PackageId>Fmacias.TplQueue.Observers</PackageId>
-    <Description>Observer factory and built-in observers for TplQueue job lifecycle events, logging, diagnostics, and profiling scenarios.</Description>
+    <Description>Observer factory and built-in observer implementations for TplQueue job lifecycle events, diagnostics, structured logging, and profiling scenarios.</Description>
     <PackageTags>tplqueue;observer;events;diagnostics;logging;queue;job</PackageTags>
     <PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
     <RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>

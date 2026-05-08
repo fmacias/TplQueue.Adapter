@@ -10,12 +10,20 @@ See also:
 
 Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
 
+Use this package when your host application is built around `IServiceCollection` and you want to register TplQueue queues, retry policies, serializers, and adapter services through familiar `Microsoft.Extensions.DependencyInjection` patterns.
+
+## Install
+
+```bash
+dotnet add package Fmacias.TplQueue.Microsoft.DependencyInjection --version 0.1.0-preview.1
+```
+
 ## Contents
 - `ServiceCollectionExtensions.AddTplQueue(...)` overloads.
 - `TplQueueOptionsBuilder` for fluent retry-policy and queue registration.
 - Registration of `IApi`, read-only option dictionaries, and related adapter services.
 
-## Local pipeline
+## Repository build notes
 Run from `TplQueue.Adapter` root:
 
 1. Build module:

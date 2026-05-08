@@ -11,12 +11,20 @@ See also:
 
 Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
 
+Use this package when you want a lightweight in-process cache provider for dehydrating payload-aware jobs, hydrating them later, and validating cache-backed flows without introducing an external storage dependency.
+
+## Install
+
+```bash
+dotnet add package Fmacias.TplQueue.Cache.MemCache --version 0.1.0-preview.1
+```
+
 ## Contents
 - `MemCacheFactory` creation entry point.
 - `MemCache` in-memory implementation of `IMemCache`.
 - Internal in-memory repository model for cache entries.
 
-## Local pipeline
+## Repository build notes
 Run from `TplQueue.Adapter` root:
 
 1. Build module:

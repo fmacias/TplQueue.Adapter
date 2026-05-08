@@ -11,11 +11,27 @@ See also:
 
 Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
 
+Use this package when you need the cache contracts and reusable hydration workflow without taking a dependency on the concrete in-memory cache implementation.
+
+## Install
+
+```bash
+dotnet add package Fmacias.TplQueue.Cache.Abstract --version 0.1.0-preview.1
+```
+
 ## Contents
 - `CacheAbstract`: base workflow implementation.
 - Domain models (`CacheEntry`, `JobNodeDto`, runtime node metadata).
 - Factories: `CacheEntryFactory`, `RuntimeNodeTypeResolverFactory`.
 - Cache hydration helpers centered on `ITypeResolver` and `IUniversalDataSerializer`.
+
+## When to use this package
+
+Choose `Fmacias.TplQueue.Cache.Abstract` when you are:
+
+- implementing a custom cache provider for `IDataJobRoot` dehydration and hydration
+- consuming cache-related contracts from another integration package
+- standardizing payload-type resolution and serializer usage without committing to `MemCache`
 
 ## Hydration flow
 

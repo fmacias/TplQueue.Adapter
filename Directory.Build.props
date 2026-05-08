@@ -15,12 +15,15 @@
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
 		<!-- Standard package metadata (used when packing) -->
-		<Authors>Fernando Macias Ruano</Authors>
-		<Company></Company>
-		<RepositoryUrl>https://github.com/fmacias/ScalableComponents</RepositoryUrl>
+		<Authors>Fernando Macías Ruano</Authors>
+		<Company>Fernando Macías Ruano</Company>
+		<Copyright>Copyright (c) Fernando Macías Ruano 2026</Copyright>
+		<RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes>Preview release of the TplQueue adapter package line for .NET Standard 2.0. This release focuses on public package metadata, consumer-facing README documentation, and strong-name-ready official build support ahead of the first stable 1.0.0 release.</PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PackageTags>tplqueue;job;queue;concurrency;adapter</PackageTags>

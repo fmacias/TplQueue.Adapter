@@ -604,7 +604,7 @@ Component READMEs describe package-specific usage. Repository-wide packaging and
 
 `TplQueue.Adapter` is distributed under the MIT license.
 
-It is designed to complement [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md), which is distributed separately under EULA terms.
+It is designed to complement [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md), which is distributed separately under a custom binary-use EULA. That Core license permits use of the official binaries, while source-code and private-repository access are governed separately by written agreement with the licensor.
 
 # Roadmap
 

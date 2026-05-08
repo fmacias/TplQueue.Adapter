@@ -11,7 +11,7 @@ namespace Fmacias.TplQueue
     public sealed class API : IApi
     {
         private readonly ICoreApi _coreApi;
-        private readonly PayloadHandlers _cacheDataHandlers;
+        private readonly PayloadHandlers _payloadHandlers;
         private readonly IRetryPolicyAbstractFactory _retryPolicyAbstractFactory;
         private readonly IReadOnlyDictionary<string, IQOptions> _queueOptions;
         private readonly IReadOnlyDictionary<string, IRetryPolicyOptions> _retryPolicyOptions;
@@ -28,7 +28,7 @@ namespace Fmacias.TplQueue
             IReadOnlyDictionary<string, IRetryPolicyOptions> retryPolicyOptions)
         {
             _coreApi = api ?? throw new ArgumentNullException(nameof(api));
-            _cacheDataHandlers = PayloadHandlers.Create();
+            _payloadHandlers = PayloadHandlers.Create();
             _retryPolicyAbstractFactory = RetryPolicies.RetryPolicyAbstractFactory.Create();
             _queueOptions = queueOptions ?? throw new ArgumentNullException(nameof(queueOptions));
             _retryPolicyOptions = retryPolicyOptions ?? throw new ArgumentNullException(nameof(retryPolicyOptions));
@@ -58,21 +58,21 @@ namespace Fmacias.TplQueue
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
         {
-            _cacheDataHandlers.Register(payloadHandlerKey, handler);
+            _payloadHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> handlerFactory)
         {
-            _cacheDataHandlers.Register(payloadHandlerKey, handlerFactory);
+            _payloadHandlers.Register(payloadHandlerKey, handlerFactory);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler)
         {
-            _cacheDataHandlers.Register(payloadHandlerKey, handler);
+            _payloadHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
@@ -80,14 +80,14 @@ namespace Fmacias.TplQueue
         public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
             where TPayload : IPayload
         {
-            _cacheDataHandlers.Register(payloadHandlerKey, handler);
+            _payloadHandlers.Register(payloadHandlerKey, handler);
             return this;
         }
 
         /// <inheritdoc />
         public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
         {
-            _cacheDataHandlers.RegisterPlugin(plugin);
+            _payloadHandlers.RegisterPlugin(plugin);
             return this;
         }
 
@@ -120,7 +120,7 @@ namespace Fmacias.TplQueue
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (typeResolver == null) throw new ArgumentNullException(nameof(typeResolver));
 
-            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _cacheDataHandlers, _retryPolicyAbstractFactory);
+            return cacheFactory.CreateCache(serializer, DataJobFactory, typeResolver, _payloadHandlers, _retryPolicyAbstractFactory);
         }
 
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory) where T : IRetryPolicy

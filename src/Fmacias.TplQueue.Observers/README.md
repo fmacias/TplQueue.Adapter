@@ -13,6 +13,7 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 ## Table of contents
 
 - [Summary](#summary)
+- [Install](#install)
 - [Why observers matter](#why-observers-matter)
 - [Module purpose](#module-purpose)
 - [Factory-first usage](#factory-first-usage)
@@ -38,6 +39,12 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 - `IObserver<IJobEvent>`
 
 The built-in observer classes are internal implementation details. Use `ObserverFactory.Create()` or `api.ObserverFactory()` instead of constructing observer classes directly.
+
+## Install
+
+```bash
+dotnet add package Fmacias.TplQueue.Observers --version 0.1.0-preview.1
+```
 
 ## Why observers matter
 
