@@ -16,7 +16,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void CacheHydration_UsesHandlerRegisteredThroughApi()
         {
-            const string payloadHandlerKey = "plugins/test/cache-api-instance-v1";
+            const string payloadHandlerKey = "test/cache-api-instance-v1";
             var payload = new TestPayload("root", payloadHandlerKey);
             var registeredHandler = Mock.Of<IHandler>();
             IHandler capturedHandler = null!;
@@ -42,7 +42,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void CacheHydration_WhenHandlerKeyIsMissing_ThrowsKeyNotFoundException()
         {
-            const string payloadHandlerKey = "plugins/test/cache-api-missing-v1";
+            const string payloadHandlerKey = "test/cache-api-missing-v1";
             var payload = new TestPayload("root", payloadHandlerKey);
             var rootId = Guid.NewGuid();
             var dataJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
@@ -58,7 +58,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task CacheHydration_UsesTypedHandlerRegisteredThroughApi()
         {
-            const string payloadHandlerKey = "plugins/test/cache-api-typed-v1";
+            const string payloadHandlerKey = "test/cache-api-typed-v1";
             var payload = new TestPayload("root", payloadHandlerKey);
             var receivedValues = new List<string>();
             IHandler capturedHandler = null!;
@@ -88,7 +88,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void CacheHydration_WithTypedHandler_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
         {
-            const string payloadHandlerKey = "plugins/test/cache-api-type-check-v1";
+            const string payloadHandlerKey = "test/cache-api-type-check-v1";
             var payload = new OtherPayload(payloadHandlerKey);
             IHandler capturedHandler = null!;
             var rootId = Guid.NewGuid();

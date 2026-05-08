@@ -8,9 +8,9 @@ namespace Fmacias.TplQueue
 {
     /// <summary>
     /// Default payload handler registry used by adapter-side composition and cache hydration.
-    /// It resolves handlers through stable plugin-style payload handler keys.
+    /// It resolves handlers through stable payload handler keys.
     /// </summary>
-    internal sealed class PayloadHandlers : IPayloadHandlers, IPayloadHandlerRegistry
+    internal sealed class PayloadHandlers : IPayloadHandlers
     {
         private readonly object _sync = new object();
         private readonly Dictionary<string, IHandler> _handlersByKey =
@@ -80,17 +80,6 @@ namespace Fmacias.TplQueue
             }));
         }
 
-        /// <summary>
-        /// Applies the registrations contributed by a plugin module.
-        /// </summary>
-        public PayloadHandlers RegisterPlugin(IPayloadHandlerPlugin plugin)
-        {
-            if (plugin == null) throw new ArgumentNullException(nameof(plugin));
-
-            plugin.Register(this);
-            return this;
-        }
-
         /// <inheritdoc />
         public IHandler Handler(string payloadHandlerKey)
         {
@@ -108,17 +97,6 @@ namespace Fmacias.TplQueue
             throw new KeyNotFoundException(
                 $"Handler not registered for payload handler key '{payloadHandlerKey}'.");
         }
-
-        void IPayloadHandlerRegistry.Register(string payloadHandlerKey, IHandler handler)
-        {
-            Register(payloadHandlerKey, handler);
-        }
-
-        void IPayloadHandlerRegistry.Register(string payloadHandlerKey, Func<IHandler> handlerFactory)
-        {
-            Register(payloadHandlerKey, handlerFactory);
-        }
-
         private void RegisterByKey(string payloadHandlerKey, IHandler handler)
         {
             if (string.IsNullOrWhiteSpace(payloadHandlerKey))

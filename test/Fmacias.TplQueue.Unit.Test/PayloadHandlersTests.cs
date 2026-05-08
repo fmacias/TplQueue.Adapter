@@ -13,7 +13,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task Register_WithHandlerInstance_ResolvesAndExecutesHandler()
         {
-            const string handlerKey = "plugins/test/v1";
+            const string handlerKey = "test/payload-handlers/v1";
             var recorder = new RecordingService();
             var payloadHandlers = PayloadHandlers.Create()
                 .Register(handlerKey, new RecordingHandler(recorder));
@@ -26,7 +26,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task Register_WithFactory_ResolvesHandlersThroughCompositionRoot()
         {
-            const string handlerKey = "plugins/test/factory-v1";
+            const string handlerKey = "test/payload-handlers/factory-v1";
             var recorder = new RecordingService();
             var createdHandlers = 0;
             var payloadHandlers = PayloadHandlers.Create()
@@ -49,7 +49,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task Register_WithUntypedDelegate_ResolvesAndExecutesHandler()
         {
-            const string handlerKey = "plugins/test/untyped-v1";
+            const string handlerKey = "test/payload-handlers/untyped-v1";
             object? receivedPayload = null;
             var payloadHandlers = PayloadHandlers.Create()
                 .Register(handlerKey, (payload, ct) =>
@@ -65,24 +65,13 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
-        public void RegisterPlugin_DelegatesRegistrationsToPlugin()
-        {
-            var payloadHandlers = PayloadHandlers.Create()
-                .RegisterPlugin(new TestPlugin());
-
-            var handler = payloadHandlers.Handler("plugins/test/plugin-v1");
-
-            Assert.That(handler, Is.Not.Null);
-        }
-
-        [Test]
         public void Register_WhenDuplicateKeyUsesDifferentHandler_ThrowsInvalidOperationException()
         {
             var payloadHandlers = PayloadHandlers.Create()
-                .Register("plugins/test/duplicate-v1", (payload, ct) => Task.CompletedTask);
+                .Register("test/payload-handlers/duplicate-v1", (payload, ct) => Task.CompletedTask);
 
             Assert.Throws<InvalidOperationException>(() =>
-                payloadHandlers.Register("plugins/test/duplicate-v1", (payload, ct) => Task.CompletedTask));
+                payloadHandlers.Register("test/payload-handlers/duplicate-v1", (payload, ct) => Task.CompletedTask));
         }
 
         [Test]
@@ -90,13 +79,13 @@ namespace Fmacias.TplQueue.Test
         {
             var payloadHandlers = PayloadHandlers.Create();
 
-            Assert.Throws<KeyNotFoundException>(() => payloadHandlers.Handler("plugins/test/missing-v1"));
+            Assert.Throws<KeyNotFoundException>(() => payloadHandlers.Handler("test/payload-handlers/missing-v1"));
         }
 
         [Test]
         public void Register_TypedHandler_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
         {
-            const string handlerKey = "plugins/test/type-check-v1";
+            const string handlerKey = "test/payload-handlers/type-check-v1";
             var payloadHandlers = PayloadHandlers.Create()
                 .Register<TestPayload>(handlerKey, (payload, ct) => Task.CompletedTask);
 
@@ -104,14 +93,6 @@ namespace Fmacias.TplQueue.Test
 
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await handler.HandleAsync(new OtherPayload(handlerKey), CancellationToken.None));
-        }
-
-        private sealed class TestPlugin : IPayloadHandlerPlugin
-        {
-            public void Register(IPayloadHandlerRegistry registry)
-            {
-                registry.Register("plugins/test/plugin-v1", new NoopHandler());
-            }
         }
 
         private sealed class RecordingHandler : IHandler

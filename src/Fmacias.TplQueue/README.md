@@ -90,7 +90,7 @@ From the facade you obtain:
 ## Registering payload handlers
 
 `API` owns the payload handler registry internally.
-If your application needs payload-aware cache hydration, register handlers through `IApi.RegisterPayloadHandler(...)`. Use `IApi.RegisterPayloadHandlerPlugin(...)` when a package or module contributes several handler registrations at once.
+If your application needs payload-aware cache hydration, register handlers through `IApi.RegisterPayloadHandler(...)`.
 The stable persisted execution identity remains `IPayload.PayloadId`, and cache hydration uses the API-owned internal handler registry.
 
 Use versioned handler keys for payloads that can outlive the current deployment in a cache. A good default shape is `<domain>.<operation>/v<version>`, for example `measurements.persist/v1`. If a payload shape or handler behavior changes incompatibly, introduce a new key such as `measurements.persist/v2` and keep the previous handler registered while old cached jobs may still hydrate.
@@ -113,16 +113,14 @@ api.RegisterPayloadHandler<MeasurementPayload>(
     });
 ```
 
-Plugin-style registration remains available for module-owned registrations:
+If your application wants to group several handler registrations, keep that grouping in the application layer and call the direct registration overloads there:
 
 ```csharp
-api.RegisterPayloadHandlerPlugin(new MeasurementPayloadPlugin());
-
-public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
+public static class MeasurementPayloadRegistration
 {
-    public void Register(IPayloadHandlerRegistry registry)
+    public static void RegisterOn(IApi api)
     {
-        registry.Register(
+        api.RegisterPayloadHandler(
             payloadHandlerKey: "measurements.persist/v1",
             handlerFactory: () => new MeasurementPayloadHandler());
     }
@@ -321,12 +319,12 @@ That split keeps application entry points compact while avoiding unnecessary cou
 
 Current state:
 
-- prefer `IApi.RegisterPayloadHandler(...)` and `IApi.RegisterPayloadHandlerPlugin(...)`
+- prefer `IApi.RegisterPayloadHandler(...)`
 - persist and resolve handlers through the stable string key carried by `IPayload.PayloadId`
 - version persisted handler keys when payload shape or handler behavior changes incompatibly
 - let `API` own the default internal payload handler registry
 
 Deferred work:
 
-- keep plugin discovery outside the facade while direct handler registration remains on `IApi`
+- keep higher-level discovery or module-loading concerns outside the facade while direct handler registration remains on `IApi`
 - if dedicated runtime loading becomes necessary for plugin payload types, prefer an `AssemblyLoadContext`-based resolver in modern .NET and treat the current AppDomain-based path as transitional compatibility behavior

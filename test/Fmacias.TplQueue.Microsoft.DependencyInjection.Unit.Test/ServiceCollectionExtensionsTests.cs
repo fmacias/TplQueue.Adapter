@@ -47,11 +47,6 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             return this;
         }
 
-        public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
-        {
-            return this;
-        }
-
         public T RetryPolicy<T>(IRetryPolicyFactory<T> retryPolicyFactory, string name) where T : IRetryPolicy
         {
             throw new NotImplementedException();

@@ -84,13 +84,6 @@ namespace Fmacias.TplQueue
             return this;
         }
 
-        /// <inheritdoc />
-        public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin)
-        {
-            _payloadHandlers.RegisterPlugin(plugin);
-            return this;
-        }
-
         /// <summary>
         /// Creates a cache using the facade-owned default runtime type resolver.
         /// </summary>

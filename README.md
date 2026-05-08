@@ -103,7 +103,6 @@ public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IHandler> hand
 public IApi RegisterPayloadHandler(string payloadHandlerKey, Func<IPayload, CancellationToken, Task> handler);
 public IApi RegisterPayloadHandler<TPayload>(string payloadHandlerKey, Func<TPayload, CancellationToken, Task> handler)
     where TPayload : IPayload;
-public IApi RegisterPayloadHandlerPlugin(IPayloadHandlerPlugin plugin);
 
 public IQFactoryAdapter QFactory
     => QFactoryAdapter.Create(_coreApi.QFactory, _retryPolicyAbstractFactory, _queueOptions, _retryPolicyOptions);
@@ -138,7 +137,6 @@ Payload-aware runtime nodes are part of the public model through `IDataJob`, `ID
 The execution-side payload model lives in Core, while Adapter provides the integration pieces commonly needed around it:
 
 - payload handler registration through `IApi.RegisterPayloadHandler(...)`
-- plugin-style registration through `IPayloadHandlerPlugin` and `IPayloadHandlerRegistry`
 - cache abstractions for dehydration and hydration
 - serializer implementations
 - queue creation helpers that combine retry and queue options
@@ -164,14 +162,14 @@ api.RegisterPayloadHandler<MeasurementPayload>(
     });
 ```
 
-Plugin-style registration is useful when a package or module contributes several handlers at once:
+If an application or higher-level module wants to group several registrations, that grouping should stay in the application layer and call the direct registration overloads itself:
 
 ```csharp
-public sealed class MeasurementPayloadPlugin : IPayloadHandlerPlugin
+public static class MeasurementPayloadRegistration
 {
-    public void Register(IPayloadHandlerRegistry registry)
+    public static void RegisterOn(IApi api)
     {
-        registry.Register(
+        api.RegisterPayloadHandler(
             payloadHandlerKey: "measurements.persist/v1",
             handlerFactory: () => new MeasurementPayloadHandler());
     }
@@ -200,7 +198,7 @@ Current state:
 
 Deferred work:
 
-- add optional higher-level plugin discovery helpers once the key-based contract is fully adopted
+- keep any higher-level discovery or module-loading helper outside the adapter facade
 - keep direct registration on `IApi` as the public composition path
 
 ## Queues and queue factory adapters

@@ -338,13 +338,13 @@ namespace Fmacias.TplQueue.Test
 
             Assert.That(cache, Is.SameAs(expectedCache));
             Assert.That(capturedResolver, Is.Not.Null);
-            Assert.Throws<KeyNotFoundException>(() => capturedResolver.Handler("plugins/test/missing-v1"));
+            Assert.Throws<KeyNotFoundException>(() => capturedResolver.Handler("test/api/missing-v1"));
         }
 
         [Test]
         public void RegisterPayloadHandler_WithHandlerInstance_UsesRegisteredHandlerWhenCreatingCache()
         {
-            const string handlerKey = "plugins/test/api-instance-v1";
+            const string handlerKey = "test/api/instance-v1";
             IApi api = CreateDefaultApi();
             var registeredHandler = Mock.Of<IHandler>();
 
@@ -358,7 +358,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task RegisterPayloadHandler_WithFactory_ResolvesHandlersThroughCompositionRoot()
         {
-            const string handlerKey = "plugins/test/api-factory-v1";
+            const string handlerKey = "test/api/factory-v1";
             IApi api = CreateDefaultApi();
             var recorder = new RecordingService();
             var createdHandlers = 0;
@@ -384,7 +384,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task RegisterPayloadHandler_WithUntypedDelegate_ResolvesAndExecutesHandler()
         {
-            const string handlerKey = "plugins/test/api-untyped-v1";
+            const string handlerKey = "test/api/untyped-v1";
             IApi api = CreateDefaultApi();
             object? receivedPayload = null;
 
@@ -405,7 +405,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public async Task RegisterPayloadHandler_WithTypedDelegate_ResolvesAndExecutesHandler()
         {
-            const string handlerKey = "plugins/test/api-typed-v1";
+            const string handlerKey = "test/api/typed-v1";
             IApi api = CreateDefaultApi();
             var recorder = new RecordingService();
 
@@ -425,7 +425,7 @@ namespace Fmacias.TplQueue.Test
         [Test]
         public void RegisterPayloadHandler_WithTypedDelegate_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
         {
-            const string handlerKey = "plugins/test/api-type-check-v1";
+            const string handlerKey = "test/api/type-check-v1";
             IApi api = CreateDefaultApi();
 
             api.RegisterPayloadHandler<TestPayload>(handlerKey, (payload, ct) => Task.CompletedTask);
@@ -438,22 +438,9 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
-        public void RegisterPayloadHandlerPlugin_DelegatesRegistrationsToPlugin()
-        {
-            const string handlerKey = "plugins/test/api-plugin-v1";
-            IApi api = CreateDefaultApi();
-
-            api.RegisterPayloadHandlerPlugin(new TestPlugin(handlerKey));
-
-            var resolver = CapturePayloadHandlers(api);
-
-            Assert.That(resolver.Handler(handlerKey), Is.Not.Null);
-        }
-
-        [Test]
         public void RegisterPayloadHandler_WhenDuplicateKeyUsesDifferentHandler_ThrowsInvalidOperationException()
         {
-            const string handlerKey = "plugins/test/api-duplicate-v1";
+            const string handlerKey = "test/api/duplicate-v1";
             IApi api = CreateDefaultApi();
 
             api.RegisterPayloadHandler(handlerKey, Mock.Of<IHandler>());
@@ -488,21 +475,6 @@ namespace Fmacias.TplQueue.Test
             _ = api.Cache(cacheFactory.Object, Mock.Of<IUniversalDataSerializer>(), _nodeTypeResolver.Object);
 
             return capturedResolver;
-        }
-
-        private sealed class TestPlugin : IPayloadHandlerPlugin
-        {
-            private readonly string _handlerKey;
-
-            public TestPlugin(string handlerKey)
-            {
-                _handlerKey = handlerKey;
-            }
-
-            public void Register(IPayloadHandlerRegistry registry)
-            {
-                registry.Register(_handlerKey, new NoopHandler());
-            }
         }
 
         private sealed class RecordingHandler : IHandler
