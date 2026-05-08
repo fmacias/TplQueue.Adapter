@@ -55,7 +55,7 @@ namespace Fmacias.TplQueue.Factories
 
             ValidateQueueOptions(queueOptions);
 
-            var retryPolicyCreator = () 
+            Func<IRetryPolicy> retryPolicyCreator = () 
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
 
             return Parallel(queueOptions.Id, name, queueOptions.MaxParallelism, logger, retryPolicyCreator);
@@ -88,7 +88,7 @@ namespace Fmacias.TplQueue.Factories
 
             ValidateQueueOptions(queueOptions);
 
-            var retryPolicyCreator = () 
+            Func<IRetryPolicy> retryPolicyCreator = () 
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
             
             return Fifo(queueOptions.Id, name, logger, retryPolicyCreator);
@@ -101,7 +101,7 @@ namespace Fmacias.TplQueue.Factories
             {
                 return Fifo(queueOptions, name, logger);
             }
-            var retryPolicyCreator = ()
+            Func<IRetryPolicy> retryPolicyCreator = ()
                 => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
 
             return _innerFactory.Fifo(queueOptions.Id, name, logger, retryPolicyCreator);

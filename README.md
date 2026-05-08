@@ -8,6 +8,7 @@
 
 - [Relationship to TplQueue.Core](#relationship-to-tplqueuecore)
 - [Repository modules](#repository-modules)
+- [C# language-version policy](#c-language-version-policy)
 - [The `API` facade](#the-api-facade)
 - [Payload-aware jobs and handlers](#payload-aware-jobs-and-handlers)
 - [Queues and queue factory adapters](#queues-and-queue-factory-adapters)
@@ -51,6 +52,14 @@ The repository currently contains these main modules:
 - [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
 At repository level, this README is the entry point. Individual modules may contain their own focused documentation.
+
+## C# language-version policy
+
+The shipped `netstandard2.0` adapter modules are pinned to `LangVersion=9.0`.
+
+This is a source-build policy for the TplQueue adapter package line, not a runtime requirement for applications that reference the compiled packages. Consumers targeting classic `.NET Framework` or any other `netstandard2.0`-compatible runtime do not need to change their own project `LangVersion` only to consume `TplQueue.Adapter` packages.
+
+`9.0` is the intentional floor because it preserves the current nullable-aware source style and the C# 8/9 syntax already used in the product code, while removing the accidental dependency on `LangVersion=latest`. If you build this repository from source, use a .NET SDK that supports C# 9 or later.
 
 ## The `API` facade
 

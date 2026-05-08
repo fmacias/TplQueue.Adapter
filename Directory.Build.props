@@ -4,7 +4,8 @@
        ========================= -->
 	<PropertyGroup>
 		<!-- Language & safety -->
-		<LangVersion>latest</LangVersion>
+		<!-- netstandard2.0 product line baseline: explicit C# 9 to avoid SDK-driven drift. -->
+		<LangVersion>9.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<Deterministic>true</Deterministic>
@@ -71,6 +72,9 @@
        (works whether IsTestProject came from csproj or auto-detection above)
        ========================= -->
 	<PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+		<!-- Tests target net8.0 and are not part of the shipped netstandard2.0 package line. -->
+		<LangVersion>12.0</LangVersion>
+
 		<!-- Disable nullable in tests -->
 		<Nullable>disable</Nullable>
 
