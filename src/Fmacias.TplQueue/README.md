@@ -278,7 +278,7 @@ if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease
     IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
 
     queue.Enqueue(hydratedRoot, CancellationToken.None);
-    queue.Start();
+    queue.ResumePolling();
 
     await hydratedRoot.WaitUntilFinishedAsync();
 }
@@ -302,6 +302,8 @@ using IDisposable consoleSubscription = queue.Subscribe(consoleObserver);
 ```
 
 The built-in observer classes are internal to the observer package. Use the factory contracts for console, logging, file logging, profiling, and default dispatcher creation. Implement `IObserver<IJobEvent>` in the consumer application when you need to feed a WPF, WinForms, ASP.NET, SignalR, metrics, or dashboard integration.
+
+Per-job execution failures stay on the normal observer stream as `IJobEvent` entries with `JobEventStatus.Failed`. Observer `OnError` is reserved for fatal dispatcher failures that transition the queue into an unusable state.
 
 For details, see the [observer package README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md).
 

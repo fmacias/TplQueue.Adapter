@@ -136,7 +136,7 @@ if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease
     IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
 
     queue.Enqueue(hydratedRoot, CancellationToken.None);
-    queue.Start();
+    queue.ResumePolling();
 
     await hydratedRoot.WaitUntilFinishedAsync();
 }

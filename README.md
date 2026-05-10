@@ -328,6 +328,8 @@ This allows queue configuration to stay externalized while the queue runtime its
 
 Core exposes events through `IObservable<IJobEvent>`. Adapter provides the [Fmacias.TplQueue.Observers](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md) package for built-in observers, default dispatcher creation, and consumer-side observer integration.
 
+Per-job execution failures remain part of the normal event stream and arrive through observer `OnNext` as `IJobEvent` values with `JobEventStatus.Failed`. Observer `OnError` is reserved for fatal dispatcher failures that transition the queue into an unusable state.
+
 Relevant modules and types include:
 
 - `IConsoleObserver`
@@ -468,7 +470,7 @@ if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease
     IParallelQ queue = api.QFactory.Parallel("main", queueLogger);
 
     queue.Enqueue(hydratedRoot, CancellationToken.None);
-    queue.Start();
+    queue.ResumePolling();
 
     await hydratedRoot.WaitUntilFinishedAsync();
 }

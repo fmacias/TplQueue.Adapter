@@ -307,7 +307,7 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public void Start()
+        public void ResumePolling()
         {
             throw new NotImplementedException();
         }
@@ -317,7 +317,7 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public Task Wait(int stateAtMs = 0)
+        public Task Wait()
         {
             throw new NotImplementedException();
         }
