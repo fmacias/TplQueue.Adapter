@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0</Version>
+	<Version>$(TplQueueVersion)</Version>
     <PackageId>Fmacias.TplQueue.Microsoft.DependencyInjection</PackageId>
     <Description>Microsoft.Extensions.DependencyInjection integration for registering TplQueue services, named queues, retry policies, serializers, and cache-aware application composition.</Description>
     <PackageTags>tplqueue;dependency-injection;microsoft-extensions;queue;retry;configuration</PackageTags>

@@ -605,9 +605,22 @@ Normal source builds are unsigned. Official release packages are strong-named on
 
 The private `.snk` file is never stored in this repository. Adapter component projects append the public key to `InternalsVisibleTo` declarations only for official signed builds. For key creation, public-key extraction, and verification, see `..\WorkspaceTplQueue\docs\strong-name-signing.md`.
 
-This is assembly strong-name signing only. NuGet package X.509 signing and obfuscation are not part of the current v1.0.0 release flow; the central policy is maintained in `..\WorkspaceTplQueue\docs\release-policy.md`.
+This is assembly strong-name signing only. NuGet package X.509 signing and obfuscation are not part of the current TplQueue release flow; the central policy is maintained in `..\WorkspaceTplQueue\docs\release-policy.md`.
 
 Component READMEs describe package-specific usage. Repository-wide packaging and signing rules live in this README.
+
+## Versioning and release
+
+The active public prototype line is `0.1.0-preview.1`. Until the first stable release, local builds and local package generation default to that preview line unless an explicit `-Version` is supplied.
+
+For any coordinated release:
+
+1. All publishable `Fmacias.TplQueue.*` packages use the same version.
+2. The published package version, git tag `v<version>`, and GitHub Release title `TplQueue <version>` must match exactly.
+3. Each contributing product repository should be tagged with that same version on the exact commit that produced the published package.
+4. `1.0.0` is reserved for the first stable release and should not be used for preview packages.
+
+Use `WorkspaceTplQueue\pack.ps1 -Version <version>` and `WorkspaceTplQueue\publish.ps1 -Version <version>` for coordinated release validation and publication. The detailed policy is maintained in `..\WorkspaceTplQueue\docs\release-policy.md`.
 
 ## License
 

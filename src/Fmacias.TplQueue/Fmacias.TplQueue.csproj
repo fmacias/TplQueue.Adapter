@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	<Version>1.0.0</Version>
+	<Version>$(TplQueueVersion)</Version>
     <PackageId>Fmacias.TplQueue</PackageId>
     <Description>Top-level adapter facade for composing TplQueue Core with retry policies, observers, cache providers, serializers, and configuration-driven queue creation.</Description>
     <PackageTags>tplqueue;adapter;job;queue;concurrency;retry;observer;cache;serialization</PackageTags>

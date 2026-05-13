@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0</Version>
+	<Version>$(TplQueueVersion)</Version>
     <PackageId>Fmacias.TplQueue.Observers</PackageId>
     <Description>Observer factory and built-in observer implementations for TplQueue job lifecycle events, diagnostics, structured logging, and profiling scenarios.</Description>
     <PackageTags>tplqueue;observer;events;diagnostics;logging;queue;job</PackageTags>

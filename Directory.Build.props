@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 	<!-- =========================
        Global (all projects)
        ========================= -->
@@ -16,9 +16,9 @@
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 
 		<!-- Standard package metadata (used when packing) -->
-		<Authors>Fernando Macías Ruano</Authors>
-		<Company>Fernando Macías Ruano</Company>
-		<Copyright>Copyright (c) Fernando Macías Ruano 2026</Copyright>
+		<Authors>Fernando Mac�as Ruano</Authors>
+		<Company>Fernando Mac�as Ruano</Company>
+		<Copyright>Copyright (c) Fernando Mac�as Ruano 2026</Copyright>
 		<RepositoryUrl>https://github.com/fmacias/TplQueue.Adapter</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/fmacias/TplQueue.Adapter</PackageProjectUrl>
 		<RepositoryType>git</RepositoryType>
@@ -56,9 +56,11 @@
 	<PropertyGroup>
 		<TplQueueOfficialSign Condition="'$(TplQueueOfficialSign)' == ''">false</TplQueueOfficialSign>
 		<SignAssembly Condition="'$(TplQueueOfficialSign)' == 'true'">true</SignAssembly>
+		<PublicSign Condition="'$(TplQueueOfficialSign)' == 'true'">true</PublicSign>
 		<AssemblyOriginatorKeyFile Condition="'$(TplQueueOfficialSign)' == 'true'">$(TplQueueStrongNameKeyFile)</AssemblyOriginatorKeyFile>
 		<TplQueueInternalsVisibleToPublicKeySuffix Condition="'$(TplQueueOfficialSign)' == 'true'">, PublicKey=$(TplQueueStrongNamePublicKey)</TplQueueInternalsVisibleToPublicKeySuffix>
-		<TplQueuePackageVersion Condition="'$(TplQueuePackageVersion)' == ''">1.0.0</TplQueuePackageVersion>
+		<TplQueueVersion Condition="'$(TplQueueVersion)' == ''">0.1.0-preview.1</TplQueueVersion>
+		<TplQueuePackageVersion Condition="'$(TplQueuePackageVersion)' == ''">$(TplQueueVersion)</TplQueuePackageVersion>
 	</PropertyGroup>
 
 	<Target Name="ValidateTplQueueOfficialStrongNameSigning" BeforeTargets="CoreCompile" Condition="'$(TplQueueOfficialSign)' == 'true'">
@@ -78,7 +80,7 @@
 		<!-- Disable nullable in tests -->
 		<Nullable>disable</Nullable>
 
-		<!-- Donâ€™t treat warnings as errors in tests -->
+		<!-- Don’t treat warnings as errors in tests -->
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Tests usually don't emit XML docs -->
