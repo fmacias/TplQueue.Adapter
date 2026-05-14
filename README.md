@@ -7,6 +7,7 @@
 ## Table of contents
 
 - [Relationship to TplQueue.Core](#relationship-to-tplqueuecore)
+- [Public usage repository](#public-usage-repository)
 - [Repository modules](#repository-modules)
 - [C# language-version policy](#c-language-version-policy)
 - [The `API` facade](#the-api-facade)
@@ -37,6 +38,12 @@ Use Core when you want the execution primitives directly.
 Use Adapter when you want the integration layer that wires those primitives together with named configuration, serializer support, cache implementations, observers, or DI registration.
 
 For the current graph-composition rules, especially the requirement that `IJobRoot` and `IDataJobRoot` remain the enqueueable terminal nodes, see [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#job-roots).
+
+## Public usage repository
+
+For package-based consumer samples, public integration tests, and observer-facing validation, see [TplQueue.Usage](https://github.com/fmacias/TplQueue.Usage).
+
+`TplQueue.Usage` is the public verification repository for the preview package line and consumes the TplQueue binaries through package references rather than private project references.
 
 ## Repository modules
 

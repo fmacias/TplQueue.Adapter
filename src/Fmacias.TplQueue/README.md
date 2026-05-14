@@ -17,6 +17,7 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 
 - [Summary](#summary)
 - [Install](#install)
+- [Public usage repository](#public-usage-repository)
 - [Module purpose](#module-purpose)
 - [Creating the facade](#creating-the-facade)
 - [Creating retry policies](#creating-retry-policies)
@@ -41,6 +42,12 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 ```bash
 dotnet add package Fmacias.TplQueue --version 0.1.0-preview.1
 ```
+
+## Public usage repository
+
+For runnable consumer samples, package-consumption tests, and public observer scenarios built on top of `Fmacias.TplQueue`, see [TplQueue.Usage](https://github.com/fmacias/TplQueue.Usage).
+
+That repository validates the preview packages through package references instead of private `TplQueue.Core` source dependencies.
 
 ## Module purpose
 
