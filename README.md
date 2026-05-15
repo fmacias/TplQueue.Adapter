@@ -19,6 +19,7 @@
 - [Serialization](#serialization)
 - [Dependency injection](#dependency-injection)
 - [Minimal example](#minimal-example)
+- [Local validation](#local-validation)
 - [Strong-name signing](#strong-name-signing)
 - [License](#license)
 
@@ -598,6 +599,23 @@ queue.Enqueue(root, CancellationToken.None);
 ```
 
 For execution semantics and queue behavior details, see [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md).
+
+## Local validation
+
+Run the repository test surface with:
+
+```powershell
+dotnet test .\TplQueue.Adapter.sln
+```
+
+Run deterministic coverage collection or enforce the accepted module baselines with:
+
+```powershell
+.\coverage.ps1
+.\coverage.ps1 -EnforceBaseline
+```
+
+The adapter coverage script writes Cobertura reports, JSON summaries, and `artifacts/coverage/html/index.html` when the standard `ReportGenerator` tool is available. The enforced per-module floors live in `coverage-baseline.json`, and the coordinated release record is maintained in `..\WorkspaceTplQueue\docs\test-coverage.md`.
 
 ## Strong-name signing
 

@@ -1,0 +1,12 @@
+{
+  "lineCoverageThresholds": {
+    "Fmacias.TplQueue": 48.0,
+    "Fmacias.TplQueue.Cache.Abstract": 58.5,
+    "Fmacias.TplQueue.Cache.MemCache": 83.5,
+    "Fmacias.TplQueue.Microsoft.DependencyInjection": 12.0,
+    "Fmacias.TplQueue.Observers": 21.0,
+    "Fmacias.TplQueue.RetryPolicies": 88.0,
+    "Fmacias.TplQueue.Serialization.SystemTextJson": 97.0,
+    "Fmacias.TplQueue.Serialization.Xml": 99.5
+  }
+}
