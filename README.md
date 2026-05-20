@@ -44,7 +44,7 @@ For the current graph-composition rules, especially the requirement that `IJobRo
 
 For package-based consumer samples, public integration tests, and observer-facing validation, see [TplQueue.Usage](https://github.com/fmacias/TplQueue.Usage).
 
-`TplQueue.Usage` is the public verification repository for the preview package line and consumes the TplQueue binaries through package references rather than private project references.
+`TplQueue.Usage` is the public verification repository for the preview package line and consumes the TplQueue binaries through package references rather than private project references. The current runnable sample entry points are [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole) and [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard).
 
 ## Repository modules
 

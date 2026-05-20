@@ -6,6 +6,7 @@ See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
 - [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
+- [TplQueue.Usage consumer samples](https://github.com/fmacias/TplQueue.Usage/tree/main/samples)
 - [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 - [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 - [Fmacias.TplQueue.RetryPolicies README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
