@@ -66,4 +66,4 @@ For package-based samples, public integration tests, and observer-facing validat
 
 `TplQueue.Adapter` is distributed under the MIT license.
 
-`TplQueue.Core`, which the adapter complements, is distributed separately under its own package-specific license terms.
+`TplQueue.Core`, which the adapter complements, is distributed separately under its own package-specific license terms. The published Core binaries are publicly consumable, but the Core source repository, private unit tests, and private integration tests remain outside the public repositories and require separate approval.
