@@ -5,18 +5,33 @@
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Adapter serialization section](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#serialization)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [TplQueue.Adapter serialization section](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/reference.md#serialization)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Install
 
 ```bash
 dotnet add package Fmacias.TplQueue.Serialization.SystemTextJson --version 0.1.0-preview.1
 ```
+
+## Canonical sample
+
+The public console sample uses the JSON serializer for indented output like this:
+
+```csharp
+IUniversalDataSerializer serializer =
+    api.SystemTextSerializerFactory().Serializer(
+        new JsonSerializerOptions { WriteIndented = true });
+```
+
+Full runnable solutions:
+
+- [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 
 ## When to use this package
 
@@ -49,11 +64,6 @@ IMemCache cache = api.Cache<IMemCache>(
 
 Some persisted members still expose JSON-oriented names such as `PayloadJson`. Those names are retained for compatibility and should be read as serializer-specific payload content, not as a restriction on the cache flow itself.
 
-## Repository build notes
+## Repository operations
 
-Run from `TplQueue.Adapter` root:
-
-```powershell
-dotnet build .\src\Fmacias.TplQueue.Serialization.SystemTextJson\Fmacias.TplQueue.Serialization.SystemTextJson.csproj
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).

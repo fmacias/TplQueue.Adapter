@@ -5,12 +5,12 @@ Observer support package for `TplQueue` job lifecycle events.
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core observers section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#observers)
+- [TplQueue.Core observers section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#observers)
 - [TplQueue.Usage QueueObserverConsole sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Table of contents
 
@@ -48,6 +48,26 @@ The built-in observer classes are internal implementation details. Use `Observer
 dotnet add package Fmacias.TplQueue.Observers --version 0.1.0-preview.1
 ```
 
+## Canonical sample
+
+The public console sample wires built-in observers like this:
+
+```csharp
+IObserverFactory observerFactory = api.ObserverFactory();
+
+using IDisposable loggingSubscription =
+    queue.Subscribe(observerFactory.CreateLoggingObserver(observerLogger));
+using IDisposable profilingSubscription =
+    queue.Subscribe(observerFactory.CreateProfilingObserver(profilingLogger));
+```
+
+The SignalR dashboard sample extends that pattern with a consumer-owned observer that projects queue events into DTOs.
+
+Full runnable solutions:
+
+- [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
+
 ## Why observers matter
 
 Observer integration is a key part of the `TplQueue` architecture. A queue emits `IJobEvent` values while it executes `IJobRoot` and `IDataJobRoot` graphs. Those events can feed logs, metrics, audit streams, operational dashboards, and UI status panels without coupling the queue engine to a specific UI framework or transport.
@@ -63,7 +83,7 @@ This package owns:
 - the internal `DirectObserverDispatcher` implementation returned by the factory for inline dispatch
 - logging subscription helpers for queue event streams
 
-Core still owns event publication through [`IQ : IObservable<IJobEvent>`](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#observers). This package owns the reusable observer implementations and the consumer-side construction entry point.
+Core still owns event publication through [`IQ : IObservable<IJobEvent>`](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#observers). This package owns the reusable observer implementations and the consumer-side construction entry point.
 
 ## Factory-first usage
 

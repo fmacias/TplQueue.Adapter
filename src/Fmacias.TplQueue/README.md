@@ -12,7 +12,7 @@ See also:
 - [Fmacias.TplQueue.RetryPolicies README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
 - [Fmacias.TplQueue.Observers README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Table of contents
 
@@ -43,6 +43,26 @@ Repository-wide packaging and strong-name signing rules are documented in the [T
 ```bash
 dotnet add package Fmacias.TplQueue --version 0.1.0-preview.1
 ```
+
+## Canonical sample
+
+The public `QueueObserverConsole` sample uses this facade shape:
+
+```csharp
+var api = API.Create(CoreApi.Create(), retryPolicies, dispatchers);
+
+using IParallelQ queue = api.QFactory.Parallel(
+    Guid.NewGuid(),
+    "greetings-pipeline",
+    maxParallelism: 1,
+    queueLogger,
+    retryPolicyFactory);
+```
+
+Full runnable solutions:
+
+- [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 
 ## Public usage repository
 

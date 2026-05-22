@@ -5,18 +5,31 @@
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Adapter serialization section](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#serialization)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [TplQueue.Adapter serialization section](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/reference.md#serialization)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Install
 
 ```bash
 dotnet add package Fmacias.TplQueue.Serialization.Xml --version 0.1.0-preview.1
 ```
+
+## Canonical sample
+
+The public console sample uses the XML serializer for the input document like this:
+
+```csharp
+IUniversalDataSerializer serializer =
+    api.XmlSerializerFactory().Serializer();
+```
+
+Full runnable solution:
+
+- [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
 
 ## When to use this package
 
@@ -49,11 +62,6 @@ IMemCache cache = api.Cache<IMemCache>(
 
 The shared cache and serializer contracts still retain some JSON-oriented member names for backward compatibility. Those names should be interpreted as serializer-specific payload storage members, not as a limitation on XML usage.
 
-## Repository build notes
+## Repository operations
 
-Run from `TplQueue.Adapter` root:
-
-```powershell
-dotnet build .\src\Fmacias.TplQueue.Serialization.Xml\Fmacias.TplQueue.Serialization.Xml.csproj
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).

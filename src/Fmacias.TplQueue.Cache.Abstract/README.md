@@ -5,12 +5,12 @@ Reusable cache orchestration primitives for data-job graph dehydration/hydration
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 Use this package when you need the cache contracts and reusable hydration workflow without taking a dependency on the concrete in-memory cache implementation.
 
@@ -19,6 +19,25 @@ Use this package when you need the cache contracts and reusable hydration workfl
 ```bash
 dotnet add package Fmacias.TplQueue.Cache.Abstract --version 0.1.0-preview.1
 ```
+
+## Canonical sample
+
+The public smoke and dashboard samples exercise the cache flow through a small sequence like this:
+
+```csharp
+cache.Dehydrate(root, isFifo: false);
+
+if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
+{
+    queue.Enqueue(hydratedRoot, CancellationToken.None);
+    await queue.Wait().ConfigureAwait(false);
+}
+```
+
+Full runnable solutions:
+
+- [PackageConsumptionSmokeConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/PackageConsumptionSmokeConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 
 ## Contents
 - `CacheAbstract`: base workflow implementation.
@@ -170,20 +189,6 @@ Deferred work:
 - when dynamic plugin loading becomes a first-class scenario in modern .NET, move the dedicated-loading design toward `AssemblyLoadContext`
 - preserve the `ITypeResolver` boundary so the runtime loading mechanism can change without redesigning the serializer contract
 
-## Local pipeline
-Run from `TplQueue.Adapter` root:
+## Repository operations
 
-1. Build module:
-```powershell
-dotnet build .\src\Fmacias.TplQueue.Cache.Abstract\Fmacias.TplQueue.Cache.Abstract.csproj
-```
-
-2. Run module tests:
-```powershell
-dotnet test .\test\Fmacias.TplQueue.Cache.Abstract.Test\Fmacias.TplQueue.Cache.Abstract.Test.csproj
-```
-
-3. Pack through ordered repo pipeline:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).

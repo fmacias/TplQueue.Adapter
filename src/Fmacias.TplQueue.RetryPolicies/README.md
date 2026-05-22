@@ -5,11 +5,11 @@ Retry-policy implementations and factories used by [TplQueue.Adapter](https://gi
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core retry section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#retry-policies)
+- [TplQueue.Core retry section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#retry-policies)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 Use this package when you want the built-in TplQueue retry-policy implementations and factories without taking the broader adapter facade package.
 
@@ -18,6 +18,25 @@ Use this package when you want the built-in TplQueue retry-policy implementation
 ```bash
 dotnet add package Fmacias.TplQueue.RetryPolicies --version 0.1.0-preview.1
 ```
+
+## Canonical sample
+
+The public console sample builds a queue-level retry policy like this:
+
+```csharp
+Func<IRetryPolicy> retryPolicyFactory = () => api.RetryPolicy(
+    ExponentialBackoffFactory.Create(),
+    maxRetries: 3,
+    delayMs: 250,
+    factor: 2d);
+```
+
+The SignalR dashboard sample complements that pattern with configuration-driven retry policy selection through named options.
+
+Full runnable solutions:
+
+- [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 
 ## Contents
 
@@ -69,24 +88,9 @@ CustomRetryPolicy custom = factory.GetPolicy<CustomRetryPolicy>();
 
 The custom policy must implement `IRetryPolicy` and expose a public parameterless constructor. Custom interfaces are not resolved automatically by `RetryPolicyAbstractFactory`; use a concrete custom type unless a registration mechanism is added later.
 
-## Repository build notes
+## Repository operations
 
-Run from `TplQueue.Adapter` root:
-
-1. Build:
-```powershell
-dotnet build .\src\Fmacias.TplQueue.RetryPolicies\Fmacias.TplQueue.RetryPolicies.csproj
-```
-
-2. Test:
-```powershell
-dotnet test .\test\Fmacias.TplQueue.RetryPolicies.Unit.Test\Fmacias.TplQueue.RetryPolicies.Test.csproj
-```
-
-3. Pack in repo order:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Refactor note
 

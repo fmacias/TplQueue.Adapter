@@ -5,12 +5,12 @@ In-memory cache provider built on top of [Fmacias.TplQueue.Cache.Abstract](https
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/README.md#cache-and-persistence)
+- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 Use this package when you want a lightweight in-process cache provider for dehydrating payload-aware jobs, hydrating them later, and validating cache-backed flows without introducing an external storage dependency.
 
@@ -20,28 +20,34 @@ Use this package when you want a lightweight in-process cache provider for dehyd
 dotnet add package Fmacias.TplQueue.Cache.MemCache --version 0.1.0-preview.1
 ```
 
+## Canonical sample
+
+The public smoke sample uses `IMemCache` through the adapter facade like this:
+
+```csharp
+var cache = api.Cache<IMemCache>(
+    MemCacheFactory.Create(),
+    api.SystemTextSerializerFactory().Serializer());
+
+cache.Dehydrate(root, isFifo: false);
+cache.TryHydrateNextJob(out var hydratedRoot, out var lease);
+queue.Enqueue(hydratedRoot, CancellationToken.None);
+await queue.Wait().ConfigureAwait(false);
+```
+
+Full runnable solutions:
+
+- [PackageConsumptionSmokeConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/PackageConsumptionSmokeConsole)
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
+
 ## Contents
 - `MemCacheFactory` creation entry point.
 - `MemCache` in-memory implementation of `IMemCache`.
 - Internal in-memory repository model for cache entries.
 
-## Repository build notes
-Run from `TplQueue.Adapter` root:
+## Repository operations
 
-1. Build module:
-```powershell
-dotnet build .\src\Fmacias.TplQueue.Cache.MemCache\Fmacias.TplQueue.Cache.MemCache.csproj
-```
-
-2. Run module tests:
-```powershell
-dotnet test .\test\Fmacias.TplQueue.Cache.MemCache.Test\Fmacias.TplQueue.Cache.MemCache.Test.csproj
-```
-
-3. Pack through repo pipeline:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Usage outline
 Create with:

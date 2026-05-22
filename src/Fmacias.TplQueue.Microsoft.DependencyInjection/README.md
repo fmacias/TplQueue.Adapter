@@ -9,7 +9,7 @@ See also:
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and strong-name signing rules are documented in the [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md#strong-name-signing).
+Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 Use this package when your host application is built around `IServiceCollection` and you want to register TplQueue queues, retry policies, serializers, and adapter services through familiar `Microsoft.Extensions.DependencyInjection` patterns.
 
@@ -24,23 +24,26 @@ dotnet add package Fmacias.TplQueue.Microsoft.DependencyInjection --version 0.1.
 - `TplQueueOptionsBuilder` for fluent retry-policy and queue registration.
 - Registration of `IApi`, read-only option dictionaries, and related adapter services.
 
-## Repository build notes
-Run from `TplQueue.Adapter` root:
+## Canonical sample
 
-1. Build module:
-```powershell
-dotnet build .\src\Fmacias.TplQueue.Microsoft.DependencyInjection\Fmacias.TplQueue.Microsoft.DependencyInjection.csproj
+The public SignalR dashboard sample registers TplQueue through DI like this:
+
+```csharp
+var settings = TplQueueDashboardSettings.Load(configuration);
+var retryPolicies = settings.CreateRetryPolicies();
+var dispatchers = settings.CreateDispatchers();
+var api = API.Create(CoreApi.Create(), retryPolicies, dispatchers);
+
+services.AddTplQueue(api, retryPolicies, dispatchers);
 ```
 
-2. Run module tests:
-```powershell
-dotnet test .\test\Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test\Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test.csproj
-```
+Full runnable solution:
 
-3. Pack through repo pipeline:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\pack-local.ps1
-```
+- [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
+
+## Repository operations
+
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
 
 ## Registration modes
 - `AddTplQueue(IServiceCollection, IConfiguration, IApi)`
