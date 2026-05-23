@@ -29,11 +29,11 @@ Install the companion adapter modules only when your application needs them.
 
 Repository-level documentation now lives under [docs/](docs/index.md):
 
-- [Usage](docs/usage/index.md)
+- [Getting Started](docs/usage/index.md)
 - [Architecture](docs/architecture/index.md)
 - [Development](docs/development/index.md)
 - [Operations](docs/operations/index.md)
-- [Full reference](docs/reference.md)
+- [Reference hub](docs/reference.md)
 
 ## Quick operations
 
