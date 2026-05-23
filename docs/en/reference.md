@@ -32,3 +32,8 @@ This page is now a short navigation hub. The previous all-in-one repository guid
 - [PackageConsumptionSmokeConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/PackageConsumptionSmokeConsole)
 - [QueueObserverConsole](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
 - [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
+
+## Related documentation surfaces
+
+- [TplQueue.Core repository docs](https://github.com/fmacias/TplQueue.Core/tree/main/docs/en)
+- [fmacias.github.io public TplQueue hub](https://fmacias.github.io/tplqueue/)

@@ -39,8 +39,8 @@ Because of this, the tutorial should explain how to integrate this component int
 When modifying documentation for this repository:
 
 1. Treat the root `README.md` as the concise repository and package entry point and part of binary. It is not considered part of the documenation.
-2. Consider the content of the `docs` folder as a Tutorial of this repository.
-2. Treat `docs/` as the long-form repository documentation tree.
+2. Consider the content of the `docs/en/` and `docs/de/` folders as the publishable tutorial trees of this repository.
+3. Treat `docs/en/` and `docs/de/` as the long-form repository documentation trees.
    - Keep content grouped by the current sections:
      - `Getting Started`: 
 		* Sumarized MD file with the title "TplQueue with .NET and ASP.NET"
@@ -64,19 +64,19 @@ When modifying documentation for this repository:
      - `operations`: like it is for now
      - `reference`: Remove content fi recicle on creating the final documenation.
 
-3. Keep terminology aligned with the current public model.
+4. Keep terminology aligned with the current public model.
    - Use `IJob`, `IJobRoot`, `IDataJob`, `IDataJobRoot`, `IQ`, `IParallelQ`, `IFifoQ`, and `ICacheQ`.
    - Do not reintroduce legacy `TaskRunner` terminology unless it is explicitly called out as historical context.
 
-4. Keep runnable examples centralized in `TplQueue.Usage`.
+5. Keep runnable examples centralized in `TplQueue.Usage`.
    - Core docs may include small focused snippets.
    - Full consumer-facing sample flows should link to `TplQueue.Usage` instead of being duplicated here.
 
-5. Keep documentation tightly coupled to the owning surface.
-   - `docs/`: repository-level explanations and grouped reference material.
-   - Diagrams: `docs/architecture/`. "Comming soon"
+6. Keep documentation tightly coupled to the owning surface.
+   - `docs/en/` and `docs/de/`: repository-level explanations and grouped reference material.
+   - Diagrams: `docs/en/architecture/` and `docs/de/architecture/`. "Comming soon"
 
-6. Keep the Core access policy explicit.
+7. Keep the Core access policy explicit.
    - Official NuGet packages are publicly consumable under the package-specific license.
    - The source repository remains private.
    - Source access, support, maintenance, and rights around modified-source distribution require a separate written agreement and explicit approval.
@@ -86,7 +86,7 @@ When modifying documentation for this repository:
 
 ### Documenation Structure
 
- Treat `docs/` as the long-form repository documentation tree.
+ Treat `docs/en/` and `docs/de/` as the long-form repository documentation trees.
    - Keep content grouped by the current sections:
      - `Getting Started`: 
      - `architecture`

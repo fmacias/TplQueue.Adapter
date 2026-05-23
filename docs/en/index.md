@@ -4,6 +4,8 @@ This folder contains the repository-level tutorial and reference material for `T
 
 Use this page as the stable entry point for future MkDocs import.
 
+This `docs/en/` tree is the source of truth mirrored into the public `TplQueue` section on `fmacias.github.io`.
+
 ## Tree
 
 - [Getting Started](usage/index.md)
