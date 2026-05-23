@@ -35,6 +35,14 @@ Repository-level documentation now lives under [docs/](docs/index.md):
 - [Operations](docs/operations/index.md)
 - [Reference hub](docs/reference.md)
 
+## Documentation rebuild prompt
+
+If you want to rebuild or refresh the repository documentation with an agent, use [docs/Agents.md](docs/Agents.md) as the instruction file and start from this prompt:
+
+```text
+Rebuild the TplQueue.Adapter documentation under docs/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, rewrite docs/usage/index.md as the main “TplQueue with .NET and ASP.NET” tutorial, keep docs/reference.md as a compact reference hub, preserve the current MkDocs-friendly structure, and ground every API example in the current TplQueue.Adapter source code and the runnable samples in TplQueue.Usage.
+```
+
 ## Quick operations
 
 Run the repository test surface:

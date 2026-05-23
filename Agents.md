@@ -29,7 +29,7 @@ The MIT-licensed wrapper package `Fmacias.TplQueue` is now a thin facade package
 
 Other packages in this repository, such as `Fmacias.TplQueue.Cache.Abstract` and `Fmacias.TplQueue.Microsoft.DependencyInjection`, are supporting adapter modules and must be treated as first-class package boundaries.
 
-When working inside a package folder, read the nearest package-level `AGENTS.md` as well. The root `Agents.md` remains the primary repository-wide instruction set.
+When working inside a package folder, read the nearest package-level `AGENTS.md` as well. When working on the repository documentation under `docs/`, use [`docs/Agents.md`](docs/Agents.md) as the authoritative end-user documentation instruction file. The root `Agents.md` remains the primary repository-wide instruction set for code and repository work.
 
 ## Current repository structure
 
@@ -327,9 +327,14 @@ When creating or substantially modifying C# code:
 3. Do not leave misleading, outdated, or speculative comments in the code.
 ---
 
-## README Documentation
+## Documentation work
 
-Check the rules to write README file of [TplQueue.Core]\prompts\documenation\ExtendedReadme.md
+For documentation tasks:
+
+1. Treat this root file as the repository-wide operating guide.
+2. Treat [`docs/Agents.md`](docs/Agents.md) as the authoritative instruction set for rebuilding or extending the end-user documentation tree under `docs/`.
+3. Keep `README.md` concise as the repository and package entry point.
+4. Do not duplicate the detailed documentation-writing rules from `docs/Agents.md` in this root file.
 
 ---
 
