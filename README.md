@@ -12,6 +12,12 @@ The repository publishes several packages. The main facade package is:
 dotnet add package Fmacias.TplQueue --version 0.1.0-preview.1
 ```
 
+For ASP.NET Core or generic-host microsoft DI integration, install:
+
+```bash
+dotnet add package Fmacias.TplQueue.Microsoft.DependencyInjection --version 0.1.0-preview.1
+```
+
 Install the companion adapter modules only when your application needs them.
 
 ## Repository modules
