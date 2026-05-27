@@ -1,11 +1,20 @@
 # Queues
 
-Queues are the runtime dispatchers that execute job graphs.
+Queues sind die Runtime-Dispatcher, die Job-Graphen ausführen.
 
-- [Parallel Queue](parallel-queue.md)
-- [FIFO Queue](fifo-queue.md)
-- [Cache Queue](cache-queue.md)
-- [Pause and Resume](pause-resume.md)
+## Öffentliche Queue-Contracts
+
+- `IQ`
+- `IParallelQ`
+- `IFifoQ`
+- `ICacheQ`
+
+## Hauptthemen
+
+- [Parallel-Queue](parallel-queue.md)
+- [FIFO-Queue](fifo-queue.md)
+- [Cache-Queue](cache-queue.md)
+- [Pause und Resume](pause-resume.md)
 - [Cancellation](cancellation.md)
 - [Cross-Queue Ownership](cross-queue-ownership.md)
-- [Reactive Dequeue Strategy](reactive-dequeue.md)
+- [Reaktive Dequeue-Strategie](reactive-dequeue.md)

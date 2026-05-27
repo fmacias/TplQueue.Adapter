@@ -1,12 +1,12 @@
-# Diagrams
+# Diagramme
 
-Gerenderte SVG-Architekturdiagramme fuer das Core-Ausfuehrungsmodell werden zusammen mit der oeffentlichen Adapter-Dokumentation veroeffentlicht.
+Gerenderte SVG-Architekturdiagramme für das Core-Ausführungsmodell werden zusammen mit der öffentlichen Adapter-Dokumentation veröffentlicht.
 
-Die zugrunde liegenden PlantUML-Quelldateien bleiben privat im Repository `TplQueue.Core` und sind nicht Teil der oeffentlichen Site.
+Die zugrunde liegenden PlantUML-Quelldateien bleiben privat im Repository `TplQueue.Core` und sind nicht Teil der öffentlichen Site.
 
-## Ueberblick
+## Überblick
 
-- [Core-Komponenten-Ueberblick](rendered/coreComponent/coreComponent.svg)
+- [Core-Komponentenüberblick](rendered/coreComponent/coreComponent.svg)
 
 ## Runtime- und Queue-Diagramme
 

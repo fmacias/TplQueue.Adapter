@@ -1,3 +1,5 @@
-# Extending Queues
+# Queues erweitern
 
-Prefer `IQFactory` for runtime queues and `IQFactoryAdapter` for named queue creation from configuration.
+Die meisten Anwendungen sollten die öffentlichen Queue-Factories verwenden, statt Queue-Implementierungen direkt zu subclassen.
+
+Bevorzugen Sie `IQFactory` für Runtime-Queues und `IQFactoryAdapter` für die Erstellung benannter Queues aus Konfiguration.

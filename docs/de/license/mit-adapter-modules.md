@@ -1,3 +1,5 @@
-# MIT Adapter Modules
+# MIT-Adapter-Module
 
-The Adapter repository publishes its public integration modules under the MIT license.
+Das Adapter-Repository veröffentlicht seine öffentlichen Integrationsmodule unter der MIT-Lizenz.
+
+Dazu gehören `Fmacias.TplQueue`, Cache-Module, Retry-Policy-Module, Observer-Module, Serializer-Module und das DI-Integrations-Package.

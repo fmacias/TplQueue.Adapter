@@ -1,4 +1,4 @@
-# Public Packages
+# Öffentliche Packages
 
 - [`Fmacias.TplQueue`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [`Fmacias.TplQueue.Cache.Abstract`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)

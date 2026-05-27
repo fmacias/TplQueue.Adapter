@@ -1,3 +1,5 @@
-# Strong-Name Signing
+# Strong-Name-Signing
 
-Normal source builds are unsigned. Official signed release packages require an external private `.snk` path and the matching public key.
+Normale Source-Builds sind unsigniert.
+
+Offizielle signierte Release-Packages werden nur erzeugt, wenn die Packaging-Pipeline einen externen privaten `.snk`-Pfad und den dazugehörigen vollständigen Public Key erhält.

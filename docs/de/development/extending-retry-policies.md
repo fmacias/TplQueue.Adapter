@@ -1,3 +1,5 @@
-# Extending Retry Policies
+# Retry-Policies erweitern
 
-Concrete retry policies belong on the Adapter side.
+Konkrete Retry-Policies gehören auf die Adapter-Seite.
+
+Halten Sie `IRetryPolicy`-Implementierungen deterministisch und Factory-Delegates frei von Seiteneffekten.

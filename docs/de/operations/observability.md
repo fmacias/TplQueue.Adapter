@@ -1,3 +1,5 @@
 # Observability
 
-Every queue implements `IObservable<IJobEvent>`, which makes TplQueue observable without coupling the execution pipeline to a specific logging or UI framework.
+Jede Queue implementiert `IObservable<IJobEvent>`, wodurch TplQueue beobachtbar wird, ohne die Ausführungspipeline an ein bestimmtes Logging- oder UI-Framework zu koppeln.
+
+Nützliche Event-Felder sind unter anderem `Status`, `JobInfo.Id`, `JobInfo.Name`, `JobInfo.CrossQueueId`, `Timestamp`, `RetryCount` und `Exception`.

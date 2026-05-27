@@ -1,3 +1,7 @@
-# Cache and Persistence Boundary
+# Cache- und Persistenzgrenze
 
-Core provides payload-aware jobs and `ICacheQ`. Adapter provides cache abstractions, concrete cache modules, serializer modules, and payload-handler registration support.
+Persistenzprovider werden nicht direkt innerhalb von `TplQueue.Core` implementiert.
+
+Core stellt payloadfähige Jobs, `ICacheQ`, Orchestrierungs-Hooks für Cache-Queues und Payload-Handler-Support bereit.
+
+Adapter stellt `IDataJobCache`-Abstraktionen, konkrete Cache-Implementierungen, Serializer-Module und Support für die Payload-Handler-Registrierung bereit.

@@ -1,3 +1,5 @@
-# C# Language Version Policy
+# C#-Language-Version-Policy
 
-The shipped `netstandard2.0` Adapter and Core product lines are pinned to `LangVersion=9.0`.
+Die ausgelieferten `netstandard2.0`-Produktlinien von Adapter und Core sind auf `LangVersion=9.0` festgelegt.
+
+Dies ist eine Source-Build-Policy und keine Runtime-Anforderung für Consumer.

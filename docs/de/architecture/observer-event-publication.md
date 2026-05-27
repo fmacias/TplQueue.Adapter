@@ -1,3 +1,9 @@
-# Observer Event Publication
+# Observer-Event-Publikation
 
-Every `IQ` implements `IObservable<IJobEvent>`. `OnError` is reserved for fatal dispatcher failures, while ordinary job failures are published through `OnNext`.
+Jede `IQ` implementiert `IObservable<IJobEvent>`.
+
+- Gewöhnliche Job-Fehler werden über `OnNext` veröffentlicht.
+- `OnError` ist für fatale Dispatcher-Fehler reserviert.
+- `OnJobEventChanged` existiert für leichtgewichtige Async-Weiterleitung.
+
+Intern verwendet `JobObserverHub` eine gequeue-te Pump auf Basis von `ConcurrentQueue<ObserverMessage>` und `SemaphoreSlim`, statt pro Event ein eigenes `Task.Run` zu starten.

@@ -1,3 +1,3 @@
-# Core / Adapter Boundary
+# Core-/Adapter-Grenze
 
-`TplQueue.Core` owns execution semantics. `TplQueue.Adapter` owns integration surfaces such as named queue creation, retry dictionaries, serializer modules, cache modules, built-in observers, and DI helpers.
+`TplQueue.Core` verantwortet die Ausführungssemantik. `TplQueue.Adapter` verantwortet Integrationsoberflächen wie benannte Queue-Erstellung, Retry-Dictionaries, Serializer-Module, Cache-Module, eingebaute Observer und DI-Helper.

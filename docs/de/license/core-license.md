@@ -1,5 +1,9 @@
-# Core License
+# Core-Lizenz
 
-`TplQueue.Core` is the execution kernel of the TplQueue line.
+`TplQueue.Core` ist der Execution-Kernel der TplQueue-Linie.
 
-The NuGet package is public, but the repository remains private and the package is not distributed under MIT.
+- das NuGet-Package ist öffentlich
+- das Repository selbst bleibt privat
+- Package-basierte Nutzung wird über die veröffentlichten Binaries unterstützt
+
+`TplQueue.Core` wird nicht unter MIT verteilt. Source-Code-Zugriff, privater Repository-Zugriff und Rechte zur Weiterverteilung sind getrennt von der öffentlichen Binary-Nutzung zu betrachten.

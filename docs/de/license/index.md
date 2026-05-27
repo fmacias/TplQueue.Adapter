@@ -1,7 +1,7 @@
-# License
+# Lizenz
 
-TplQueue uses a deliberate license split.
+TplQueue verwendet bewusst eine Lizenztrennung.
 
-- [Core License](core-license.md)
-- [MIT Adapter Modules](mit-adapter-modules.md)
-- [Production Use](production-use.md)
+- [Core-Lizenz](core-license.md)
+- [MIT-Adapter-Module](mit-adapter-modules.md)
+- [Produktive Nutzung](production-use.md)
