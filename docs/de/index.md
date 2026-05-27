@@ -1,5 +1,7 @@
 # TplQueue
 
+**Preview-Status: Die aktuelle TplQueue-Release-Linie ist ein Preview-Prototyp. Sie ist noch nicht produktionsreif und sollte derzeit nur in explorativen, Proof-of-Concept- oder nicht-kritischen Umgebungen evaluiert werden.**
+
 This documentation tree is the public entry point for the whole TplQueue ecosystem.
 
 It brings together:
