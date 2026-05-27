@@ -1,27 +1,46 @@
-# TplQueue.Adapter docs
+# TplQueue
 
-This folder contains the repository-level tutorial and reference material for `TplQueue.Adapter`.
+This documentation tree is the public entry point for the whole TplQueue ecosystem.
 
-Use this page as the stable entry point for future MkDocs import.
+It brings together:
 
-This `docs/en/` tree is the source of truth mirrored into the public `TplQueue` section on `fmacias.github.io`.
+- `TplQueue.Core` runtime concepts that consumers need in order to build queues and job graphs
+- `TplQueue.Adapter` integration guidance for packages, dependency injection, caching, observers, serialization, and named queue creation
+- `TplQueue.Usage` sample references for runnable package-consumption scenarios
 
-## Tree
+Core usability documentation is integrated directly into the sections below. License and legal boundaries stay under [License](license/index.md).
 
-- [Getting Started](usage/index.md)
+## Start here
+
+- [Getting Started](getting-started/index.md)
+- [Core Concepts](core-concepts/index.md)
+- [Queues](queues/index.md)
 - [Architecture](architecture/index.md)
-- [Development](development/index.md)
 - [Operations](operations/index.md)
-- [Reference hub](reference.md)
+- [Development](development/index.md)
+- [Reference](reference/index.md)
+- [License](license/index.md)
 
-## Scope
+## What TplQueue provides
 
-`TplQueue.Adapter` owns the integration layer that sits on top of `TplQueue.Core`.
+- `IJob` and `IJobRoot` graph composition
+- `IDataJob` and `IDataJobRoot` payload-aware execution
+- `IParallelQ`, `IFifoQ`, and `ICacheQ` dispatch models
+- queue-level and root-level retry-policy selection
+- observer-based runtime visibility
+- adapter-side support for dependency injection, serialization, cache modules, and named queue configuration
 
-Start here when you need to understand:
+## Public package surfaces
 
-- the `API` facade and adapter-side factories
-- named queue creation and retry-policy resolution
-- cache, serialization, observer, and DI integration
-- how to wire TplQueue into a .NET or ASP.NET application
-- how the adapter packages are built and released
+- `Fmacias.TplQueue.Core`
+- `Fmacias.TplQueue`
+- `Fmacias.TplQueue.Microsoft.DependencyInjection`
+- `Fmacias.TplQueue.Cache.Abstract`
+- `Fmacias.TplQueue.Cache.MemCache`
+- `Fmacias.TplQueue.RetryPolicies`
+- `Fmacias.TplQueue.Serialization.SystemTextJson`
+- `Fmacias.TplQueue.Observers`
+
+## Compatibility note
+
+Older public documentation used `usage/` and `reference.md` as the main entry points. Those paths remain available as compatibility pages, but the primary source of truth is now the section structure shown above.

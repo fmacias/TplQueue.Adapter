@@ -18,8 +18,6 @@ For ASP.NET Core or generic-host microsoft DI integration, install:
 dotnet add package Fmacias.TplQueue.Microsoft.DependencyInjection --version 0.1.0-preview.1
 ```
 
-Install the companion adapter modules only when your application needs them.
-
 ## Repository modules
 
 - [Fmacias.TplQueue](src/Fmacias.TplQueue/README.md)
@@ -37,11 +35,14 @@ Repository-level documentation now lives under the multilingual source-of-truth 
 
 - [English landing page](docs/en/index.md)
 - [German landing page](docs/de/index.md)
-- [English getting started](docs/en/usage/index.md)
+- [English getting started](docs/en/getting-started/index.md)
+- [English core concepts](docs/en/core-concepts/index.md)
+- [English queues](docs/en/queues/index.md)
 - [English architecture](docs/en/architecture/index.md)
 - [English development](docs/en/development/index.md)
 - [English operations](docs/en/operations/index.md)
-- [English reference hub](docs/en/reference.md)
+- [English reference hub](docs/en/reference/index.md)
+- [English license section](docs/en/license/index.md)
 
 `docs/Agents.md` is the repository-local instruction file for rebuilding those documentation trees. It is not part of the published documentation and must not be mirrored into `fmacias.github.io`.
 
@@ -50,7 +51,7 @@ Repository-level documentation now lives under the multilingual source-of-truth 
 If you want to rebuild or refresh the repository documentation with an agent, use [docs/Agents.md](docs/Agents.md) as the instruction file and start from this prompt:
 
 ```text
-Rebuild the TplQueue.Adapter documentation under docs/en/ and docs/de/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, keep docs/en/ and docs/de/ structurally aligned, rewrite docs/en/usage/index.md as the main "TplQueue with .NET and ASP.NET" tutorial, keep docs/en/reference.md as a compact reference hub, and ground every API example in the current TplQueue.Adapter source code and the runnable samples in TplQueue.Usage.
+Rebuild the TplQueue.Adapter documentation under docs/en/ and docs/de/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, keep docs/en/ and docs/de/ structurally aligned, use docs/en/getting-started/index.md as the main entry for onboarding, keep docs/en/reference/index.md as a compact reference hub, and ground every API example in the current TplQueue.Adapter source code and the runnable samples in TplQueue.Usage.
 ```
 
 ## Quick operations

@@ -116,6 +116,19 @@ Integration tests must remain readable and useful to a human reviewer.
 
 If you find contradictions, obsolete terminology, or architectural inconsistencies in this document or in nearby documentation, report them clearly in your final response.
 
+## Cross-repository documentation alignment
+
+When a task touches documentation, navigation, publishing, licensing text, or repository-boundary explanations:
+
+1. Read the root `Agents.md` or `AGENTS.md` and the root `README.md` of every directly affected repository before editing.
+2. If a more specific instruction file exists for the affected surface, such as `docs/Agents.md` or a package-level `AGENTS.md`, read it after the root files.
+3. Compare the requested change against the current documented source-of-truth model and note any contradictions before applying broad edits.
+4. Do not silently normalize contradictions across repositories.
+5. If the human instruction conflicts with the existing documentation or instruction files and intent is not already explicit, ask whether to:
+   - align the documentation to the current human instruction and treat the inconsistency as an exception, or
+   - preserve the existing inconsistency as the current operating rule.
+6. When proceeding with a cross-repository documentation change, update the relevant `README.md`, `Agents.md` or `AGENTS.md`, and sync or publishing instructions together so the documentation boundary remains aligned.
+
 ---
 
 ## General operating rules

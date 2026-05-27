@@ -1,16 +1,19 @@
 # Development
 
-This section covers local source-build concerns for `TplQueue.Adapter`.
+This section groups extension and source-build guidance for the public TplQueue package line.
 
-## Language-version policy
+## Main topics
 
-The shipped `netstandard2.0` adapter modules are pinned to `LangVersion=9.0`.
-
-That is a source-build policy for the repository, not a consumer runtime requirement.
+- [Extending Queues](extending-queues.md)
+- [Extending Observers](extending-observers.md)
+- [Extending Retry Policies](extending-retry-policies.md)
+- [Serialization Modules](serialization-modules.md)
+- [Dependency Injection](dependency-injection.md)
+- [C# Language Version Policy](csharp-language-version.md)
 
 ## Local validation
 
-Run the repository test surface:
+Run the Adapter test surface:
 
 ```powershell
 dotnet test .\TplQueue.Adapter.sln

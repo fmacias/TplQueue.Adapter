@@ -45,7 +45,7 @@ When modifying documentation for this repository:
      - `Getting Started`: 
 		* Sumarized MD file with the title "TplQueue with .NET and ASP.NET"
 		* First paragraph with the explanation, links to the mentioned subcompnents or related repositories like TplQueue.Usage(https://github.com/fmacias/TplQueue.Usage)
-		to the personal site (htpps://fmacias.github.io), and to TplQueue.Core access requestor site in (https://fmacias.github.io/tplqueue/core-license/) as well.
+		to the personal site (htpps://fmacias.github.io), and to TplQueue.Core access requestor site in (https://fmacias.github.io/tplqueue/license/core-license/) as well.
 		* Prerequisites: About the Nuget packages to install, in this case `Fmacias.TplQueue.Microsoft.DependencyInjection` and `Fmacias.TplQueue.Core`.
 		Add a note to highlite that the core component can be used gratis, but request for a lincence give you a profesional service support to improve your leggacy solution.
 		* Load Configuration: Note that the DI component has teh avility to load the retry policies and queues from predefined application configuration.
@@ -78,6 +78,19 @@ When modifying documentation for this repository:
 
 7. Keep the Core access policy explicit.
    - Official NuGet packages are publicly consumable under the package-specific license.
+
+## Cross-repository documentation alignment
+
+When a documentation task also affects another repository, the public site, publishing, navigation, or license wording:
+
+1. Read the root `Agents.md` or `AGENTS.md` and the root `README.md` of every directly affected repository before editing.
+2. Read this file after the root files and treat it as the detailed instruction set for the `docs/` trees.
+3. Compare the requested change against the current documented source-of-truth model and identify contradictions before broad rewrites.
+4. Do not silently normalize contradictions across repositories.
+5. If the human instruction conflicts with the existing documentation or instruction files and intent is not already explicit, ask whether to:
+   - align the documentation to the current human instruction and treat the inconsistency as an exception, or
+   - preserve the existing inconsistency as the current operating rule.
+6. When proceeding, update the relevant `README.md`, `Agents.md` or `AGENTS.md`, and sync or publishing instructions together so the documentation boundary remains aligned.
    - The source repository remains private.
    - Source access, support, maintenance, and rights around modified-source distribution require a separate written agreement and explicit approval.
 
@@ -93,5 +106,3 @@ When modifying documentation for this repository:
      - `development`
      - `operations`
      - `reference`
-
-
