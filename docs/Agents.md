@@ -74,7 +74,8 @@ When modifying documentation for this repository:
 
 6. Keep documentation tightly coupled to the owning surface.
    - `docs/en/` and `docs/de/`: repository-level explanations and grouped reference material.
-   - Diagrams: `docs/en/architecture/` and `docs/de/architecture/`. "Comming soon"
+   - Diagrams: publish rendered SVG artifacts under `docs/en/architecture/rendered/` and `docs/de/architecture/rendered/` when they are intended for the public site.
+   - Keep PlantUML source files private in `TplQueue.Core` unless the human explicitly asks to publish them.
 
 7. Keep the Core access policy explicit.
    - Official NuGet packages are publicly consumable under the package-specific license.
