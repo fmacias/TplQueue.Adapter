@@ -11,3 +11,11 @@ Verwenden Sie diesen Bereich, wenn Sie die Hauptkonzepte bereits verstehen und s
 - [IQFactory](iqfactory.md)
 - [Öffentliche Packages](packages.md)
 - [Samples](samples.md)
+
+## Öffentliche Projektlinks
+
+- [TplQueue.Adapter Repository](https://github.com/fmacias/TplQueue.Adapter)
+- [TplQueue.Adapter Issues](https://github.com/fmacias/TplQueue.Adapter/issues)
+- [TplQueue.Adapter Releases](https://github.com/fmacias/TplQueue.Adapter/releases)
+- [TplQueue.Abstractions Repository](https://github.com/fmacias/TplQueue.Abstractions)
+- [TplQueue.Usage Repository](https://github.com/fmacias/TplQueue.Usage)
