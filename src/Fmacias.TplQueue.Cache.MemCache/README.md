@@ -5,12 +5,12 @@ In-memory cache provider built on top of [Fmacias.TplQueue.Cache.Abstract](https
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
+- [TplQueue cache-backed recovery guide](https://fmacias.github.io/tplqueue/operations/cache-backed-recovery/)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 Use this package when you want a lightweight in-process cache provider for dehydrating payload-aware jobs, hydrating them later, and validating cache-backed flows without introducing an external storage dependency.
 
@@ -47,7 +47,7 @@ Full runnable solutions:
 
 ## Repository operations
 
-Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Usage outline
 Create with:

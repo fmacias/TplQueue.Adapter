@@ -5,11 +5,11 @@ Dependency Injection integration for [TplQueue.Adapter](https://github.com/fmaci
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
+- [TplQueue dependency injection guide](https://fmacias.github.io/tplqueue/development/dependency-injection/)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 Use this package when your host application is built around `IServiceCollection` and you want to register TplQueue queues, retry policies, serializers, and adapter services through familiar `Microsoft.Extensions.DependencyInjection` patterns.
 
@@ -43,7 +43,7 @@ Full runnable solution:
 
 ## Repository operations
 
-Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Registration modes
 - `AddTplQueue(IServiceCollection, IConfiguration, IApi)`

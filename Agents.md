@@ -22,10 +22,10 @@ Production packages in this repository target `netstandard2.0`. Test projects ta
 The MIT-licensed wrapper package `Fmacias.TplQueue` is now a thin facade package. It depends on `Fmacias.TplQueue.Abstractions` and on repo-local adapter packages such as:
 
 - `Fmacias.TplQueue.Cache.MemCache`
-- `Fmacias.TplQueue.Log`
+- `Fmacias.TplQueue.Observers`
 - `Fmacias.TplQueue.RetryPolicies`
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
-- `Fmacias.TplQueue.Observers.ViewModel`
+- `Fmacias.TplQueue.Serialization.Xml`
 
 Other packages in this repository, such as `Fmacias.TplQueue.Cache.Abstract` and `Fmacias.TplQueue.Microsoft.DependencyInjection`, are supporting adapter modules and must be treated as first-class package boundaries.
 
@@ -38,22 +38,23 @@ The current adapter packages are:
 - `Fmacias.TplQueue`
 - `Fmacias.TplQueue.Cache.Abstract`
 - `Fmacias.TplQueue.Cache.MemCache`
-- `Fmacias.TplQueue.Log`
 - `Fmacias.TplQueue.Microsoft.DependencyInjection`
-- `Fmacias.TplQueue.Observers.ViewModel`
+- `Fmacias.TplQueue.Observers`
 - `Fmacias.TplQueue.RetryPolicies`
 - `Fmacias.TplQueue.Serialization.SystemTextJson`
+- `Fmacias.TplQueue.Serialization.Xml`
 
 The current repository test projects are:
 
 - `Fmacias.TplQueue.Unit.Test`
 - `Fmacias.TplQueue.Cache.Abstract.Test`
 - `Fmacias.TplQueue.Cache.MemCache.Test`
-- `Fmacias.TplQueue.Log.Unit.Test`
+- `Fmacias.TplQueue.Integration.Test`
 - `Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test`
-- `Fmacias.TplQueue.Observers.ViewModel.Unit.Test`
+- `Fmacias.TplQueue.Observers.Unit.Test`
 - `Fmacias.TplQueue.RetryPolicies.Unit.Test`
 - `Fmacias.TplQueue.Serialization.SystemTextJson.Unit.Test`
+- `Fmacias.TplQueue.Serialization.Xml.Unit.Test`
 
 Prefer changes that stay inside the owning package and its matching test project.
 

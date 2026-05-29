@@ -1,18 +1,19 @@
 # Fmacias.TplQueue
 
-Top-level adapter facade over [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) and the modular TplQueue integration packages.
+Top-level adapter facade over the [public TplQueue Core runtime docs](https://fmacias.github.io/tplqueue/reference/core-api/) and the modular TplQueue integration packages.
 
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core README](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
+- [TplQueue Core runtime docs](https://fmacias.github.io/tplqueue/reference/core-api/)
+- [TplQueue public package guide](https://fmacias.github.io/tplqueue/reference/packages/)
 - [TplQueue.Usage consumer samples](https://github.com/fmacias/TplQueue.Usage/tree/main/samples)
 - [Fmacias.TplQueue.Cache.Abstract README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.Abstract/README.md)
 - [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 - [Fmacias.TplQueue.RetryPolicies README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md)
 - [Fmacias.TplQueue.Observers README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Observers/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Table of contents
 
@@ -30,7 +31,7 @@ Repository-wide packaging and release operations are documented in the [TplQueue
 
 `Fmacias.TplQueue` composes the Core orchestration engine with the concrete Adapter modules used by application code:
 
-- [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md) for queue execution and job graph orchestration
+- [TplQueue Core runtime docs](https://fmacias.github.io/tplqueue/reference/core-api/) for queue execution and job graph orchestration
 - [Fmacias.TplQueue.RetryPolicies](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.RetryPolicies/README.md) for concrete retry-policy factories
 - `Fmacias.TplQueue.Serialization.SystemTextJson` for serializer creation
 - `Fmacias.TplQueue.Serialization.Xml` for XML serializer creation
@@ -80,7 +81,7 @@ This package exposes the adapter-facing entry points:
 - cache creation helpers through `Cache<T>(...)`
 - retry-policy creation helpers that wrap `IRetryPolicyFactory<TPolicy>` and the built-in backoff factories
 
-Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md).
+Concrete queue execution, job graphs, and payload-aware runtime semantics still belong to the [TplQueue Core runtime surface](https://fmacias.github.io/tplqueue/architecture/core-adapter-boundary/).
 
 ## Creating the facade
 
@@ -339,7 +340,7 @@ For details, see the [observer package README](https://github.com/fmacias/TplQue
 
 This package stays thin on purpose:
 
-- runtime orchestration belongs in [TplQueue.Core](https://github.com/fmacias/TplQueue.Core/blob/main/README.md)
+- runtime orchestration belongs in the [TplQueue Core runtime surface](https://fmacias.github.io/tplqueue/architecture/core-adapter-boundary/)
 - concrete integration modules stay in focused Adapter packages
 - the top-level facade centralizes composition without hiding the public factories that advanced callers may still use directly
 

@@ -5,12 +5,12 @@ Observer support package for `TplQueue` job lifecycle events.
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core observers section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#observers)
+- [TplQueue observability guide](https://fmacias.github.io/tplqueue/operations/observability/)
 - [TplQueue.Usage QueueObserverConsole sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverConsole)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Table of contents
 
@@ -83,7 +83,7 @@ This package owns:
 - the internal `DirectObserverDispatcher` implementation returned by the factory for inline dispatch
 - logging subscription helpers for queue event streams
 
-Core still owns event publication through [`IQ : IObservable<IJobEvent>`](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#observers). This package owns the reusable observer implementations and the consumer-side construction entry point.
+Core still owns event publication through [`IQ : IObservable<IJobEvent>`](https://fmacias.github.io/tplqueue/operations/observability/). This package owns the reusable observer implementations and the consumer-side construction entry point.
 
 ## Factory-first usage
 

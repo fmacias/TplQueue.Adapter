@@ -5,12 +5,12 @@ Reusable cache orchestration primitives for data-job graph dehydration/hydration
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core cache section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#cache-and-persistence)
+- [TplQueue cache-backed recovery guide](https://fmacias.github.io/tplqueue/operations/cache-backed-recovery/)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 - [Fmacias.TplQueue.Cache.MemCache README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Cache.MemCache/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 Use this package when you need the cache contracts and reusable hydration workflow without taking a dependency on the concrete in-memory cache implementation.
 
@@ -191,4 +191,4 @@ Deferred work:
 
 ## Repository operations
 
-Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).

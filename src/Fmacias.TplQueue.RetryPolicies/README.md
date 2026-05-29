@@ -5,11 +5,11 @@ Retry-policy implementations and factories used by [TplQueue.Adapter](https://gi
 See also:
 
 - [TplQueue.Adapter root README](https://github.com/fmacias/TplQueue.Adapter/blob/main/README.md)
-- [TplQueue.Core retry section](https://github.com/fmacias/TplQueue.Core/blob/main/docs/reference.md#retry-policies)
+- [TplQueue retry guide](https://fmacias.github.io/tplqueue/operations/retry-policies/)
 - [TplQueue.Usage QueueObserverSignalRDashboard sample](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 - [Fmacias.TplQueue README](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md)
 
-Repository-wide packaging and release operations are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository-wide packaging and release operations are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 Use this package when you want the built-in TplQueue retry-policy implementations and factories without taking the broader adapter facade package.
 
@@ -90,7 +90,7 @@ The custom policy must implement `IRetryPolicy` and expose a public parameterles
 
 ## Repository operations
 
-Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue.Adapter operations guide](https://github.com/fmacias/TplQueue.Adapter/blob/main/docs/operations/index.md).
+Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Refactor note
 
