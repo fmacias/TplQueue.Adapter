@@ -33,6 +33,31 @@ queue.Enqueue(load, workflowCancellation.Token);
 
 This is the recommended pattern when your application already has a dependency graph and the enqueueable terminal node is the `IJobRoot`.
 
+## Minimal package-only smoke scenario
+
+`PackageConsumptionSmokeConsole` keeps a smaller public `IJob` / `IJobRoot` example for release-smoke validation:
+
+```csharp
+var child = api.JobFactory.Job(
+    ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    },
+    name: "smoke-child");
+
+var root = api.JobFactory.JobRoot(
+    ct =>
+    {
+        ct.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    },
+    name: "smoke-root");
+
+root.After(child);
+queue.Enqueue(root, CancellationToken.None);
+```
+
 ## Enqueue a standalone async closure
 
 You can also enqueue one isolated operation without building a graph first:
@@ -61,3 +86,10 @@ See also:
 - [Job Roots](../core-concepts/job-roots.md)
 - [Job Graphs](../core-concepts/job-graphs.md)
 - [FIFO Queue](../queues/fifo-queue.md)
+
+## Public source trail
+
+- [`QueueObserverConsole/Program.cs`](https://github.com/fmacias/TplQueue.Usage/blob/main/samples/QueueObserverConsole/Program.cs)
+- [`PackageConsumptionSmokeConsole/Program.cs`](https://github.com/fmacias/TplQueue.Usage/blob/main/samples/PackageConsumptionSmokeConsole/Program.cs)
+- [`IJob`](https://github.com/fmacias/TplQueue.Abstractions/blob/main/src/Contracts/IJob.cs)
+- [`IJobRoot`](https://github.com/fmacias/TplQueue.Abstractions/blob/main/src/Contracts/IJobRoot.cs)

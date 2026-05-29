@@ -44,6 +44,8 @@ Repository-level documentation now lives under the multilingual source-of-truth 
 - [English reference hub](docs/en/reference/index.md)
 - [English license section](docs/en/license/index.md)
 
+`TplQueue.Adapter/docs/<lang>/` is the only documentation tree imported into `fmacias.github.io` for the public TplQueue site. Those pages may still link to other public repositories and may include small focused code blocks from public sources such as `TplQueue.Abstractions` and `TplQueue.Usage` when that improves the documentation.
+
 `docs/Agents.md` is the repository-local instruction file for rebuilding those documentation trees. It is not part of the published documentation and must not be mirrored into `fmacias.github.io`.
 
 ## Documentation rebuild prompt
@@ -51,7 +53,7 @@ Repository-level documentation now lives under the multilingual source-of-truth 
 If you want to rebuild or refresh the repository documentation with an agent, use [docs/Agents.md](docs/Agents.md) as the instruction file and start from this prompt:
 
 ```text
-Rebuild the TplQueue.Adapter documentation under docs/en/ and docs/de/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, keep docs/en/ and docs/de/ structurally aligned, use docs/en/getting-started/index.md as the main entry for onboarding, keep docs/en/reference/index.md as a compact reference hub, and ground every API example in the current TplQueue.Adapter source code and the runnable samples in TplQueue.Usage.
+Rebuild the TplQueue.Adapter documentation under docs/en/ and docs/de/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, keep docs/en/ and docs/de/ structurally aligned, use docs/en/getting-started/index.md as the main entry for onboarding, keep docs/en/reference/index.md as a compact reference hub, keep `TplQueue.Adapter/docs/<lang>/` as the only public-site source tree, and ground every API example in the current TplQueue.Adapter source code plus small focused public snippets or runnable sample links from TplQueue.Abstractions and TplQueue.Usage where they improve the docs.
 ```
 
 ## Quick operations

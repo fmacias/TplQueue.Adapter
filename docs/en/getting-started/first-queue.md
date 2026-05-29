@@ -67,3 +67,25 @@ Relevant source entry points:
 - [`API.Create(...)`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/API.cs)
 - [`QFactoryAdapter`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/Factories/QFactoryAdapter.cs)
 - [`AddTplQueue(...)`](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue.Microsoft.DependencyInjection/ServiceCollectionExtensions.cs)
+
+## Focused public ASP.NET sample excerpt
+
+The public `QueueObserverSignalRDashboard` sample in `TplQueue.Usage` uses the same registration shape:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSignalR();
+builder.Services.AddDashboardSample(builder.Configuration);
+```
+
+Use that sample when you want the full public composition around named dispatchers, runtime services, and web-host wiring.
+
+## Public source trail
+
+- [`QueueObserverSignalRDashboard/Program.cs`](https://github.com/fmacias/TplQueue.Usage/blob/main/samples/QueueObserverSignalRDashboard/Program.cs)
+- [`QueueObserverSignalRDashboard/DashboardSampleServiceCollectionExtensions.cs`](https://github.com/fmacias/TplQueue.Usage/blob/main/samples/QueueObserverSignalRDashboard/DashboardSampleServiceCollectionExtensions.cs)
+- [`QueueObserverSignalRDashboard/TplQueueDashboardSettings.cs`](https://github.com/fmacias/TplQueue.Usage/blob/main/samples/QueueObserverSignalRDashboard/TplQueueDashboardSettings.cs)
+- [`IQ`](https://github.com/fmacias/TplQueue.Abstractions/blob/main/src/Contracts/IQ.cs)
+- [`IParallelQ`](https://github.com/fmacias/TplQueue.Abstractions/blob/main/src/Contracts/IParallelQ.cs)
+- [`IFifoQ`](https://github.com/fmacias/TplQueue.Abstractions/blob/main/src/Contracts/IFifoQ.cs)

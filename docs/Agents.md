@@ -72,12 +72,17 @@ When modifying documentation for this repository:
    - Core docs may include small focused snippets.
    - Full consumer-facing sample flows should link to `TplQueue.Usage` instead of being duplicated here.
 
-6. Keep documentation tightly coupled to the owning surface.
+6. Keep `TplQueue.Adapter/docs/en/` and `docs/de/` as the only public documentation source-of-truth trees imported by `fmacias.github.io`.
+   - Public links to repositories such as `TplQueue.Abstractions` and `TplQueue.Usage` are allowed.
+   - Small focused code blocks derived from those public repositories are allowed when they improve the documentation.
+   - Do not turn the site publication model into a multi-repository docs import workflow.
+
+7. Keep documentation tightly coupled to the owning surface.
    - `docs/en/` and `docs/de/`: repository-level explanations and grouped reference material.
    - Diagrams: publish rendered SVG artifacts under `docs/en/architecture/rendered/` and `docs/de/architecture/rendered/` when they are intended for the public site.
    - Keep PlantUML source files private in `TplQueue.Core` unless the human explicitly asks to publish them.
 
-7. Keep the Core access policy explicit.
+8. Keep the Core access policy explicit.
    - Official NuGet packages are publicly consumable under the package-specific license.
 
 ## Cross-repository documentation alignment
