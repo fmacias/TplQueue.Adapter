@@ -25,14 +25,14 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         /// <summary>
         /// Serialized payload content. The property name is retained for compatibility and is not limited to JSON.
         /// </summary>
-        public string PayloadJson { get; private set; }
+        public string SerializedPayload { get; private set; }
         public string PayloadHandlerKey { get; }
 
         private JobNodeDto(
             Guid jobId,
             Guid parentJobId,
             Type payloadType,
-            string payloadJson,
+            string serializedPayload,
             bool isRoot,
             bool isFifo,
             IRetryPolicyOptions retryPolicyDescriptor,
@@ -41,7 +41,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         {
             if (jobId == Guid.Empty) throw new ArgumentException("Id cannot be empty.", nameof(jobId));
             if (payloadType == null) throw new ArgumentNullException(nameof(payloadType));
-            if (string.IsNullOrEmpty(payloadJson)) throw new ArgumentNullException(nameof(payloadJson));
+            if (string.IsNullOrEmpty(serializedPayload)) throw new ArgumentNullException(nameof(serializedPayload));
             if (string.IsNullOrWhiteSpace(payloadHandlerKey))
                 throw new ArgumentException("Payload handler key cannot be null or empty.", nameof(payloadHandlerKey));
 
@@ -52,7 +52,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
             PayloadTypeName = payloadType.AssemblyQualifiedName
                            ?? payloadType.FullName
                            ?? payloadType.Name;
-            PayloadJson = payloadJson;
+            SerializedPayload = serializedPayload;
             NodeCreationUtc = DateTime.UtcNow;
             IsRoot = isRoot;
             IsFifo = isFifo;
@@ -87,7 +87,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
             return new JobNodeDto(
                 jobId: dataJob.Id,
                 parentJobId: parentJob?.Id ?? Guid.Empty,
-                payloadJson: SerializePayload(dataJob, serializer),
+                serializedPayload: SerializePayload(dataJob, serializer),
                 payloadType: payload.GetType(),
                 isRoot: dataJob is IDataJobRoot,
                 isFifo: isFifo,
@@ -96,12 +96,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
                 name: dataJob.Name);
         }
 
-        public void UpdatePayloadJson(string payloadJson)
+        public void UpdateSerializedPayload(string serializedPayload)
         {
-            if (string.IsNullOrWhiteSpace(payloadJson))
-                throw new ArgumentException("Serialized payload content cannot be null or whitespace.", nameof(payloadJson));
+            if (string.IsNullOrWhiteSpace(serializedPayload))
+                throw new ArgumentException("Serialized payload content cannot be null or whitespace.", nameof(serializedPayload));
 
-            PayloadJson = payloadJson;
+            SerializedPayload = serializedPayload;
         }
 
         private static string SerializePayload(IDataJobNode dataJob, IUniversalDataSerializer serializer)
@@ -120,13 +120,13 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
         public object Deserialize(IUniversalDataSerializer serializer)
         {
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-            return serializer.Deserialize(PayloadJson, PayloadType);
+            return serializer.Deserialize(SerializedPayload, PayloadType);
         }
 
         public T Deserialize<T>(IUniversalDataSerializer serializer)
         {
             if (serializer is null) throw new ArgumentNullException(nameof(serializer));
-            return serializer.Deserialize<T>(PayloadJson);
+            return serializer.Deserialize<T>(SerializedPayload);
         }
     }
 }

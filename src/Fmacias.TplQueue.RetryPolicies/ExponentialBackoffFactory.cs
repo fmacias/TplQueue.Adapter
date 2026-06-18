@@ -1,9 +1,9 @@
-﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Contracts;
 using System;
 
 namespace Fmacias.TplQueue.RetryPolicies
 {
-    public class ExponentialBackoffFactory : FactoryAbstract<IExponentialBackoff>, IExponentialBackofFactory
+    public class ExponentialBackoffFactory : FactoryAbstract<IExponentialBackoff>, IExponentialBackoffFactory
     {
         private ExponentialBackoffFactory()
         {
@@ -20,7 +20,7 @@ namespace Fmacias.TplQueue.RetryPolicies
             return (IExponentialBackoff)new ExponentialBackoff().SetFromDescriptor(options);
         }
 
-        public IExponentialBackoff ExponentialBackof(int maxRetries, int delayMs, double factor)
+        public IExponentialBackoff ExponentialBackoff(int maxRetries, int delayMs, double factor)
         {
             return new ExponentialBackoff(maxRetries, delayMs, factor);
         }

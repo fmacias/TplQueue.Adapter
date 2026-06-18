@@ -36,13 +36,13 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
         }
 
         [Test]
-        public void UpdatePayloadJson_WhenValueIsWhitespace_ThrowsArgumentException()
+        public void UpdateSerializedPayload_WhenValueIsWhitespace_ThrowsArgumentException()
         {
             // Arrange
             var dto = CreateNodeDto();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dto.UpdatePayloadJson(" "));
+            Assert.Throws<ArgumentException>(() => dto.UpdateSerializedPayload(" "));
         }
 
         [Test]

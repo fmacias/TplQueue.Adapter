@@ -147,7 +147,7 @@ namespace Fmacias.TplQueue.Test
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
-            var policy = api.RetryPolicy((IExponentialBackofFactory)ExponentialBackoffFactory.Create(), 4, 150, 2.5);
+            var policy = api.RetryPolicy((IExponentialBackoffFactory)ExponentialBackoffFactory.Create(), 4, 150, 2.5);
 
             Assert.That(policy.MaxRetries, Is.EqualTo(4));
             Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(150).Within(0.1));
@@ -220,20 +220,23 @@ namespace Fmacias.TplQueue.Test
         }
 
         [Test]
-        public void SystemTexSerializerFactory_LegacyTypo_ReturnsSystemTextJsonPackageFactory()
+        public void SystemTextSerializerFactory_RepeatedCalls_ReturnSameSerializerType()
         {
             var api = API.Create(
                 _coreApi.Object,
                 new Dictionary<string, IRetryPolicyOptions>(),
                 _queueOptions);
 
-            var factory = api.SystemTexSerializerFactory();
-            var serializer = factory.Serializer();
+            var firstFactory = api.SystemTextSerializerFactory();
+            var secondFactory = api.SystemTextSerializerFactory();
+            var firstSerializer = firstFactory.Serializer();
+            var secondSerializer = secondFactory.Serializer();
 
             Assert.Multiple(() =>
             {
-                Assert.That(factory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Serialization.SystemTextJson"));
-                Assert.That(serializer, Is.InstanceOf<ISystemTextJsonUniversalSerializer>());
+                Assert.That(firstFactory.GetType().Assembly.GetName().Name, Is.EqualTo("Fmacias.TplQueue.Serialization.SystemTextJson"));
+                Assert.That(firstSerializer, Is.InstanceOf<ISystemTextJsonUniversalSerializer>());
+                Assert.That(secondSerializer.GetType(), Is.EqualTo(firstSerializer.GetType()));
             });
         }
 

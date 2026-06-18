@@ -55,7 +55,7 @@ LinearBackoffFactory linearFactory = LinearBackoffFactory.Create();
 ILinearBackoff linear = linearFactory.LinearBackoff(maxRetries: 3, delayMs: 100);
 
 ExponentialBackoffFactory exponentialFactory = ExponentialBackoffFactory.Create();
-IExponentialBackoff exponential = exponentialFactory.ExponentialBackof(maxRetries: 4, delayMs: 200, factor: 2d);
+IExponentialBackoff exponential = exponentialFactory.ExponentialBackoff(maxRetries: 4, delayMs: 200, factor: 2d);
 ```
 
 When using the top-level [Fmacias.TplQueue API facade](https://github.com/fmacias/TplQueue.Adapter/blob/main/src/Fmacias.TplQueue/README.md), the same factories can be passed to `api.RetryPolicy(...)` overloads for creation by default, by name, by `IRetryPolicyOptions`, or by explicit built-in arguments.
@@ -97,5 +97,5 @@ Repository build, test, coverage, packaging, and release steps are documented in
 Retry-policy creation is documented around the current public contract names:
 
 - `LinearBackoffFactory.LinearBackoff(...)`
-- `ExponentialBackoffFactory.ExponentialBackof(...)`
+- `ExponentialBackoffFactory.ExponentialBackoff(...)`
 - `API.RetryPolicy(...)` wrappers over `IRetryPolicyFactory<TPolicy>`

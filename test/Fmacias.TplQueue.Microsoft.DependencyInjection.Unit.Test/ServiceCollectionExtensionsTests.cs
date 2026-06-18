@@ -22,8 +22,6 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
         public ISystemTextJsonSerializerFactory SystemTextSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
 
-        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory() => Mock.Of<ISystemTextJsonSerializerFactory>();
-
         public IXmlSerializerFactory XmlSerializerFactory() => Mock.Of<IXmlSerializerFactory>();
 
         public IApi RegisterPayloadHandler(string payloadHandlerKey, IHandler handler)
@@ -74,7 +72,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             throw new NotImplementedException();
         }
 
-        public IExponentialBackoff RetryPolicy(IExponentialBackofFactory exponentialBackofFactory, int maxRetries, int delayMs, double factor)
+        public IExponentialBackoff RetryPolicy(IExponentialBackoffFactory exponentialBackoffFactory, int maxRetries, int delayMs, double factor)
         {
             throw new NotImplementedException();
         }

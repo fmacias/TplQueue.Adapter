@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Fmacias.TplQueue.Cache.Abstract.Helpers;
 using Fmacias.TplQueue.Contracts;
@@ -82,7 +82,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             Assert.That(single.JobId, Is.EqualTo(rootId));
             Assert.That(single.ParentJobId, Is.EqualTo(Guid.Empty));
             Assert.That(single.IsRoot, Is.True);
-            Assert.That(single.PayloadJson, Is.EqualTo("{}"));
+            Assert.That(single.SerializedPayload, Is.EqualTo("{}"));
             Assert.That(callbackNodes[0].RootId, Is.EqualTo(rootId));
         }
 

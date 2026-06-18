@@ -251,7 +251,7 @@ Serializer surface:
 - XML support uses `IXmlSerializerFactory` and `IXmlUniversalSerializer : IUniversalDataSerializer`
 - serializer plugin discovery and serializer registries are outside the current facade scope
 
-Existing JSON-oriented public names are compatibility concerns. `SystemTexSerializerFactory()` remains available as the legacy typo-preserving alias; new code should use `SystemTextSerializerFactory()`. `PayloadJson` and serializer parameters named `json` should be read as serializer-specific payload content, not as JSON-only behavior. They should not be renamed as part of adding XML support.
+The stable adapter surface now uses `SystemTextSerializerFactory()` and serializer-agnostic payload-record naming such as `SerializedPayload`. Serializer parameters historically named `json` still represent serializer-specific payload content, not JSON-only behavior.
 
 Create either supported serializer through the facade:
 

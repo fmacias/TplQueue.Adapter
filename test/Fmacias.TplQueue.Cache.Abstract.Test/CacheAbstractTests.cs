@@ -394,7 +394,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             jobNodeRecord.SetupGet(r => r.IsFifo).Returns(false);
             jobNodeRecord.SetupGet(r => r.PayloadTypeName)
                 .Returns(payloadTypeName ?? typeof(DummyPayload).AssemblyQualifiedName!);
-            jobNodeRecord.SetupGet(r => r.PayloadJson).Returns("{}");
+            jobNodeRecord.SetupGet(r => r.SerializedPayload).Returns("{}");
             jobNodeRecord.SetupGet(r => r.RetryPolicyOptions).Returns(Mock.Of<IRetryPolicyOptions>());
 
             return jobNodeRecord;

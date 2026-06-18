@@ -1,4 +1,4 @@
-﻿using Fmacias.TplQueue.Cache.Abstract.Helpers;
+using Fmacias.TplQueue.Cache.Abstract.Helpers;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 using Fmacias.TplQueue.Exceptions;
@@ -222,7 +222,7 @@ namespace Fmacias.TplQueue.Cache.Abstract
 
             var dto = leaseEntry.JobNodeRecordDto;
             var payloadType = _typeResolver.Resolve(dto.PayloadTypeName);
-            var obj = _serializer.Deserialize(dto.PayloadJson, payloadType);
+            var obj = _serializer.Deserialize(dto.SerializedPayload, payloadType);
 
             if (obj is IPayload payload)
             {

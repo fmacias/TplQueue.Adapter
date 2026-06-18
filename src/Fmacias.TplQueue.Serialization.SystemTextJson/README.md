@@ -62,7 +62,7 @@ IMemCache cache = api.Cache<IMemCache>(
 
 ## Compatibility note
 
-Some persisted members still expose JSON-oriented names such as `PayloadJson`. Those names are retained for compatibility and should be read as serializer-specific payload content, not as a restriction on the cache flow itself.
+Persisted payload-record members now use serializer-agnostic naming such as `SerializedPayload`. The JSON serializer remains one concrete producer of that serialized payload content, not the only supported cache format.
 
 ## Repository operations
 

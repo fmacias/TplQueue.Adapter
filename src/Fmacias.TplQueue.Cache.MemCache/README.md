@@ -109,8 +109,8 @@ Use `xmlSerializer` instead of `jsonSerializer` in `api.Cache<IMemCache>(...)` w
 
 ## Compatibility note
 
-Some public persisted members still expose JSON-oriented names such as `PayloadJson`.
-Those names are retained for compatibility and should be read as serializer-specific payload content. `MemCache` can store payload content produced by either the JSON or XML `IUniversalDataSerializer` implementation selected during cache creation.
+Public persisted payload-record members now use serializer-agnostic naming such as `SerializedPayload`.
+`MemCache` can store payload content produced by either the JSON or XML `IUniversalDataSerializer` implementation selected during cache creation.
 
 ## Runtime type resolution status
 

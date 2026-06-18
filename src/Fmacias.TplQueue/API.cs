@@ -136,11 +136,11 @@ namespace Fmacias.TplQueue
 
             return retryPolicyFactory.CreatePolicy(retryPolicyOptions);
         }
-        public IExponentialBackoff RetryPolicy(IExponentialBackofFactory exponentialBackofFactory, int maxRetries, int delayMs, double factor)
+        public IExponentialBackoff RetryPolicy(IExponentialBackoffFactory exponentialBackoffFactory, int maxRetries, int delayMs, double factor)
         {
-            if (exponentialBackofFactory is null) throw new ArgumentNullException(nameof(exponentialBackofFactory));
+            if (exponentialBackoffFactory is null) throw new ArgumentNullException(nameof(exponentialBackoffFactory));
 
-            return exponentialBackofFactory.ExponentialBackof(maxRetries, delayMs, factor);
+            return exponentialBackoffFactory.ExponentialBackoff(maxRetries, delayMs, factor);
         }
 
         public ILinearBackoff RetryPolicy(ILinearBackoffFactory linearBackofFactory, int maxRetries, int delayMs)
@@ -166,19 +166,6 @@ namespace Fmacias.TplQueue
         public ISystemTextJsonSerializerFactory SystemTextSerializerFactory()
         {
             return SystemTextJsonSerializerFactory.Create();
-        }
-
-        /// <summary>
-        /// Creates the System.Text.Json serializer factory exposed by the adapter facade.
-        /// </summary>
-        /// <remarks>
-        /// This typo-preserving member is retained for source and binary compatibility.
-        /// Prefer <see cref="SystemTextSerializerFactory"/>.
-        /// </remarks>
-        /// <returns>A System.Text.Json serializer factory.</returns>
-        public ISystemTextJsonSerializerFactory SystemTexSerializerFactory()
-        {
-            return SystemTextSerializerFactory();
         }
 
         /// <summary>

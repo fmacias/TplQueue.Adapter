@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
 
@@ -87,7 +87,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Models
 
             if (!string.IsNullOrEmpty(serializedOutput))
             {
-                JobNodeRecordDto.UpdatePayloadJson(serializedOutput);
+                JobNodeRecordDto.UpdateSerializedPayload(serializedOutput);
             }
 
             Status = EntryStatus.Acknownledged;

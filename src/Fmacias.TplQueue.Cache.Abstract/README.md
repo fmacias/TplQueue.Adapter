@@ -174,8 +174,8 @@ Keeping `ITypeResolver` separate from `IUniversalDataSerializer` is the cleaner 
 
 ## Compatibility note
 
-Some public contracts still expose JSON-oriented names such as `PayloadJson` and `IUniversalDataSerializer.Deserialize(string json, Type type)`.
-Those names are retained for compatibility and should be read as serializer-specific payload content, not as a JSON-only storage rule.
+Payload records now expose serializer-agnostic naming such as `SerializedPayload`.
+`IUniversalDataSerializer.Deserialize(string json, Type type)` still keeps its historical parameter name, but the value remains serializer-specific payload content rather than a JSON-only storage rule.
 
 ## Runtime type resolution status
 

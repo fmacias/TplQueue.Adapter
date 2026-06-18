@@ -31,11 +31,11 @@ namespace Fmacias.TplQueue.RetryPolicies.Test
         }
 
         [Test]
-        public void ExponentialBackof_UsesProvidedValues()
+        public void ExponentialBackoff_UsesProvidedValues()
         {
             var factory = ExponentialBackoffFactory.Create();
 
-            var policy = factory.ExponentialBackof(maxRetries: 4, delayMs: 150, factor: 2.5);
+            var policy = factory.ExponentialBackoff(maxRetries: 4, delayMs: 150, factor: 2.5);
 
             Assert.That(policy.MaxRetries, Is.EqualTo(4));
             Assert.That(policy.Delay.TotalMilliseconds, Is.EqualTo(150).Within(0.1));

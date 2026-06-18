@@ -1,4 +1,4 @@
-﻿using Fmacias.TplQueue.Cache.Abstract.Factories;
+using Fmacias.TplQueue.Cache.Abstract.Factories;
 using Fmacias.TplQueue.Cache.Abstract.Models;
 using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Defaults;
@@ -92,7 +92,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
         }
 
         [Test]
-        public void MarkAck_UpdatesPayloadJsonAndStatus()
+        public void MarkAck_UpdatesSerializedPayloadAndStatus()
         {
             // Arrange
             var nodeDto = new Mock<IJobNodeDto>();
@@ -120,7 +120,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
                 Mock.Of<IUniversalDataSerializer>());
 
             // Assert
-            nodeDto.Verify(n => n.UpdatePayloadJson("{\"result\":1}"), 
+            nodeDto.Verify(n => n.UpdateSerializedPayload("{\"result\":1}"), 
                 Times.Once);
             Assert.That(entry.Status, Is.EqualTo(EntryStatus.Acknownledged));
         }
@@ -190,7 +190,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
                 n.JobId == runnerId &&
                 n.ParentJobId == parentRunnerId &&
                 n.Name == "node" &&
-                n.PayloadJson == "{}" &&
+                n.SerializedPayload == "{}" &&
                 n.PayloadTypeName == "type" &&
                 n.IsFifo == true &&
                 n.IsRoot == true &&
@@ -258,7 +258,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
             var nodeDto = Mock.Of<IJobNodeDto>(n =>
                 n.JobId == runnerId &&
                 n.Name == "node" &&
-                n.PayloadJson == "{}" &&
+                n.SerializedPayload == "{}" &&
                 n.PayloadTypeName == "type" &&
                 n.IsRoot == false);
 

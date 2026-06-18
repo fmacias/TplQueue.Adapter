@@ -1,4 +1,4 @@
-﻿using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Contracts;
 using Fmacias.TplQueue.Factories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -248,7 +248,7 @@ namespace Fmacias.TplQueue.Test.Factories
         public int MaxParallelism { get; set; } = 2;
         public string RetryPolicy { get; set; } = "rp";
         public IDataJobCache PayloadLeaseCache { get; set; } = Mock.Of<IDataJobCache>();
-        public IDataJobFactory PayloadRunnerFactory { get; set; } = Mock.Of<IDataJobFactory>();
+        public IDataJobFactory PayloadJobFactory { get; set; } = Mock.Of<IDataJobFactory>();
 
         public Guid Id { get; set; } = Guid.NewGuid();
     }
