@@ -17,7 +17,7 @@ namespace Fmacias.TplQueue.Test
         public void CacheHydration_UsesHandlerRegisteredThroughApi()
         {
             const string payloadHandlerKey = "test/cache-api-instance-v1";
-            var payload = new TestPayload("root", payloadHandlerKey);
+            var payload = new TestPayload("root", "payload/cache-api-instance", payloadHandlerKey);
             var registeredHandler = Mock.Of<IHandler>();
             IHandler capturedHandler = null!;
             var rootId = Guid.NewGuid();
@@ -43,7 +43,7 @@ namespace Fmacias.TplQueue.Test
         public void CacheHydration_WhenHandlerKeyIsMissing_ThrowsKeyNotFoundException()
         {
             const string payloadHandlerKey = "test/cache-api-missing-v1";
-            var payload = new TestPayload("root", payloadHandlerKey);
+            var payload = new TestPayload("root", "payload/cache-api-missing", payloadHandlerKey);
             var rootId = Guid.NewGuid();
             var dataJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
             var api = CreateApi(dataJobFactory.Object);
@@ -59,7 +59,7 @@ namespace Fmacias.TplQueue.Test
         public async Task CacheHydration_UsesTypedHandlerRegisteredThroughApi()
         {
             const string payloadHandlerKey = "test/cache-api-typed-v1";
-            var payload = new TestPayload("root", payloadHandlerKey);
+            var payload = new TestPayload("root", "payload/cache-api-typed", payloadHandlerKey);
             var receivedValues = new List<string>();
             IHandler capturedHandler = null!;
             var rootId = Guid.NewGuid();
@@ -89,7 +89,7 @@ namespace Fmacias.TplQueue.Test
         public void CacheHydration_WithTypedHandler_WhenPayloadTypeDoesNotMatch_ThrowsInvalidOperationException()
         {
             const string payloadHandlerKey = "test/cache-api-type-check-v1";
-            var payload = new OtherPayload(payloadHandlerKey);
+            var payload = new OtherPayload("payload/cache-api-other", payloadHandlerKey);
             IHandler capturedHandler = null!;
             var rootId = Guid.NewGuid();
             var hydratedRoot = CreateHydratedRoot(payload);
@@ -166,7 +166,7 @@ namespace Fmacias.TplQueue.Test
             root.SetupGet(r => r.Name).Returns("root");
             root.SetupGet(r => r.Payload).Returns(payload);
             root.As<IDataJobNode>().SetupGet(r => r.PayloadType).Returns(typeof(TPayload));
-            root.As<IDataJobInfo>().SetupGet(r => r.PayloadHandlerKey).Returns(payload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(r => r.PayloadHandlerKey).Returns(payload.HandlerKey);
             root.As<IDataJobNode>().Setup(r => r.GetPayload()).Returns(payload);
             root.As<IDataJobNode>().Setup(r => r.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             root.Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
@@ -187,26 +187,30 @@ namespace Fmacias.TplQueue.Test
 
         public sealed class TestPayload : IPayload
         {
-            public TestPayload(string value, string payloadId)
+            public TestPayload(string value, string payloadId, string handlerKey)
             {
                 Value = value;
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string Value { get; }
             public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
 
         public sealed class OtherPayload : IPayload
         {
-            public OtherPayload(string payloadId)
+            public OtherPayload(string payloadId, string handlerKey)
             {
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
     }
 }

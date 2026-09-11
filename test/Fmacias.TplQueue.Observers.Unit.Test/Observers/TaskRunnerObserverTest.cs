@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults.Log;
 using Fmacias.TplQueue.Observers;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -94,6 +95,46 @@ namespace Fmacias.TplQueue.Observers.Test.Observers
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateLoggingObserver(null!));
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateProfilingObserver(null!));
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateFileLoggingObserver(null!, "main"));
+        }
+
+        [Test]
+        public void FileLoggingObserver_WhenInformationLoggingIsDisabled_DoesNotEvaluateEventDetails()
+        {
+            var loggerMock = new Mock<ILogger>();
+            loggerMock.Setup(logger => logger.IsEnabled(LogLevel.Information)).Returns(false);
+            var eventMock = new Mock<IJobEvent>(MockBehavior.Strict);
+            var observer = _observerFactory.CreateFileLoggingObserver(loggerMock.Object, "main");
+
+            observer.OnNext(eventMock.Object);
+
+            loggerMock.Verify(
+                logger => logger.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Never);
+        }
+
+        [Test]
+        public void FileLoggingObserver_WhenInformationLoggingIsEnabled_UsesSharedEventMessage()
+        {
+            var loggerMock = new Mock<ILogger>();
+            loggerMock.Setup(logger => logger.IsEnabled(LogLevel.Information)).Returns(true);
+            var observer = _observerFactory.CreateFileLoggingObserver(loggerMock.Object, "main");
+
+            observer.OnNext(_eventMock.Object);
+
+            loggerMock.Verify(
+                logger => logger.Log(
+                    LogLevel.Information,
+                    EventCatalog.FileObserverEventWritten,
+                    It.Is<It.IsAnyType>((value, _) =>
+                        (value.ToString() ?? string.Empty).Contains("[main] Status=Successed", StringComparison.Ordinal)),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
         }
     }
 }

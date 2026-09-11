@@ -10,6 +10,7 @@ This section groups operational concerns that matter when you publish, observe, 
 - [Build and Test](build-and-test.md)
 - [Strong-Name Signing](strong-name-signing.md)
 - [Versioning and Release](versioning-release.md)
+- [Current API Migration](api-migration.md)
 
 ## Local packaging
 

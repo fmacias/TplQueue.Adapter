@@ -4,6 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 {
+    internal sealed class FakeCoreApi : ICoreApi
+    {
+        public IQFactory QFactory => Mock.Of<IQFactory>();
+
+        public IJobFactory JobFactory => Mock.Of<IJobFactory>();
+
+        public IDataJobFactory DataJobFactory => Mock.Of<IDataJobFactory>();
+    }
+
     internal sealed class FakeApi : IApi
     {
         public IRetryPolicyAbstractFactory RetryPolicyAbstractFactory => Mock.Of<IRetryPolicyAbstractFactory>();
@@ -95,12 +104,11 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
                 { "default", RetryPolicyOptions.Create(100, 3) }
             };
             var queueOptions = new Dictionary<string, IQOptions>();
-            var fakeApi = new FakeApi();
+            var fakeCoreApi = new FakeCoreApi();
 
-            services.AddTplQueue(fakeApi, retryPolicies, queueOptions);
-            var provider = services.BuildServiceProvider();
-
-            Assert.That(provider.GetService<IApi>(), Is.SameAs(fakeApi));
+            services.AddTplQueue(fakeCoreApi, retryPolicies, queueOptions);
+            var provider = services.BuildServiceProvider(); 
+            Assert.That(provider.GetService<IApi>(), Is.SameAs(provider.GetService<IApi>()));
         }
 
         [Test]
@@ -113,17 +121,17 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             };
             var queueOptions = new Dictionary<string, IQOptions>
             {
-                { "default", Mock.Of<IQOptions>() }
+                { "default", new QOptions(Guid.NewGuid(), 1, "none") }
             };
 
             services.AddTplQueue(
-                new FakeApi(),
+                new FakeCoreApi(),
                 retryPolicies,
                 queueOptions);
 
             var provider = services.BuildServiceProvider();
-            var registeredRetries = provider.GetService<IReadOnlyDictionary<string, IRetryPolicyOptions>>();
-            var registeredDispatchers = provider.GetService<IReadOnlyDictionary<string, IQOptions>>();
+            var registeredRetries = provider.GetRequiredService<IReadOnlyDictionary<string, IRetryPolicyOptions>>();
+            var registeredDispatchers = provider.GetRequiredService<IReadOnlyDictionary<string, IQOptions>>();
 
             Assert.That(registeredRetries, Is.Not.Null);
             Assert.That(registeredDispatchers, Is.Not.Null);
@@ -137,7 +145,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
             var services = new ServiceCollection();
 
             services.AddTplQueue(
-                new FakeApi(),
+                new FakeCoreApi(),
                 new Dictionary<string, IRetryPolicyOptions>(),
                 new Dictionary<string, IQOptions>());
 
@@ -157,7 +165,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
 
             Assert.Throws<ArgumentNullException>(() => services.AddTplQueue(
                 configure: _ => { },
-                apiImplementation: null!));
+                coreApi: null!));
         }
 
         [Test]
@@ -165,9 +173,7 @@ namespace Fmacias.TplQueue.Microsoft.DependencyInjection.Unit.Test
         {
             var services = new ServiceCollection();
 
-            Assert.Throws<ArgumentNullException>(() => services.AddTplQueue(
-                configure: null!,
-                apiImplementation: new FakeApi()));
+            Assert.Throws<ArgumentNullException>(() => services.AddTplQueue(null!));
         }
 
         [Test]

@@ -1,5 +1,6 @@
 ﻿using Fmacias.TplQueue.Contracts;
 using Microsoft.Extensions.Logging;
+using Fmacias.TplQueue.Defaults;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -56,7 +57,7 @@ namespace Fmacias.TplQueue.Factories
             ValidateQueueOptions(queueOptions);
 
             Func<IRetryPolicy> retryPolicyCreator = () 
-                => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
+                => ResolveRetryPolicy(queueOptions.RetryPolicy);
 
             return Parallel(queueOptions.Id, name, queueOptions.MaxParallelism, logger, retryPolicyCreator);
         }
@@ -89,7 +90,7 @@ namespace Fmacias.TplQueue.Factories
             ValidateQueueOptions(queueOptions);
 
             Func<IRetryPolicy> retryPolicyCreator = () 
-                => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
+                => ResolveRetryPolicy(queueOptions.RetryPolicy);
             
             return Fifo(queueOptions.Id, name, logger, retryPolicyCreator);
         }
@@ -101,10 +102,8 @@ namespace Fmacias.TplQueue.Factories
             {
                 return Fifo(queueOptions, name, logger);
             }
-            Func<IRetryPolicy> retryPolicyCreator = ()
-                => _retryPolicyFactory.PolicyByName(queueOptions.RetryPolicy, _retryPolicyOptions);
 
-            return _innerFactory.Fifo(queueOptions.Id, name, logger, retryPolicyCreator);
+            return _innerFactory.Fifo(Guid.NewGuid(), name, logger);
         }
         /// <inheritdoc />
         public T GetCoreQ<T>(string name, ILogger<T> logger) where T : IQ
@@ -118,9 +117,9 @@ namespace Fmacias.TplQueue.Factories
             var queue = CreateCoreQueue<T>(name, logger);
             return CastQ<T>(queue, name);
         }
-        public ICacheQ CacheQ(ILogger<ICacheQ> logger, IDataJobCache payloadLeaseCache, IParallelQ queue)
+        public ICacheQ CacheQ(Func<IDataJobCache> dataJobCacheFactory, ILogger<ICacheQ> logger, IParallelQ queue)
         {
-            return _innerFactory.CacheQ(logger, payloadLeaseCache, queue); 
+            return _innerFactory.CacheQ(dataJobCacheFactory, logger, queue);
         }
 
         private bool TryGetQueueFromOptions(string name, out IQOptions queueOptions)
@@ -142,9 +141,14 @@ namespace Fmacias.TplQueue.Factories
         {
             if (queueOptions.MaxParallelism < 1)
                 throw new ArgumentException("MaxParallelism must be >= 1.");
+        }
 
-            if (string.IsNullOrWhiteSpace(queueOptions.RetryPolicy))
-                throw new ArgumentException("RetryPolicy name is required.");
+        /// <summary>Uses NoRetry when queue configuration omits a retry-policy name.</summary>
+        private IRetryPolicy ResolveRetryPolicy(string? name)
+        {
+            return string.IsNullOrWhiteSpace(name)
+                ? NoRetryPolicy.Create()
+                : _retryPolicyFactory.PolicyByName(name!, _retryPolicyOptions);
         }
         private IQ CreateCoreQueue<T>(string name, ILogger<T> logger)
             where T : IQ

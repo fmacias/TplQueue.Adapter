@@ -4,7 +4,7 @@ Der empfohlene Einstiegspunkt für ASP.NET ist `Fmacias.TplQueue.Microsoft.Depen
 
 ## Queue- und Retry-Konfiguration laden
 
-Die Adapter-Queue-Factories konsumieren benannte Retry-Policy- und Queue-Dictionaries. Halten Sie diese Metadaten in der normalen Anwendungskonfiguration und konvertieren Sie sie in `RetryPolicyOptions` und `QOptions`.
+Die Adapter-Queue-Factories konsumieren benannte Retry-Policy- und Queue-Dictionaries. Halten Sie diese Metadaten unter `TplQueue:RetryPolicies` und `TplQueue:Queues`; `AddTplQueue` bindet sie und erstellt die Options-Snapshots.
 
 ```json
 {
@@ -16,7 +16,7 @@ Die Adapter-Queue-Factories konsumieren benannte Retry-Policy- und Queue-Diction
         "Factor": 2.0
       }
     },
-    "Dispatchers": {
+    "Queues": {
       "dashboard-metadata": {
         "Id": "2bdba3c7-7d17-4ea5-b2cb-7cf3f7ea14b9",
         "MaxParallelism": 1,
@@ -29,16 +29,15 @@ Die Adapter-Queue-Factories konsumieren benannte Retry-Policy- und Queue-Diction
 
 Fügen Sie eine explizite `Id` hinzu, wenn die Queue-Identität über Neustarts hinweg deterministisch bleiben muss oder wenn externe Systeme mit derselben Dispatcher-Identität korrelieren sollen.
 
+Eine konfigurierte Queue darf `RetryPolicy` weglassen; null, eine leere Zeichenfolge oder nur Leerzeichen wählen NoRetry. Ein nicht registrierter, nicht leerer Name verwendet NoRetry. Eine fehlende `Id` wird einmal pro Settings-Instanz erzeugt und bleibt bei weiteren Abfragen gleich; für eine stabile Identität nach Neustarts geben Sie sie explizit an.
+
 ## Facade und Queue-Dictionaries registrieren
 
 ```csharp
-var settings = TplQueueDashboardSettings.Load(configuration);
-var retryPolicies = settings.CreateRetryPolicies();
-var dispatchers = settings.CreateDispatchers();
-var api = API.Create(CoreApi.Create(), retryPolicies, dispatchers);
+using Fmacias.TplQueue.Core;
+using Fmacias.TplQueue.Microsoft.DependencyInjection;
 
-services.AddSingleton(settings);
-services.AddTplQueue(api, retryPolicies, dispatchers);
+services.AddTplQueue(configuration, CoreApi.Create());
 ```
 
 ## Eine benannte `IParallelQ` erstellen
@@ -70,7 +69,7 @@ Relevante Source-Einstiegspunkte:
 
 ## Fokussierter öffentlicher ASP.NET-Sample-Ausschnitt
 
-Das öffentliche `QueueObserverSignalRDashboard`-Sample in `TplQueue.Usage` verwendet dieselbe Registrierungsform:
+Das öffentliche `QueueObserverSignalRDashboard`-Sample in `TplQueue.Usage` veranschaulicht die Web-Host-Komposition:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);

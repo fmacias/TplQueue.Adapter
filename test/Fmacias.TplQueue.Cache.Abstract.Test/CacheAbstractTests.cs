@@ -112,7 +112,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         public void TryHydrateNextJob_UsesPersistedPayloadHandlerKey()
         {
             var rootJobId = Guid.NewGuid();
-            var payload = new DummyPayload("payload/fallback");
+            var payload = new DummyPayload(
+                payloadId: "payload/instance",
+                handlerKey: "payload/fallback");
             const string persistedPayloadHandlerKey = "payload/persisted";
             var expectedHandler = Mock.Of<IHandler>();
             var hydratedRoot = Mock.Of<IDataJobRoot<IPayload>>();
@@ -173,14 +175,16 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
                 Assert.That(lease, Is.SameAs(rootLease.Object));
             });
             payloadHandlers.Verify(h => h.Handler(persistedPayloadHandlerKey), Times.Once);
-            payloadHandlers.Verify(h => h.Handler(payload.PayloadId), Times.Never);
+            payloadHandlers.Verify(h => h.Handler(payload.HandlerKey), Times.Never);
         }
 
         [Test]
-        public void TryHydrateNextJob_FallsBackToPayloadIdWhenPersistedKeyIsMissing()
+        public void TryHydrateNextJob_FallsBackToPayloadHandlerKeyWhenPersistedKeyIsMissing()
         {
             var rootJobId = Guid.NewGuid();
-            var payload = new DummyPayload("payload/legacy");
+            var payload = new DummyPayload(
+                payloadId: "payload/instance",
+                handlerKey: "payload/fallback");
             var expectedHandler = Mock.Of<IHandler>();
             var hydratedRoot = Mock.Of<IDataJobRoot<IPayload>>();
             var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Strict);
@@ -200,7 +204,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
             var payloadHandlers = new Mock<IPayloadHandlers>(MockBehavior.Strict);
             payloadHandlers
-                .Setup(h => h.Handler(payload.PayloadId))
+                .Setup(h => h.Handler(payload.HandlerKey))
                 .Returns(expectedHandler);
 
             var payloadJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
@@ -239,7 +243,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
                 Assert.That(payloadJobRoot, Is.SameAs(hydratedRoot));
                 Assert.That(lease, Is.SameAs(rootLease.Object));
             });
-            payloadHandlers.Verify(h => h.Handler(payload.PayloadId), Times.Once);
+            payloadHandlers.Verify(h => h.Handler(payload.HandlerKey), Times.Once);
         }
 
         [Test]
@@ -247,7 +251,9 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
         {
             var rootJobId = Guid.NewGuid();
             const string persistedPayloadTypeName = "persisted/plugin/payload-type";
-            var payload = new DummyPayload("payload/type-resolver");
+            var payload = new DummyPayload(
+                payloadId: "payload/type-resolver-instance",
+                handlerKey: "payload/type-resolver");
             var expectedHandler = Mock.Of<IHandler>();
             var hydratedRoot = Mock.Of<IDataJobRoot<IPayload>>();
             var serializer = new Mock<IUniversalDataSerializer>(MockBehavior.Strict);
@@ -267,7 +273,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
             var payloadHandlers = new Mock<IPayloadHandlers>(MockBehavior.Strict);
             payloadHandlers
-                .Setup(h => h.Handler(payload.PayloadId))
+                .Setup(h => h.Handler(payload.HandlerKey))
                 .Returns(expectedHandler);
 
             var payloadJobFactory = new Mock<IDataJobFactory>(MockBehavior.Strict);
@@ -369,7 +375,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
             var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Loose);
             root.SetupGet(r => r.Id).Returns(Guid.NewGuid());
             root.SetupGet(r => r.Name).Returns("root");
-            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.HandlerKey);
             root.As<IDataJobNode>().Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns(payload);
             root.As<ISerializable>()
@@ -415,13 +421,17 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test
 
         private sealed class DummyPayload : IPayload
         {
-            public DummyPayload(string payloadId = "cache-abstract/root")
+            public DummyPayload(
+                string payloadId = "cache-abstract/root-instance",
+                string handlerKey = "cache-abstract/root-handler")
             {
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
-            public string PayloadId { get; } = "cache-abstract/root";
+            public string PayloadId { get; }
             public DateTime CollectionTime { get; } = DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
     }
 }

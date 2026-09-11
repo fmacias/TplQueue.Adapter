@@ -10,6 +10,7 @@ Dieser Bereich bündelt betriebliche Themen, die relevant sind, wenn Sie die Tpl
 - [Build und Test](build-and-test.md)
 - [Strong-Name-Signing](strong-name-signing.md)
 - [Versionierung und Release](versioning-release.md)
+- [Aktuelle API-Migration](api-migration.md)
 
 ## Lokales Packaging
 

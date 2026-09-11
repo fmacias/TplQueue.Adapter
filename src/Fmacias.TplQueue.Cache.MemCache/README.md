@@ -32,7 +32,7 @@ var cache = api.Cache<IMemCache>(
 cache.Dehydrate(root, isFifo: false);
 cache.TryHydrateNextJob(out var hydratedRoot, out var lease);
 queue.Enqueue(hydratedRoot, CancellationToken.None);
-await queue.Wait().ConfigureAwait(false);
+await queue.WaitAsync().ConfigureAwait(false);
 ```
 
 Full runnable solutions:

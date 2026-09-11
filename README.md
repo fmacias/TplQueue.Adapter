@@ -56,6 +56,8 @@ If you want to rebuild or refresh the repository documentation with an agent, us
 Rebuild the TplQueue.Adapter documentation under docs/en/ and docs/de/ according to docs/Agents.md. Treat README.md as the concise repository and package entry point, keep docs/en/ and docs/de/ structurally aligned, use docs/en/getting-started/index.md as the main entry for onboarding, keep docs/en/reference/index.md as a compact reference hub, keep `TplQueue.Adapter/docs/<lang>/` as the only public-site source tree, and ground every API example in the current TplQueue.Adapter source code plus small focused public snippets or runnable sample links from TplQueue.Abstractions and TplQueue.Usage where they improve the docs.
 ```
 
+For the current contract and DI changes, follow the [API migration notes](docs/en/operations/api-migration.md) ([Deutsch](docs/de/operations/api-migration.md)).
+
 ## Quick operations
 
 Run the repository test surface:
@@ -88,3 +90,9 @@ For package-based samples, public integration tests, and observer-facing validat
 `TplQueue.Adapter` is distributed under the MIT license.
 
 `TplQueue.Core`, which the adapter complements, is distributed separately under its own package-specific license terms. The published Core binaries are publicly consumable, but the Core source repository, private unit tests, and private integration tests remain outside the public repositories and require separate approval.
+
+Queue configuration may omit the retry-policy name. Null, empty, or whitespace selects NoRetry; a supplied name uses the configured policy lookup.
+
+Observe waiting and executing jobs through `IQ.Subscribe`; `IQ.OnJobEventChanged` has been removed. CacheQ owns a private observer for terminal cache updates.
+
+`WaitAsync` waits for underlying queue work. Cache acknowledgment remains asynchronous, and slow subscribers on the shared observer hub can delay it. CacheQ disposal unsubscribes its observer and can discard pending notifications; completing `WaitAsync` does not guarantee that cache acknowledgment has finished.

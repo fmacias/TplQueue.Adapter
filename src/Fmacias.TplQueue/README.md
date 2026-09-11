@@ -100,7 +100,7 @@ API api = API.Create(
     queueOptions);
 
 api.RegisterPayloadHandler(
-    MeasurementPayload.HandlerKey,
+    MeasurementPayload.HandlerKeyValue,
     new MeasurementPayloadHandler());
 ```
 
@@ -120,7 +120,9 @@ From the facade you obtain:
 
 `API` owns the payload handler registry internally.
 If your application needs payload-aware cache hydration, register handlers through `IApi.RegisterPayloadHandler(...)`.
-The stable persisted execution identity remains `IPayload.PayloadId`, and cache hydration uses the API-owned internal handler registry.
+The stable persisted routing key is `IPayload.HandlerKey`; `IPayload.PayloadId`
+identifies the individual payload instance. Cache hydration uses the API-owned
+internal handler registry.
 
 Use versioned handler keys for payloads that can outlive the current deployment in a cache. A good default shape is `<domain>.<operation>/v<version>`, for example `measurements.persist/v1`. If a payload shape or handler behavior changes incompatibly, introduce a new key such as `measurements.persist/v2` and keep the previous handler registered while old cached jobs may still hydrate.
 
@@ -131,11 +133,11 @@ API api = API.Create(
     queueOptions);
 
 api.RegisterPayloadHandler(
-    MeasurementPayload.HandlerKey,
+    MeasurementPayload.HandlerKeyValue,
     new MeasurementPayloadHandler());
 
 api.RegisterPayloadHandler<MeasurementPayload>(
-    MeasurementPayload.HandlerKey,
+    MeasurementPayload.HandlerKeyValue,
     (payload, ct) =>
     {
         return Task.CompletedTask;
@@ -268,12 +270,13 @@ The same serializer contract is used when a payload graph moves through cache hy
 ```csharp
 public sealed class MeasurementPayload : IPayload
 {
-    public const string HandlerKey = "measurements.persist/v1";
+    public const string HandlerKeyValue = "measurements.persist/v1";
 
+    public string PayloadId { get; set; } = Guid.NewGuid().ToString("N");
     public string SensorId { get; set; } = string.Empty;
     public double Value { get; set; }
-    public string PayloadId => HandlerKey;
-    public DateTime CollectionTime => DateTime.UtcNow;
+    public DateTime CollectionTime { get; set; } = DateTime.UtcNow;
+    public string HandlerKey => HandlerKeyValue;
 }
 
 public sealed class MeasurementPayloadHandler : IHandler
@@ -287,7 +290,7 @@ public sealed class MeasurementPayloadHandler : IHandler
 
 IHandler handler = new MeasurementPayloadHandler();
 
-api.RegisterPayloadHandler(MeasurementPayload.HandlerKey, handler);
+api.RegisterPayloadHandler(MeasurementPayload.HandlerKeyValue, handler);
 
 var cache = api.Cache(
     MemCacheFactory.Create(),
@@ -351,7 +354,7 @@ That split keeps application entry points compact while avoiding unnecessary cou
 Current state:
 
 - prefer `IApi.RegisterPayloadHandler(...)`
-- persist and resolve handlers through the stable string key carried by `IPayload.PayloadId`
+- persist and resolve handlers through the stable string key carried by `IPayload.HandlerKey`
 - version persisted handler keys when payload shape or handler behavior changes incompatibly
 - let `API` own the default internal payload handler registry
 

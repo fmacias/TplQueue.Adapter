@@ -3,122 +3,102 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Fmacias.TplQueue.Microsoft.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        private const string RETRY_POLICIES = "RetryPolicies";
-        private const string DISPATCHERS = "Dispatchers";
-
-        public static IServiceCollection AddTplQueue(
-            this IServiceCollection services,
-            IConfiguration configurationSection,
-            IApi apiImplementation)
+        public static IServiceCollection AddTplQueue(this IServiceCollection services, ICoreApi coreApi)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
-            if (configurationSection == null) throw new ArgumentNullException(nameof(configurationSection));
-            if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
-
-            var retryPolicies = new Dictionary<string, IRetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
-            var dispatchers = new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
-
-            configurationSection.GetSection(RETRY_POLICIES).Bind(retryPolicies);
-            configurationSection.GetSection(DISPATCHERS).Bind(dispatchers);
-            services
-                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyOptions>>(retryPolicies)
-                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(dispatchers);
-
-            return AddApi(services, apiImplementation);
+            if (coreApi == null) throw new ArgumentNullException(nameof(coreApi));
+            return AddApi(services, coreApi, TplQueueSettings.Create());
         }
 
         public static IServiceCollection AddTplQueue(
             this IServiceCollection services,
-            Action<TplQueueOptionsBuilder> configure,
-            IApi apiImplementation)
+            IConfiguration configuration,
+            ICoreApi coreApi)
+        {
+            if (services == null) throw new ArgumentNullException(nameof(services));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (coreApi == null) throw new ArgumentNullException(nameof(coreApi));
+
+            return AddApi(services, coreApi, TplQueueSettings.Load(configuration));
+        }
+
+        public static IServiceCollection AddTplQueue(
+            this IServiceCollection services,
+            Action<ITplQueueSettings> configure,
+            ICoreApi coreApi)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (configure == null) throw new ArgumentNullException(nameof(configure));
-            if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
+            if (coreApi == null) throw new ArgumentNullException(nameof(coreApi));
 
-            var builder = new TplQueueOptionsBuilder();
-            configure(builder);
-
-            services
-                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyOptions>>(builder.RetryPolicies)
-                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(builder.Dispatchers);
-
-            return AddApi(services, apiImplementation);
+            var settings = TplQueueSettings.Create();
+            configure(settings);
+            return AddApi(services, coreApi, settings);
         }
 
         public static IServiceCollection AddTplQueue(
             this IServiceCollection services,
-            IApi apiImplementation,
+            ICoreApi coreApi,
             IDictionary<string, IRetryPolicyOptions> retryPolicies,
-            IDictionary<string, IQOptions> dispatcherOptions)
+            IDictionary<string, IQOptions> queues, 
+            IConfiguration? configuration = null)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
-            if (apiImplementation == null) throw new ArgumentNullException(nameof(apiImplementation));
+            if (coreApi == null) throw new ArgumentNullException(nameof(coreApi));
             if (retryPolicies == null) throw new ArgumentNullException(nameof(retryPolicies));
-            if (dispatcherOptions == null) throw new ArgumentNullException(nameof(dispatcherOptions));
+            if (queues == null) throw new ArgumentNullException(nameof(queues));
 
-            services
-                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyOptions>>(
-                    retryPolicies is IReadOnlyDictionary<string, IRetryPolicyOptions> rPolicies
-                        ? rPolicies
-                        : new Dictionary<string, IRetryPolicyOptions>(retryPolicies, StringComparer.OrdinalIgnoreCase))
-                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(
-                    dispatcherOptions is IReadOnlyDictionary<string, IQOptions> dOptions
-                        ? dOptions
-                        : new Dictionary<string, IQOptions>(dispatcherOptions, StringComparer.OrdinalIgnoreCase));
-    
-            return AddApi(services, apiImplementation);
+
+            TplQueueSettings settings = (configuration == null) ? TplQueueSettings.Create()
+                : TplQueueSettings.Load(configuration);
+
+            foreach (var policy in retryPolicies)
+            {
+                settings.Upsert(policy.Key, policy.Value);
+            }
+            foreach (var queue in queues)
+            {
+                settings.Upsert(queue.Key, queue.Value);
+            }
+            return AddApi(services, coreApi, settings);
         }
-        private static IServiceCollection AddApi(IServiceCollection services, IApi facade)
+        private static IServiceCollection AddApi(IServiceCollection services, ICoreApi coreApi,
+             ITplQueueSettings tplQueueSettings)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
-            if (facade == null) throw new ArgumentNullException(nameof(facade));
-
-            return services
-                .AddSingleton(facade)
-                .AddSingleton(facade.RetryPolicyAbstractFactory)
-                .AddSingleton(facade.JobFactory)
-                .AddSingleton(facade.DataJobFactory)
-                .AddSingleton(facade.QFactory)
-                .AddSingleton(facade.ObserverFactory())
-                .AddSingleton(facade.SystemTextSerializerFactory())
-                .AddSingleton(facade.XmlSerializerFactory());
+            if (coreApi == null) throw new ArgumentNullException(nameof(coreApi));
+            return RegisterServicesIntoContainer(services, coreApi, tplQueueSettings);
         }
-        /// <summary>
-        /// Fluent builder for code-based configuration of retry policies and dispatcher options.
-        /// </summary>
-        public sealed class TplQueueOptionsBuilder
+
+        private static IServiceCollection RegisterServicesIntoContainer(IServiceCollection services, ICoreApi coreApi, ITplQueueSettings settings)
         {
-            internal Dictionary<string, IRetryPolicyOptions> RetryPolicies { get; } =
-                new Dictionary<string, IRetryPolicyOptions>(StringComparer.OrdinalIgnoreCase);
-
-            internal Dictionary<string, IQOptions> Dispatchers { get; } =
-                new Dictionary<string, IQOptions>(StringComparer.OrdinalIgnoreCase);
-
-            public TplQueueOptionsBuilder AddRetryPolicy(string name, IRetryPolicyOptions options)
-            {
-                if (string.IsNullOrWhiteSpace(name))
-                    throw new ArgumentException("Name cannot be null or empty.", nameof(name));
-                if (options is null) throw new ArgumentNullException(nameof(options));
-
-                RetryPolicies[name] = options;
-                return this;
-            }
-
-            public TplQueueOptionsBuilder AddDispatcher(string name, IQOptions options)
-            {
-                if (string.IsNullOrWhiteSpace(name))
-                    throw new ArgumentException("Name cannot be null or empty.", nameof(name));
-                if (options is null) throw new ArgumentNullException(nameof(options));
-
-                Dispatchers[name] = options;
-                return this;
-            }
+            var apiFasade = API.Create(coreApi, settings.ExtractRetryPolicies(), settings.ExtractQueues());
+            return services
+                .AddSingleton<IApi>(apiFasade)
+                .AddSingleton<IReadOnlyDictionary<string, IRetryPolicyOptions>>(apiFasade.RetryPolicyOptions)
+                .AddSingleton<IReadOnlyDictionary<string, IQOptions>>(apiFasade.QueueOptions)
+                .AddSingleton<IRetryPolicyAbstractFactory>(apiFasade.RetryPolicyAbstractFactory)
+                .AddSingleton<IJobFactory>(apiFasade.JobFactory)
+                .AddSingleton<IDataJobFactory>(apiFasade.DataJobFactory)
+                .AddSingleton<IQFactoryAdapter>(apiFasade.QFactory)
+                .AddSingleton<IObserverFactory>(apiFasade.ObserverFactory())
+                .AddSingleton<ISystemTextJsonSerializerFactory>(apiFasade.SystemTextSerializerFactory())
+                .AddSingleton<IXmlSerializerFactory>(apiFasade.XmlSerializerFactory())
+                .AddSingleton<ITplQueueSettings>(settings)
+                .AddTransient<ISystemTextJsonUniversalSerializer>(serviceProvider 
+                    => serviceProvider
+                        .GetRequiredService<ISystemTextJsonSerializerFactory>()
+                        .Serializer(new JsonSerializerOptions { WriteIndented = true }))
+                .AddTransient<IXmlUniversalSerializer>(serviceProvider 
+                    => serviceProvider
+                        .GetRequiredService<IXmlSerializerFactory>()
+                        .Serializer());
         }
     }
 }

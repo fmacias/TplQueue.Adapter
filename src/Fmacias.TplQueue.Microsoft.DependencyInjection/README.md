@@ -21,23 +21,25 @@ dotnet add package Fmacias.TplQueue.Microsoft.DependencyInjection --version 0.1.
 
 ## Contents
 - `ServiceCollectionExtensions.AddTplQueue(...)` overloads.
-- `TplQueueOptionsBuilder` for fluent retry-policy and queue registration.
+- `ITplQueueSettings.Upsert(...)` for fluent retry-policy and queue registration.
 - Registration of `IApi`, read-only option dictionaries, and related adapter services.
 
-## Canonical sample
+## Register from configuration
 
-The public SignalR dashboard sample registers TplQueue through DI like this:
+Pass the application root configuration and the Core API:
 
 ```csharp
-var settings = TplQueueDashboardSettings.Load(configuration);
-var retryPolicies = settings.CreateRetryPolicies();
-var dispatchers = settings.CreateDispatchers();
-var api = API.Create(CoreApi.Create(), retryPolicies, dispatchers);
+using Fmacias.TplQueue.Core;
+using Fmacias.TplQueue.Microsoft.DependencyInjection;
 
-services.AddTplQueue(api, retryPolicies, dispatchers);
+services.AddTplQueue(configuration, CoreApi.Create());
 ```
 
-Full runnable solution:
+Configuration is read from `TplQueue:RetryPolicies` and `TplQueue:Queues`. Each configured queue requires a positive `MaxParallelism`. Its `RetryPolicy` name is optional; null, empty, or whitespace selects NoRetry. An unregistered nonblank policy name falls back to NoRetry. Omitted queue IDs are generated once per settings instance; configure IDs explicitly for identity across restarts.
+
+For complete configuration examples and migration from earlier overloads, see the [DI guide](../../docs/en/development/dependency-injection.md) and [API migration notes](../../docs/en/operations/api-migration.md).
+
+Related public application sample:
 
 - [QueueObserverSignalRDashboard](https://github.com/fmacias/TplQueue.Usage/tree/main/samples/QueueObserverSignalRDashboard)
 
@@ -46,6 +48,9 @@ Full runnable solution:
 Repository build, test, coverage, packaging, and release steps are documented in the [TplQueue public operations guide](https://fmacias.github.io/tplqueue/operations/).
 
 ## Registration modes
-- `AddTplQueue(IServiceCollection, IConfiguration, IApi)`
-- `AddTplQueue(IServiceCollection, Action<TplQueueOptionsBuilder>, IApi)`
-- `AddTplQueue(IServiceCollection, IApi, IDictionary<string, IRetryPolicyOptions>, IDictionary<string, IQOptions>)`
+- `AddTplQueue(IServiceCollection, ICoreApi)`
+- `AddTplQueue(IServiceCollection, IConfiguration, ICoreApi)`
+- `AddTplQueue(IServiceCollection, Action<ITplQueueSettings>, ICoreApi)`
+- `AddTplQueue(IServiceCollection, ICoreApi, IDictionary<string, IRetryPolicyOptions>, IDictionary<string, IQOptions>, IConfiguration? configuration = null)`
+
+Explicit dictionary entries override configuration entries with matching names, ignoring case. Registration captures independent API option snapshots and exposes those same dictionaries as injectable read-only services. Later `ITplQueueSettings.Upsert` calls do not reconfigure the API, factories or existing queues. Settings mutation belongs to configuration time and is not concurrent.

@@ -4,7 +4,7 @@ The recommended starting point for ASP.NET is `Fmacias.TplQueue.Microsoft.Depend
 
 ## Load queue and retry configuration
 
-The adapter queue factories consume named retry-policy and queue dictionaries. Keep that metadata in regular application configuration and convert it to `RetryPolicyOptions` and `QOptions`.
+The adapter queue factories consume named retry-policy and queue dictionaries. Keep that metadata under `TplQueue:RetryPolicies` and `TplQueue:Queues`; `AddTplQueue` binds it and creates the option snapshots.
 
 ```json
 {
@@ -16,7 +16,7 @@ The adapter queue factories consume named retry-policy and queue dictionaries. K
         "Factor": 2.0
       }
     },
-    "Dispatchers": {
+    "Queues": {
       "dashboard-metadata": {
         "Id": "2bdba3c7-7d17-4ea5-b2cb-7cf3f7ea14b9",
         "MaxParallelism": 1,
@@ -29,16 +29,15 @@ The adapter queue factories consume named retry-policy and queue dictionaries. K
 
 Add an explicit `Id` when the queue identity must remain deterministic across restarts or when external systems need to correlate with the same dispatcher identity.
 
+A configured queue may omit `RetryPolicy`; null, empty, or whitespace selects NoRetry. An unregistered nonblank name falls back to NoRetry. An omitted `Id` is generated once per settings instance and remains stable across reads; specify it to retain identity across restarts.
+
 ## Register the facade and queue dictionaries
 
 ```csharp
-var settings = TplQueueDashboardSettings.Load(configuration);
-var retryPolicies = settings.CreateRetryPolicies();
-var dispatchers = settings.CreateDispatchers();
-var api = API.Create(CoreApi.Create(), retryPolicies, dispatchers);
+using Fmacias.TplQueue.Core;
+using Fmacias.TplQueue.Microsoft.DependencyInjection;
 
-services.AddSingleton(settings);
-services.AddTplQueue(api, retryPolicies, dispatchers);
+services.AddTplQueue(configuration, CoreApi.Create());
 ```
 
 ## Create a named `IParallelQ`
@@ -70,7 +69,7 @@ Relevant source entry points:
 
 ## Focused public ASP.NET sample excerpt
 
-The public `QueueObserverSignalRDashboard` sample in `TplQueue.Usage` uses the same registration shape:
+The public `QueueObserverSignalRDashboard` sample in `TplQueue.Usage` illustrates web-host composition:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);

@@ -15,19 +15,22 @@ namespace Fmacias.TplQueue.Serialization.Xml.Test
             public TestPayload()
             {
                 PayloadId = string.Empty;
+                HandlerKey = string.Empty;
                 Name = string.Empty;
                 CollectionTime = DateTime.MinValue;
             }
 
             public TestPayload(string name, int count)
             {
-                PayloadId = "xml-test/v1";
+                PayloadId = $"xml-test/{name}-{count}";
+                HandlerKey = "xml-test-handler/v1";
                 Name = name;
                 Count = count;
                 CollectionTime = new DateTime(2026, 4, 17, 12, 30, 0, DateTimeKind.Utc);
             }
 
             public string PayloadId { get; set; }
+            public string HandlerKey { get; set; }
             public string Name { get; set; }
             public int Count { get; set; }
             public DateTime CollectionTime { get; set; }
@@ -66,6 +69,7 @@ namespace Fmacias.TplQueue.Serialization.Xml.Test
             {
                 Assert.That(xml.TrimStart(), Does.StartWith("<"));
                 Assert.That(roundTripped.PayloadId, Is.EqualTo(payload.PayloadId));
+                Assert.That(roundTripped.HandlerKey, Is.EqualTo(payload.HandlerKey));
                 Assert.That(roundTripped.Name, Is.EqualTo(payload.Name));
                 Assert.That(roundTripped.Count, Is.EqualTo(payload.Count));
             });
@@ -85,6 +89,7 @@ namespace Fmacias.TplQueue.Serialization.Xml.Test
                 Assert.That(xml.TrimStart(), Does.StartWith("<"));
                 Assert.That(roundTripped, Is.InstanceOf<TestPayload>());
                 Assert.That(((TestPayload)roundTripped).PayloadId, Is.EqualTo(payload.PayloadId));
+                Assert.That(((TestPayload)roundTripped).HandlerKey, Is.EqualTo(payload.HandlerKey));
                 Assert.That(((TestPayload)roundTripped).Name, Is.EqualTo(payload.Name));
                 Assert.That(((TestPayload)roundTripped).Count, Is.EqualTo(payload.Count));
             });

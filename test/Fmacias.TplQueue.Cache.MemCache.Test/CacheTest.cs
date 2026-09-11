@@ -98,11 +98,11 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
                 Assert.That(rootLease.Status, Is.EqualTo(EntryStatus.Pending));
                 Assert.That(childLease.Status, Is.EqualTo(EntryStatus.Pending));
                 Assert.That(rootLease.JobNodeRecordDto.PayloadTypeName, Does.Contain(nameof(DummyPayload)));
-                Assert.That(rootLease.JobNodeRecordDto.PayloadHandlerKey, Is.EqualTo(nameof(DummyPayload)));
+                Assert.That(rootLease.JobNodeRecordDto.PayloadHandlerKey, Is.EqualTo(DummyPayload.DefaultHandlerKey));
                 Assert.That(capturedDependencies.Single(), Is.SameAs(payloadJobChild.Object));
             });
 
-            payloadHandlerResolver.Verify(r => r.Handler(nameof(DummyPayload)), Times.Exactly(2));
+            payloadHandlerResolver.Verify(r => r.Handler(DummyPayload.DefaultHandlerKey), Times.Exactly(2));
         }
 
         [Test]
@@ -163,7 +163,7 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(childPayload.PayloadId);
+            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(childPayload.HandlerKey);
             child.Setup(c => c.GetPayload()).Returns(childPayload);
             child.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             child.As<IJob>().Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
@@ -176,7 +176,7 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
             root.SetupGet(r => r.Name).Returns("root");
             root.SetupGet(r => r.Payload).Returns(rootPayload);
             root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(rootPayload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(rootPayload.HandlerKey);
             root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns(rootPayload);
             root.As<IDataJobNode>().Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
             root.Setup(r => r.GetRetryPolicyFactory()).Returns(retryPolicy);
@@ -187,9 +187,21 @@ namespace Fmacias.TplQueue.Cache.MemCache.Test
 
         public sealed class DummyPayload : IPayload
         {
-            public string PayloadId => nameof(DummyPayload);
+            public const string DefaultHandlerKey = "test/mem-cache/dummy-handler-v1";
+
+            public DummyPayload(
+                string payloadId = "test/mem-cache/dummy-instance",
+                string handlerKey = DefaultHandlerKey)
+            {
+                PayloadId = payloadId;
+                HandlerKey = handlerKey;
+            }
+
+            public string PayloadId { get; }
 
             public DateTime CollectionTime => DateTime.UtcNow;
+
+            public string HandlerKey { get; }
         }
 
         private static class MockFactory

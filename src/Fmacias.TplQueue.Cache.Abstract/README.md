@@ -30,7 +30,7 @@ cache.Dehydrate(root, isFifo: false);
 if (cache.TryHydrateNextJob(out IDataJobRoot hydratedRoot, out ICacheEntry lease))
 {
     queue.Enqueue(hydratedRoot, CancellationToken.None);
-    await queue.Wait().ConfigureAwait(false);
+    await queue.WaitAsync().ConfigureAwait(false);
 }
 ```
 

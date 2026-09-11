@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Defaults.Log;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
@@ -21,25 +22,27 @@ namespace Fmacias.TplQueue.Observers
             return new FileLoggingObserver(logger, queueName);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
         public void OnCompleted()
         {
-            _logger.LogInformation("[{Queue}] OBSERVER COMPLETED", _queueName);
+            LogMessages.FileObserverCompleted(_logger, _queueName, null);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
         public void OnError(Exception error)
         {
             if (error == null) throw new ArgumentNullException(nameof(error));
-            _logger.LogError(error, "[{Queue}] OBSERVER ERROR: {Message}", _queueName, error.Message);
+            LogMessages.FileObserverError(_logger, _queueName, error.Message, error);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
         public void OnNext(IJobEvent value)
         {
             if (value == null)
             {
-                _logger.LogWarning("[{Queue}] NULL event received", _queueName);
+                LogMessages.FileObserverNullEvent(_logger, _queueName, null);
+                return;
+            }
+
+            if (!_logger.IsEnabled(LogLevel.Information))
+            {
                 return;
             }
 
@@ -56,7 +59,7 @@ namespace Fmacias.TplQueue.Observers
                 sb.Append(" | Exception=").Append(value.Exception.GetType().Name).Append(": ").Append(value.Exception.Message);
             }
 
-            _logger.LogInformation("[{Queue}] {Line}", _queueName, sb.ToString());
+            LogMessages.FileObserverEventWritten(_logger, _queueName, sb.ToString(), null);
         }
     }
 }

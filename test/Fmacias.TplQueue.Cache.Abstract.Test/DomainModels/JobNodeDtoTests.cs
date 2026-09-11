@@ -96,11 +96,11 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
 
         private static Mock<IDataJob> BuildCarrierJob(string payloadHandlerKey = "dummy")
         {
-            var payload = new DummyPayload(payloadHandlerKey);
+            var payload = new DummyPayload("payload/instance", payloadHandlerKey);
             var carrier = new Mock<IDataJob>(MockBehavior.Loose);
             carrier.SetupGet(c => c.Id).Returns(Guid.NewGuid());
             carrier.SetupGet(c => c.Name).Returns("job");
-            carrier.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            carrier.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.HandlerKey);
             carrier.Setup(c => c.GetPayload()).Returns(payload);
             carrier.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             carrier.As<ISerializable>()
@@ -111,13 +111,15 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.DomainModels
 
         private sealed class DummyPayload : IPayload
         {
-            public DummyPayload(string payloadId)
+            public DummyPayload(string payloadId, string handlerKey)
             {
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string PayloadId { get; }
             public DateTime CollectionTime { get; } = DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
     }
 }

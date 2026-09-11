@@ -305,13 +305,13 @@ namespace Fmacias.TplQueue.Cache.Abstract
                 return _payloadHandlerResolver.Handler(jobNodeRecord.PayloadHandlerKey);
             }
 
-            if (!string.IsNullOrWhiteSpace(payload.PayloadId))
+            if (!string.IsNullOrWhiteSpace(payload.HandlerKey))
             {
-                return _payloadHandlerResolver.Handler(payload.PayloadId);
+                return _payloadHandlerResolver.Handler(payload.HandlerKey);
             }
 
             throw new InvalidOperationException(
-                $"Unable to resolve a payload handler for JobId '{jobNodeRecord.JobId}'. No registered handler was found for key '{jobNodeRecord.PayloadHandlerKey ?? payload.PayloadId ?? string.Empty}'.");
+                $"Unable to resolve a payload handler for JobId '{jobNodeRecord.JobId}'. No registered handler was found for key '{jobNodeRecord.PayloadHandlerKey ?? payload.HandlerKey ?? string.Empty}'.");
         }
 
         protected virtual bool AreRootChildsNotFinalized(Guid rootId)

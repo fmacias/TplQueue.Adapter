@@ -15,11 +15,13 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson.Test
             public TestPayload(string name)
             {
                 Name = name;
+                PayloadId = $"test/{name}";
             }
 
             public string Name { get; }
-            public string PayloadId => "test";
+            public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey => "test/system-text-json-handler/v1";
         }
 
         [Test]
@@ -31,7 +33,12 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson.Test
             var json = serializer.Serialize(payload);
             var roundTripped = serializer.Deserialize<TestPayload>(json);
 
-            Assert.That(roundTripped.Name, Is.EqualTo(payload.Name));
+            Assert.Multiple(() =>
+            {
+                Assert.That(roundTripped.Name, Is.EqualTo(payload.Name));
+                Assert.That(roundTripped.PayloadId, Is.EqualTo(payload.PayloadId));
+                Assert.That(roundTripped.HandlerKey, Is.EqualTo(payload.HandlerKey));
+            });
         }
 
         [Test]
@@ -47,6 +54,8 @@ namespace Fmacias.TplQueue.Serialization.SystemTextJson.Test
             {
                 Assert.That(roundTripped, Is.InstanceOf<TestPayload>());
                 Assert.That(((TestPayload)roundTripped).Name, Is.EqualTo(payload.Name));
+                Assert.That(((TestPayload)roundTripped).PayloadId, Is.EqualTo(payload.PayloadId));
+                Assert.That(((TestPayload)roundTripped).HandlerKey, Is.EqualTo(payload.HandlerKey));
             });
         }
 

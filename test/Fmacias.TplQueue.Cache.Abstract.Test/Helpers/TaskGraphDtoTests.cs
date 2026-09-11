@@ -20,10 +20,12 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
                 .Setup(s => s.Serialize(It.IsAny<object>(), It.IsAny<Type>()))
                 .Returns("{}");
 
-            var payload = new DummyPayload("task-graph/root");
+            var payload = new DummyPayload(
+                payloadId: "task-graph/root-instance",
+                handlerKey: "task-graph/root-handler");
             var root = GetRootGraphMock(Guid.NewGuid());
             root.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
-            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.HandlerKey);
             root.Setup(c => c.GetPayload()).Returns(payload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
@@ -49,12 +51,14 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
 
             // Root mock (also an IPayloadCarrier)
             Mock<IDataJobRoot<IPayload>> root = GetRootGraphMock(rootId);
-            var payload = new DummyPayload("task-graph/root");
+            var payload = new DummyPayload(
+                payloadId: "task-graph/root-instance",
+                handlerKey: "task-graph/root-handler");
 
             var dataJobNode = root.As<IDataJobNode>();
             dataJobNode.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             dataJobNode.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(payload.HandlerKey);
             dataJobNode.Setup(c => c.GetPayload()).Returns(payload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
@@ -107,13 +111,17 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             var childId = Guid.NewGuid();
             var root = new Mock<IDataJobRoot<IPayload>>(MockBehavior.Loose);
             var child = new Mock<IDataJob>(MockBehavior.Loose);
-            var childPayload = new DummyPayload("task-graph/child");
-            var rootPayload = new DummyPayload("task-graph/root");
+            var childPayload = new DummyPayload(
+                payloadId: "task-graph/child-instance",
+                handlerKey: "task-graph/child-handler");
+            var rootPayload = new DummyPayload(
+                payloadId: "task-graph/root-instance",
+                handlerKey: "task-graph/root-handler");
             child.SetupGet(c => c.Id).Returns(childId);
             child.SetupGet(c => c.Name).Returns("child");
             child.Setup(c => c.GetDependentDataJobs()).Returns(Array.Empty<IDataJob>());
             child.SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(childPayload.PayloadId);
+            child.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(childPayload.HandlerKey);
             child.Setup(c => c.GetPayload()).Returns(childPayload);
             child.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
@@ -125,7 +133,7 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
             root.SetupGet(r => r.Name).Returns("root");
             root.Setup(c => c.GetDependentDataJobs()).Returns(new[] { child.Object });
             root.As<IDataJobNode>().SetupGet(c => c.PayloadType).Returns(typeof(DummyPayload));
-            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(rootPayload.PayloadId);
+            root.As<IDataJobInfo>().SetupGet(c => c.PayloadHandlerKey).Returns(rootPayload.HandlerKey);
             root.As<IDataJobNode>().Setup(c => c.GetPayload()).Returns(rootPayload);
             root.As<ISerializable>()
                 .Setup(s => s.Serialize(It.IsAny<IUniversalDataSerializer>()))
@@ -164,13 +172,15 @@ namespace Fmacias.TplQueue.Cache.Abstract.Test.Helpers
 
         private sealed class DummyPayload : IPayload
         {
-            public DummyPayload(string payloadId)
+            public DummyPayload(string payloadId, string handlerKey)
             {
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
     }
 }

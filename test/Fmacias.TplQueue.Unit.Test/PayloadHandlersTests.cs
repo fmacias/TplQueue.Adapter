@@ -18,7 +18,9 @@ namespace Fmacias.TplQueue.Test
             var payloadHandlers = PayloadHandlers.Create()
                 .Register(handlerKey, new RecordingHandler(recorder));
 
-            await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("ok", handlerKey), CancellationToken.None);
+            await payloadHandlers.Handler(handlerKey).HandleAsync(
+                new TestPayload("ok", "payload/ok", handlerKey),
+                CancellationToken.None);
 
             Assert.That(recorder.Values, Is.EqualTo(new[] { "ok" }));
         }
@@ -36,8 +38,12 @@ namespace Fmacias.TplQueue.Test
                     return new RecordingHandler(recorder);
                 });
 
-            await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("first", handlerKey), CancellationToken.None);
-            await payloadHandlers.Handler(handlerKey).HandleAsync(new TestPayload("second", handlerKey), CancellationToken.None);
+            await payloadHandlers.Handler(handlerKey).HandleAsync(
+                new TestPayload("first", "payload/first", handlerKey),
+                CancellationToken.None);
+            await payloadHandlers.Handler(handlerKey).HandleAsync(
+                new TestPayload("second", "payload/second", handlerKey),
+                CancellationToken.None);
 
             Assert.Multiple(() =>
             {
@@ -58,7 +64,7 @@ namespace Fmacias.TplQueue.Test
                     return Task.CompletedTask;
                 });
 
-            var payload = new TestPayload("untyped", handlerKey);
+            var payload = new TestPayload("untyped", "payload/untyped", handlerKey);
             await payloadHandlers.Handler(handlerKey).HandleAsync(payload, CancellationToken.None);
 
             Assert.That(receivedPayload, Is.SameAs(payload));
@@ -92,7 +98,9 @@ namespace Fmacias.TplQueue.Test
             var handler = payloadHandlers.Handler(handlerKey);
 
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await handler.HandleAsync(new OtherPayload(handlerKey), CancellationToken.None));
+                await handler.HandleAsync(
+                    new OtherPayload("payload/other", handlerKey),
+                    CancellationToken.None));
         }
 
         private sealed class RecordingHandler : IHandler
@@ -131,26 +139,30 @@ namespace Fmacias.TplQueue.Test
 
         private sealed class TestPayload : IPayload
         {
-            public TestPayload(string value, string payloadId)
+            public TestPayload(string value, string payloadId, string handlerKey)
             {
                 Value = value;
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string Value { get; }
             public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
 
         private sealed class OtherPayload : IPayload
         {
-            public OtherPayload(string payloadId)
+            public OtherPayload(string payloadId, string handlerKey)
             {
                 PayloadId = payloadId;
+                HandlerKey = handlerKey;
             }
 
             public string PayloadId { get; }
             public DateTime CollectionTime => DateTime.UtcNow;
+            public string HandlerKey { get; }
         }
     }
 }

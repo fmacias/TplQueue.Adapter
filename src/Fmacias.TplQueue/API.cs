@@ -174,7 +174,7 @@ namespace Fmacias.TplQueue
         /// <returns>An XML serializer factory.</returns>
         public IXmlSerializerFactory XmlSerializerFactory()
         {
-            return Fmacias.TplQueue.Serialization.Xml.XmlSerializerFactory.Create();
+            return Serialization.Xml.XmlSerializerFactory.Create();
         }
 
     }

@@ -200,6 +200,31 @@ namespace Fmacias.TplQueue.Test.Factories
         }
 
         [Test]
+        public void CacheQ_ForwardsDedicatedCacheFactoryToCoreFactory()
+        {
+            var coreFactory = new Mock<IQFactory>();
+            var cacheFactory = new Func<IDataJobCache>(() => Mock.Of<IDataJobCache>());
+            var logger = Mock.Of<ILogger<ICacheQ>>();
+            var innerQueue = Mock.Of<IParallelQ>();
+            var expected = Mock.Of<ICacheQ>();
+            coreFactory
+                .Setup(factory => factory.CacheQ(cacheFactory, logger, innerQueue))
+                .Returns(expected);
+            var adapter = QFactoryAdapter.Create(
+                coreFactory.Object,
+                Mock.Of<IRetryPolicyAbstractFactory>(),
+                new Dictionary<string, IQOptions>(),
+                new Dictionary<string, IRetryPolicyOptions>());
+
+            var result = adapter.CacheQ(cacheFactory, logger, innerQueue);
+
+            Assert.That(result, Is.SameAs(expected));
+            coreFactory.Verify(
+                factory => factory.CacheQ(cacheFactory, logger, innerQueue),
+                Times.Once);
+        }
+
+        [Test]
         public void CreateParallel_UnknownName_LoadsDefaultParallel()
         {
             var retryFactory = Helper.GetRetryPolicyFactoryMock();
@@ -215,6 +240,31 @@ namespace Fmacias.TplQueue.Test.Factories
             var queue = f.Parallel("unknown", Mock.Of<ILogger<IParallelQ>>());
 
             Assert.That(queue.MaxParallelism, Is.EqualTo(Environment.ProcessorCount));
+        }
+
+        [Test]
+        public void CreateFifo_UnknownName_LoadsDefaultFifo()
+        {
+            var retryFactory = Helper.GetRetryPolicyFactoryMock();
+            var coreQFactory = Helper.GetQFactoryCoreMock();
+            var retryOptions = new Dictionary<string, IRetryPolicyOptions>();
+
+            var factory = QFactoryAdapter.Create(
+                coreQFactory.Object,
+                retryFactory.Object,
+                new Dictionary<string, IQOptions>(),
+                retryOptions);
+
+            var queue = factory.Fifo("unknown", Mock.Of<ILogger<IFifoQ>>());
+
+            Assert.That(queue, Is.Not.Null);
+            coreQFactory.Verify(
+                core => core.Fifo(
+                    It.IsAny<Guid>(),
+                    "unknown",
+                    It.IsAny<ILogger>(),
+                    null),
+                Times.Once);
         }
 
         [Test]
@@ -265,7 +315,6 @@ namespace Fmacias.TplQueue.Test.Factories
     {
         public bool IsDisposed => throw new NotImplementedException();
 
-        public Func<IJobEvent, Task> OnJobEventChanged { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public string Name => throw new NotImplementedException();
 
@@ -317,7 +366,7 @@ namespace Fmacias.TplQueue.Test.Factories
             throw new NotImplementedException();
         }
 
-        public Task Wait()
+        public Task WaitAsync()
         {
             throw new NotImplementedException();
         }
