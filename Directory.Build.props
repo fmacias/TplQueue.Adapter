@@ -59,7 +59,7 @@
 		<PublicSign Condition="'$(TplQueueOfficialSign)' == 'true' and '$(OS)' != 'Windows_NT'">true</PublicSign>
 		<AssemblyOriginatorKeyFile Condition="'$(TplQueueOfficialSign)' == 'true'">$(TplQueueStrongNameKeyFile)</AssemblyOriginatorKeyFile>
 		<TplQueueInternalsVisibleToPublicKeySuffix Condition="'$(TplQueueOfficialSign)' == 'true'">, PublicKey=$(TplQueueStrongNamePublicKey)</TplQueueInternalsVisibleToPublicKeySuffix>
-		<TplQueueVersion Condition="'$(TplQueueVersion)' == ''">0.1.0-preview.1</TplQueueVersion>
+		<TplQueueVersion Condition="'$(TplQueueVersion)' == ''">0.2.0-preview.2</TplQueueVersion>
 		<TplQueuePackageVersion Condition="'$(TplQueuePackageVersion)' == ''">$(TplQueueVersion)</TplQueuePackageVersion>
 	</PropertyGroup>
 
