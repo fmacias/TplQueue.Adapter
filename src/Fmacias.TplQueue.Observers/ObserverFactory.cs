@@ -1,4 +1,5 @@
 using Fmacias.TplQueue.Contracts;
+using Fmacias.TplQueue.Snapshots;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -55,6 +56,11 @@ namespace Fmacias.TplQueue.Observers
             if (logger == null) throw new ArgumentNullException(nameof(logger));
 
             return FileLoggingObserver.Create(logger, queueName);
+        }
+
+        public JobEventSnapshot CreateJobEventSnapshot(IJobEvent source)
+        {
+            return JobEventSnapshotMapper.Create().Capture(source);
         }
     }
 }

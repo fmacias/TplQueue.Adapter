@@ -9,7 +9,7 @@ using System;
 namespace Fmacias.TplQueue.Observers.Test.Observers
 {
     [TestFixture]
-    public class JobObserverTests
+    public class JobObserverFactoryTest
     {
         private Mock<IJobEvent> _eventMock = null!;
         private Mock<IJobInfo> _infoMock = null!;
@@ -95,6 +95,83 @@ namespace Fmacias.TplQueue.Observers.Test.Observers
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateLoggingObserver(null!));
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateProfilingObserver(null!));
             Assert.Throws<ArgumentNullException>(() => _observerFactory.CreateFileLoggingObserver(null!, "main"));
+        }
+
+        [Test]
+        public void CreateJobEventSnapshot_ThroughFactoryContract_CapturesEventMetadata()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _infoMock.Setup(info => info.Id).Returns(id);
+            _infoMock.Setup(info => info.Dependencies).Returns(Array.Empty<IJobInfo>());
+            _eventMock.Setup(value => value.RetryCount).Returns(2);
+            _eventMock.As<IJobExecutionEvent>().Setup(value => value.ExecutionChannel).Returns(0);
+            _eventMock.Setup(value => value.Exception).Returns(new InvalidOperationException("failure"));
+
+            // Act
+            var snapshot = _observerFactory.CreateJobEventSnapshot(_eventMock.Object);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(snapshot.Status, Is.EqualTo(JobEventStatus.Successed));
+                Assert.That(snapshot.Timestamp, Is.EqualTo(_now));
+                Assert.That(snapshot.RetryCount, Is.EqualTo(2));
+                Assert.That(snapshot.ExecutionChannel, Is.EqualTo(0));
+                Assert.That(snapshot.JobInfo.Id, Is.EqualTo(id));
+                Assert.That(snapshot.JobInfo.Name, Is.EqualTo("TestTask"));
+                Assert.That(snapshot.Diagnostic.Message, Is.EqualTo("failure"));
+            });
+        }
+
+        [Test]
+        public void CreateJobEventSnapshot_RepeatedCalls_ReturnIndependentSnapshots()
+        {
+            // Arrange
+            _infoMock.Setup(info => info.Dependencies).Returns(Array.Empty<IJobInfo>());
+
+            // Act
+            var first = _observerFactory.CreateJobEventSnapshot(_eventMock.Object);
+            _infoMock.Setup(info => info.Name).Returns("Changed");
+            var second = _observerFactory.CreateJobEventSnapshot(_eventMock.Object);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(second, Is.Not.SameAs(first));
+                Assert.That(second.JobInfo, Is.Not.SameAs(first.JobInfo));
+                Assert.That(first.JobInfo.Name, Is.EqualTo("TestTask"));
+                Assert.That(second.JobInfo.Name, Is.EqualTo("Changed"));
+            });
+        }
+
+        [Test]
+        public void CreateJobEventSnapshot_NullSource_PropagatesArgumentNullException()
+        {
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => _observerFactory.CreateJobEventSnapshot(null!));
+
+            Assert.That(exception!.ParamName, Is.EqualTo("source"));
+        }
+
+        [Test]
+        public void CreateJobEventSnapshot_NullJobInfo_PropagatesArgumentException()
+        {
+            _eventMock.Setup(value => value.JobInfo).Returns((IJobInfo)null!);
+
+            var exception = Assert.Throws<ArgumentException>(
+                () => _observerFactory.CreateJobEventSnapshot(_eventMock.Object));
+
+            Assert.That(exception!.ParamName, Is.EqualTo("source"));
+        }
+
+        [Test]
+        public void CreateJobEventSnapshot_CyclicDependencies_PropagatesInvalidOperationException()
+        {
+            _infoMock.Setup(info => info.Dependencies).Returns(new[] { _infoMock.Object });
+
+            Assert.Throws<InvalidOperationException>(
+                () => _observerFactory.CreateJobEventSnapshot(_eventMock.Object));
         }
 
         [Test]
